@@ -8,10 +8,6 @@
             {{ __('Track TESDA certifications by level or classification, then record the related program or qualification title.') }}
         </p>
     </header>
-
-    <form method="post" action="{{ route('certificates.store') }}" enctype="multipart/form-data" class="mt-6 space-y-6">
-        @csrf
-
         <div class="grid gap-4 md:grid-cols-2">
             <div>
                 <x-input-label for="certificate_name" :value="__('Certificate Name')" />
@@ -67,9 +63,15 @@
             </div>
 
             <div class="md:col-span-2">
-                <x-input-label for="certificate_file" :value="__('Certificate File (Image or PDF)')" />
-                <input id="certificate_file" name="certificate_file" type="file" class="mt-1 block w-full rounded-button border-grayTheme-border bg-white text-grayTheme-dark shadow-sm focus:border-primary focus:ring-primary/30" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.tif,.tiff,image/*,application/pdf" />
-                <p class="mt-1 text-xs text-gray-500">Upload a scanned copy or photo of the certificate. Accepted formats: PDF or image files.</p>
+                <x-file-input
+                    name="certificate_file"
+                    id="certificate_file"
+                    :accept="'.pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.tif,.tiff,image/*,application/pdf'"
+                    :required="true"
+                    :help="__('Upload a scanned copy or photo of the certificate. Accepted formats: PDF or image files.')"
+                >
+                    {{ __('Certificate File (Image or PDF)') }}
+                </x-file-input>
                 <x-input-error class="mt-2" :messages="$errors->get('certificate_file')" />
             </div>
         </div>
@@ -97,60 +99,74 @@
 
     <div class="mt-6">
         <h3 class="text-sm font-semibold text-gray-700">Existing Certificates</h3>
-        <div class="mt-3 overflow-x-auto">
-            <table class="min-w-full text-sm">
-                <thead class="text-left text-gray-500">
-                    <tr>
-                        <th class="py-2">Name</th>
+        <form method="get" class="mt-3 flex flex-wrap items-end gap-3 text-sm">
+            <input type="hidden" name="tab" value="certificates" />
+            @if ($docType !== 'all')
+                <input type="hidden" name="doc_type" value="{{ $docType }}" />
+            @endif
+            <div>
+                <label class="text-xs font-semibold uppercase text-grayTheme-medium" for="cert_status">Status</label>
+                <select id="cert_status" name="cert_status" class="mt-1 form-input">
+                    <option value="all" @selected($certStatus === 'all')>All</option>
+                    <option value="valid" @selected($certStatus === 'valid')>Valid</option>
+                    <option value="expiring" @selected($certStatus === 'expiring')>Expiring</option>
+                    <option value="expired" @selected($certStatus === 'expired')>Expired</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-semibold uppercase text-grayTheme-medium" for="cert_window">Expiration Window</label>
+                <select id="cert_window" name="cert_window" class="mt-1 form-input">
+                    <option value="0" @selected($certWindow === 0)>All dates</option>
+                    <option value="30" @selected($certWindow === 30)>Next 30 days</option>
+                    <option value="60" @selected($certWindow === 60)>Next 60 days</option>
+                    <option value="90" @selected($certWindow === 90)>Next 90 days</option>
+                </select>
+            </div>
+            <button class="btn-primary" type="submit">Apply</button>
+        </form>
+
+        <div
+            class="mt-3"
+            x-data="loadMoreList({ nextUrl: @js($certificates->nextPageUrl()), partialParam: 'certificates_partial' })"
+        >
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="text-left text-gray-500">
+                        <tr>
+                            <th class="py-2">Name</th>
                             <th class="py-2">TESDA Classification</th>
                             <th class="py-2">Program / Qualification</th>
                             <th class="py-2">File</th>
-                        <th class="py-2">Expires</th>
-                        <th class="py-2">Status</th>
-                        <th class="py-2"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    @forelse ($certificates as $certificate)
-                            @php($certificateFile = $certificate->documents->first())
-                        <tr>
-                            <td class="py-2 font-medium text-gray-900">{{ $certificate->certificate_name }}</td>
-                                <td class="py-2">{{ $certificate->certificate_type_label }}</td>
-                                <td class="py-2">{{ $certificate->qualification_title ?? '—' }}</td>
-                                <td class="py-2">
-                                    @if ($certificateFile)
-                                        <a class="text-primary hover:text-primary-hover" href="{{ route('documents.download', $certificateFile) }}">
-                                            {{ $certificateFile->original_name }}
-                                        </a>
-                                    @else
-                                        <span class="text-gray-500">—</span>
-                                    @endif
-                                </td>
-                            <td class="py-2">{{ $certificate->expiration_date?->format('Y-m-d') ?? '—' }}</td>
-                            <td class="py-2">{{ ucfirst($certificate->status) }}</td>
-                            <td class="py-2 text-right">
-                                <form method="post" action="{{ route('certificates.destroy', $certificate) }}">
-                                    @csrf
-                                    @method('delete')
-                                    <button class="text-red-600 hover:text-red-900" type="submit">
-                                        Delete
-                                    </button>
-                                </form>
-                            </td>
+                            <th class="py-2">Expires</th>
+                            <th class="py-2">Status</th>
+                            <th class="py-2"></th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="py-4 text-center text-gray-500">No certificates yet.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        @if (method_exists($certificates, 'links'))
-            <div class="mt-4">
-                {{ $certificates->links() }}
+                    </thead>
+                    <tbody class="divide-y" x-ref="list">
+                        @if ($certificates->isEmpty())
+                            <tr>
+                                <td colspan="7" class="py-4 text-center text-gray-500">No certificates yet.</td>
+                            </tr>
+                        @else
+                            @include('profile.partials.certificate-rows', ['certificates' => $certificates])
+                        @endif
+                    </tbody>
+                </table>
             </div>
-        @endif
+
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                {{ $certificates->links() }}
+                <button
+                    type="button"
+                    class="btn-secondary"
+                    x-show="nextUrl"
+                    x-on:click="loadMore"
+                    :disabled="loading"
+                >
+                    <span x-show="!loading">Load more</span>
+                    <span x-show="loading">Loading...</span>
+                </button>
+            </div>
+        </div>
     </div>
 </section>

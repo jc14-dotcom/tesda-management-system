@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\CacheBuster;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -31,6 +32,9 @@ class ProfileDetailsController extends Controller
             ['user_id' => $request->user()->id],
             $data
         );
+
+        CacheBuster::bumpUser($request->user()->id);
+        CacheBuster::bumpAdminUsers();
 
         return back()->with('status', 'profile-details-updated');
     }

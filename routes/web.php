@@ -43,6 +43,12 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
         Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
+        Route::view('/certificates', 'admin.certificates.index')->name('certificates.index');
+        Route::view('/documents', 'admin.documents.index')->name('documents.index');
+        Route::view('/notifications', 'admin.notifications.index')->name('notifications.index');
+        Route::view('/activity', 'admin.activity.index')->name('activity.index');
+        Route::view('/backups', 'admin.backups.index')->name('backups.index');
+        Route::view('/settings', 'admin.settings.index')->name('settings.index');
     });
 
 require __DIR__.'/auth.php';

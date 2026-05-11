@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Certificate;
 use App\Notifications\CertificateExpiryNotification;
+use App\Support\CacheBuster;
 use Illuminate\Support\Carbon;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -37,10 +38,11 @@ class SendCertificateExpiryNotifications extends Command
         /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\Certificate> $certificates */
         $certificates = Certificate::with('user')
             ->whereNotNull('expiration_date')
-            ->whereDate('expiration_date', '<=', now()->addDays($maxDays))
+            ->where('expiration_date', '<=', now()->addDays($maxDays)->toDateString())
             ->get();
 
         $notifiedCount = 0;
+        $touchedUserIds = [];
 
         foreach ($certificates as $certificate) {
             /** @var \App\Models\Certificate $certificate */
@@ -72,6 +74,15 @@ class SendCertificateExpiryNotifications extends Command
             }
 
             $certificate->save();
+            $touchedUserIds[$certificate->user_id] = true;
+        }
+
+        if ($touchedUserIds) {
+            foreach (array_keys($touchedUserIds) as $userId) {
+                CacheBuster::bumpUser((int) $userId);
+            }
+
+            CacheBuster::bumpAdminUsers();
         }
 
         $this->info("Expiry notifications sent: {$notifiedCount}");

@@ -63,66 +63,121 @@
 
             <div class="surface p-6">
                 <h3 class="text-lg font-semibold text-grayTheme-dark">Certificates</h3>
-                <div class="mt-4 overflow-x-auto">
-                    <table class="min-w-full text-sm">
-                        <thead class="text-left text-grayTheme-medium">
-                            <tr>
-                                <th class="py-2">Name</th>
-                                <th class="py-2">TESDA Classification</th>
-                                <th class="py-2">Program / Qualification</th>
-                                <th class="py-2">Number</th>
-                                <th class="py-2">Expires</th>
-                                <th class="py-2">Status</th>
-                                <th class="py-2">Documents</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y">
-                            @forelse ($user->certificates as $certificate)
+                <form method="get" class="mt-4 flex flex-wrap items-end gap-3 text-sm">
+                    @if ($docType !== 'all')
+                        <input type="hidden" name="doc_type" value="{{ $docType }}" />
+                    @endif
+                    <div>
+                        <label class="text-xs font-semibold uppercase text-grayTheme-medium" for="cert_status">Status</label>
+                        <select id="cert_status" name="cert_status" class="mt-1 form-input">
+                            <option value="all" @selected($certStatus === 'all')>All</option>
+                            <option value="valid" @selected($certStatus === 'valid')>Valid</option>
+                            <option value="expiring" @selected($certStatus === 'expiring')>Expiring</option>
+                            <option value="expired" @selected($certStatus === 'expired')>Expired</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold uppercase text-grayTheme-medium" for="cert_window">Expiration Window</label>
+                        <select id="cert_window" name="cert_window" class="mt-1 form-input">
+                            <option value="0" @selected($certWindow === 0)>All dates</option>
+                            <option value="30" @selected($certWindow === 30)>Next 30 days</option>
+                            <option value="60" @selected($certWindow === 60)>Next 60 days</option>
+                            <option value="90" @selected($certWindow === 90)>Next 90 days</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" type="submit">Apply</button>
+                </form>
+
+                <div
+                    class="mt-4"
+                    x-data="loadMoreList({ nextUrl: @js($certificates->nextPageUrl()), partialParam: 'certificates_partial' })"
+                >
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="text-left text-grayTheme-medium">
                                 <tr>
-                                    <td class="py-2 font-medium text-grayTheme-dark">{{ $certificate->certificate_name }}</td>
-                                    <td class="py-2">{{ $certificate->certificate_type_label }}</td>
-                                    <td class="py-2">{{ $certificate->qualification_title ?? '—' }}</td>
-                                    <td class="py-2">{{ $certificate->certificate_number ?? '—' }}</td>
-                                    <td class="py-2">{{ $certificate->expiration_date?->format('Y-m-d') ?? '—' }}</td>
-                                    <td class="py-2">{{ ucfirst($certificate->status) }}</td>
-                                    <td class="py-2">
-                                        @forelse ($certificate->documents as $document)
-                                            <div>
-                                                <a class="text-primary hover:text-primary-hover" href="{{ route('documents.download', $document) }}">
-                                                    {{ $document->document_name ?? $document->original_name }}
-                                                </a>
-                                            </div>
-                                        @empty
-                                            <span class="text-grayTheme-medium">—</span>
-                                        @endforelse
-                                    </td>
+                                    <th class="py-2">Name</th>
+                                    <th class="py-2">TESDA Classification</th>
+                                    <th class="py-2">Program / Qualification</th>
+                                    <th class="py-2">Number</th>
+                                    <th class="py-2">Expires</th>
+                                    <th class="py-2">Status</th>
+                                    <th class="py-2">Documents</th>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="py-4 text-center text-grayTheme-medium">No certificates found.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="divide-y" x-ref="list">
+                                @if ($certificates->isEmpty())
+                                    <tr>
+                                        <td colspan="7" class="py-4 text-center text-grayTheme-medium">No certificates found.</td>
+                                    </tr>
+                                @else
+                                    @include('admin.users.partials.certificates-rows', ['certificates' => $certificates])
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                        {{ $certificates->links() }}
+                        <button
+                            type="button"
+                            class="btn-secondary"
+                            x-show="nextUrl"
+                            x-on:click="loadMore"
+                            :disabled="loading"
+                        >
+                            <span x-show="!loading">Load more</span>
+                            <span x-show="loading">Loading...</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div class="surface p-6">
                 <h3 class="text-lg font-semibold text-grayTheme-dark">Other Documents</h3>
-                <div class="mt-4 space-y-2">
-                    @forelse ($user->documents->where('type', '!=', 'certificate') as $document)
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="text-sm text-grayTheme-medium">{{ strtoupper($document->type) }}</div>
-                                <div class="text-grayTheme-dark">{{ $document->document_name ?? $document->original_name }}</div>
-                            </div>
-                            <a class="text-primary hover:text-primary-hover" href="{{ route('documents.download', $document) }}">
-                                Download
-                            </a>
-                        </div>
-                    @empty
+                <form method="get" class="mt-4 flex flex-wrap items-end gap-3 text-sm">
+                    @if ($certStatus !== 'all')
+                        <input type="hidden" name="cert_status" value="{{ $certStatus }}" />
+                    @endif
+                    @if ($certWindow > 0)
+                        <input type="hidden" name="cert_window" value="{{ $certWindow }}" />
+                    @endif
+                    <div>
+                        <label class="text-xs font-semibold uppercase text-grayTheme-medium" for="doc_type">Document Type</label>
+                        <select id="doc_type" name="doc_type" class="mt-1 form-input">
+                            <option value="all" @selected($docType === 'all')>All</option>
+                            <option value="cv" @selected($docType === 'cv')>CV</option>
+                            <option value="other" @selected($docType === 'other')>Other</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" type="submit">Apply</button>
+                </form>
+
+                <div
+                    class="mt-4"
+                    x-data="loadMoreList({ nextUrl: @js($documents->nextPageUrl()), partialParam: 'documents_partial' })"
+                >
+                    @if ($documents->isEmpty())
                         <p class="text-sm text-grayTheme-medium">No documents uploaded.</p>
-                    @endforelse
+                    @else
+                        <div class="space-y-2" x-ref="list">
+                            @include('admin.users.partials.documents-items', ['documents' => $documents])
+                        </div>
+                    @endif
+
+                    <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                        {{ $documents->links() }}
+                        <button
+                            type="button"
+                            class="btn-secondary"
+                            x-show="nextUrl"
+                            x-on:click="loadMore"
+                            :disabled="loading"
+                        >
+                            <span x-show="!loading">Load more</span>
+                            <span x-show="loading">Loading...</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

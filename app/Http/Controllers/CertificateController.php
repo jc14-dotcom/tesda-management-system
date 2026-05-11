@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Certificate;
 use App\Models\Document;
+use App\Support\CacheBuster;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -61,6 +62,9 @@ class CertificateController extends Controller
             ]);
         }
 
+        CacheBuster::bumpUser($user->id);
+        CacheBuster::bumpAdminUsers();
+
         return back()->with('status', 'certificate-added');
     }
 
@@ -79,6 +83,9 @@ class CertificateController extends Controller
         }
 
         $certificate->delete();
+
+        CacheBuster::bumpUser($certificate->user_id);
+        CacheBuster::bumpAdminUsers();
 
         return back()->with('status', 'certificate-deleted');
     }

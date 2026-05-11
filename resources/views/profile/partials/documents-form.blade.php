@@ -71,8 +71,14 @@
             </div>
 
             <div class="md:col-span-2">
-                <x-input-label for="file" :value="__('File')" />
-                <input id="file" name="file" type="file" class="mt-1 block w-full" required />
+                <x-file-input
+                    name="file"
+                    id="file"
+                    :required="true"
+                    :help="__('Upload a CV, certificate file, or other supporting document.')"
+                >
+                    {{ __('File') }}
+                </x-file-input>
                 <x-input-error class="mt-2" :messages="$errors->get('file')" />
             </div>
         </div>
@@ -94,65 +100,52 @@
 
     <div class="mt-6">
         <h3 class="text-sm font-semibold text-gray-700">Uploaded Documents</h3>
-        <div class="mt-3 space-y-3">
-            @forelse ($documents as $document)
-                <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                    <button
-                        type="button"
-                        class="block w-full text-left"
-                        @click="openDocument({
-                            title: @js($document->document_name ?? $document->original_name),
-                            type: @js(strtoupper($document->type)),
-                            previewUrl: @js(route('documents.preview', $document)),
-                            downloadUrl: @js(route('documents.download', $document)),
-                            originalName: @js($document->original_name),
-                            viewUrl: @js(route('documents.view', $document)),
-                        })"
-                    >
-                        <div class="flex items-start justify-between gap-4">
-                            <div class="min-w-0">
-                                <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ strtoupper($document->type) }}</div>
-                                <div class="mt-1 truncate text-base font-semibold text-gray-900">{{ $document->document_name ?? $document->original_name }}</div>
-                                <div class="mt-1 text-sm text-gray-500">Click to view or print</div>
-                            </div>
-                            <div class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">Open</div>
-                        </div>
-                    </button>
-
-                    <div class="mt-4 flex flex-wrap items-center gap-3">
-                        <button type="button" class="text-sm font-semibold text-primary hover:text-blue-800" @click="openDocument({
-                            title: @js($document->document_name ?? $document->original_name),
-                            type: @js(strtoupper($document->type)),
-                            previewUrl: @js(route('documents.preview', $document)),
-                            downloadUrl: @js(route('documents.download', $document)),
-                            originalName: @js($document->original_name),
-                            viewUrl: @js(route('documents.view', $document)),
-                        })">
-                            View
-                        </button>
-                        <a class="text-sm font-semibold text-primary hover:text-blue-800" href="{{ route('documents.download', $document) }}">
-                            Download
-                        </a>
-
-                        <form method="post" action="{{ route('documents.destroy', $document) }}" onsubmit="return confirm('Delete this document?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-sm font-semibold text-red-600 hover:text-red-800">
-                                Delete
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            @empty
-                <p class="text-sm text-gray-500">No documents uploaded.</p>
-            @endforelse
-        </div>
-
-        @if (method_exists($documents, 'links'))
-            <div class="mt-4">
-                {{ $documents->links() }}
+        <form method="get" class="mt-3 flex flex-wrap items-end gap-3 text-sm">
+            <input type="hidden" name="tab" value="documents" />
+            @if ($certStatus !== 'all')
+                <input type="hidden" name="cert_status" value="{{ $certStatus }}" />
+            @endif
+            @if ($certWindow > 0)
+                <input type="hidden" name="cert_window" value="{{ $certWindow }}" />
+            @endif
+            <div>
+                <label class="text-xs font-semibold uppercase text-grayTheme-medium" for="doc_type">Document Type</label>
+                <select id="doc_type" name="doc_type" class="mt-1 form-input">
+                    <option value="all" @selected($docType === 'all')>All</option>
+                    <option value="cv" @selected($docType === 'cv')>CV</option>
+                    <option value="certificate" @selected($docType === 'certificate')>Certificate</option>
+                    <option value="other" @selected($docType === 'other')>Other</option>
+                </select>
             </div>
-        @endif
+            <button class="btn-primary" type="submit">Apply</button>
+        </form>
+
+        <div
+            class="mt-3"
+            x-data="loadMoreList({ nextUrl: @js($documents->nextPageUrl()), partialParam: 'documents_partial' })"
+        >
+            @if ($documents->isEmpty())
+                <p class="text-sm text-gray-500">No documents uploaded.</p>
+            @else
+                <div class="space-y-3" x-ref="list">
+                    @include('profile.partials.document-cards', ['documents' => $documents])
+                </div>
+            @endif
+
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                {{ $documents->links() }}
+                <button
+                    type="button"
+                    class="btn-secondary"
+                    x-show="nextUrl"
+                    x-on:click="loadMore"
+                    :disabled="loading"
+                >
+                    <span x-show="!loading">Load more</span>
+                    <span x-show="loading">Loading...</span>
+                </button>
+            </div>
+        </div>
 
         @if (session('status') === 'document-deleted')
             <p class="mt-4 text-sm text-gray-600">Document deleted.</p>

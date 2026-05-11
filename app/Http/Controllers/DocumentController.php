@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Certificate;
 use App\Models\Document;
+use App\Support\CacheBuster;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -62,6 +63,9 @@ class DocumentController extends Controller
             'size' => $file->getSize(),
             'is_primary' => $data['type'] === 'cv',
         ]);
+
+        CacheBuster::bumpUser($user->id);
+        CacheBuster::bumpAdminUsers();
 
         return back()->with('status', 'document-uploaded');
     }
@@ -124,6 +128,9 @@ class DocumentController extends Controller
         }
 
         $document->delete();
+
+        CacheBuster::bumpUser($document->user_id);
+        CacheBuster::bumpAdminUsers();
 
         return back()->with('status', 'document-deleted');
     }

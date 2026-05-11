@@ -1,7 +1,6 @@
 @php
     $activeTab = request('tab', 'dashboard');
     $isProfileRoute = request()->routeIs('profile.edit');
-    $isAdminRoute = request()->routeIs('admin.*');
     $isAdminUser = auth()->user()?->hasRole('admin');
 @endphp
 
@@ -40,6 +39,9 @@
         </div>
 
         <div class="flex-1 overflow-y-auto px-4 py-6" :class="desktopCollapsed ? 'sm:px-2' : 'sm:px-4'">
+        @if ($isAdminUser)
+            @include('layouts.partials.admin-sidebar')
+        @else
         <ul class="space-y-2 font-medium">
             <li>
                 <a href="{{ route('dashboard') }}" @class([
@@ -139,37 +141,8 @@
                 </a>
             </li>
 
-            @if ($isAdminUser)
-                <li>
-                    <button type="button" class="flex items-center w-full justify-between px-2 py-1.5 rounded-lg text-white/80 hover:bg-primary-hover hover:text-white group" aria-controls="admin-menu" data-collapse-toggle="admin-menu">
-                        <span class="flex items-center gap-3">
-                            <svg class="w-5 h-5 shrink-0 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10V6a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v4m3-2 .917 11.923A1 1 0 0 1 17.92 21H6.08a1 1 0 0 1-.997-1.077L6 8h12Z" />
-                            </svg>
-                            <span x-show="!desktopCollapsed" x-transition class="whitespace-nowrap">Administration</span>
-                        </span>
-                                <svg x-show="!desktopCollapsed" x-transition class="w-4 h-4 text-white/70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <ul id="admin-menu" @class([
-                        'py-2 space-y-1',
-                        'hidden' => ! $isAdminRoute,
-                    ])>
-                        <li>
-                            <a href="{{ route('admin.dashboard') }}" class="pl-10 flex items-center px-2 py-1.5 rounded-lg transition duration-250 group {{ $isAdminRoute && request()->routeIs('admin.dashboard') ? 'bg-primary-hover border-l-4 border-accent text-white' : 'text-white/80 hover:bg-primary-hover hover:text-white' }}" x-show="!desktopCollapsed" x-transition>
-                                Dashboard
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('admin.users.index') }}" class="pl-10 flex items-center px-2 py-1.5 rounded-lg transition duration-250 group {{ $isAdminRoute && request()->routeIs('admin.users.*') ? 'bg-primary-hover border-l-4 border-accent text-white' : 'text-white/80 hover:bg-primary-hover hover:text-white' }}" x-show="!desktopCollapsed" x-transition>
-                                Users
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-            @endif
         </ul>
+        @endif
         </div>
     </div>
 </aside>
