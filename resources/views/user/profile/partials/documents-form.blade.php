@@ -187,7 +187,7 @@
                     ></iframe>
                 </div>
 
-                <aside class="border-t border-slate-200 bg-white p-5 lg:border-t-0 lg:border-l">
+                <aside class="border-t border-slate-200 bg-white p-5 lg:border-t-0 lg;border-l">
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <div class="text-sm font-semibold text-slate-700">Actions</div>
                         <div class="mt-4 space-y-3">

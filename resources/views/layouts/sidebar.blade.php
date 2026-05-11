@@ -1,6 +1,4 @@
 @php
-    $activeTab = request('tab', 'dashboard');
-    $isProfileRoute = request()->routeIs('profile.edit');
     $isAdminUser = auth()->user()?->hasRole('admin');
 @endphp
 
@@ -61,14 +59,14 @@
             </li>
 
             <li>
-                <a href="{{ route('profile.edit', ['tab' => 'profile']) }}" @class([
+                <a href="{{ route('profile.edit') }}" @class([
                     'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
-                    'bg-primary-hover border-l-4 border-accent text-white' => $isProfileRoute && $activeTab === 'profile',
-                    'text-white/80 hover:bg-primary-hover hover:text-white' => !($isProfileRoute && $activeTab === 'profile'),
+                    'bg-primary-hover border-l-4 border-accent text-white' => request()->routeIs('profile.edit'),
+                    'text-white/80 hover:bg-primary-hover hover:text-white' => !request()->routeIs('profile.edit'),
                 ])>
                     <svg class="w-5 h-5 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
-                        'text-accent' => $isProfileRoute && $activeTab === 'profile',
-                        'text-white/70' => !($isProfileRoute && $activeTab === 'profile'),
+                        'text-accent' => request()->routeIs('profile.edit'),
+                        'text-white/70' => !request()->routeIs('profile.edit'),
                     ])>
                         <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                     </svg>
@@ -77,14 +75,14 @@
             </li>
 
             <li>
-                <a href="{{ route('profile.edit', ['tab' => 'certificates']) }}" @class([
+                <a href="{{ route('profile.certificates') }}" @class([
                     'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
-                    'bg-primary-hover border-l-4 border-accent text-white' => $isProfileRoute && $activeTab === 'certificates',
-                    'text-white/80 hover:bg-primary-hover hover:text-white' => !($isProfileRoute && $activeTab === 'certificates'),
+                    'bg-primary-hover border-l-4 border-accent text-white' => request()->routeIs('profile.certificates'),
+                    'text-white/80 hover:bg-primary-hover hover:text-white' => !request()->routeIs('profile.certificates'),
                 ])>
                     <svg class="w-5 h-5 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
-                        'text-accent' => $isProfileRoute && $activeTab === 'certificates',
-                        'text-white/70' => !($isProfileRoute && $activeTab === 'certificates'),
+                        'text-accent' => request()->routeIs('profile.certificates'),
+                        'text-white/70' => !request()->routeIs('profile.certificates'),
                     ])>
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6m-6 4h6" />
@@ -94,14 +92,14 @@
             </li>
 
             <li>
-                <a href="{{ route('profile.edit', ['tab' => 'documents']) }}" @class([
+                <a href="{{ route('profile.documents') }}" @class([
                     'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
-                    'bg-primary-hover border-l-4 border-accent text-white' => $isProfileRoute && $activeTab === 'documents',
-                    'text-white/80 hover:bg-primary-hover hover:text-white' => !($isProfileRoute && $activeTab === 'documents'),
+                    'bg-primary-hover border-l-4 border-accent text-white' => request()->routeIs('profile.documents'),
+                    'text-white/80 hover:bg-primary-hover hover:text-white' => !request()->routeIs('profile.documents'),
                 ])>
                     <svg class="w-5 h-5 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
-                        'text-accent' => $isProfileRoute && $activeTab === 'documents',
-                        'text-white/70' => !($isProfileRoute && $activeTab === 'documents'),
+                        'text-accent' => request()->routeIs('profile.documents'),
+                        'text-white/70' => !request()->routeIs('profile.documents'),
                     ])>
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 13h3.439a.991.991 0 0 1 .908.6 3.978 3.978 0 0 0 7.306 0 .99.99 0 0 1 .908-.6H20M4 13v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6M4 13l2-9h12l2 9M9 7h6m-7 3h8" />
                     </svg>
@@ -110,14 +108,14 @@
             </li>
 
             <li>
-                <a href="{{ route('profile.edit', ['tab' => 'notifications']) }}" @class([
+                <a href="{{ route('profile.notifications') }}" @class([
                     'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
-                    'bg-primary-hover border-l-4 border-accent text-white' => $isProfileRoute && $activeTab === 'notifications',
-                    'text-white/80 hover:bg-primary-hover hover:text-white' => !($isProfileRoute && $activeTab === 'notifications'),
+                    'bg-primary-hover border-l-4 border-accent text-white' => request()->routeIs('profile.notifications'),
+                    'text-white/80 hover:bg-primary-hover hover:text-white' => !request()->routeIs('profile.notifications'),
                 ])>
                     <svg class="w-5 h-5 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
-                        'text-accent' => $isProfileRoute && $activeTab === 'notifications',
-                        'text-white/70' => !($isProfileRoute && $activeTab === 'notifications'),
+                        'text-accent' => request()->routeIs('profile.notifications'),
+                        'text-white/70' => !request()->routeIs('profile.notifications'),
                     ])>
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 13h16M6 9h12m-8 8h4" />
                     </svg>
@@ -126,14 +124,14 @@
             </li>
 
             <li>
-                <a href="{{ route('profile.edit', ['tab' => 'settings']) }}" @class([
+                <a href="{{ route('profile.settings') }}" @class([
                     'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
-                    'bg-primary-hover border-l-4 border-accent text-white' => $isProfileRoute && $activeTab === 'settings',
-                    'text-white/80 hover:bg-primary-hover hover:text-white' => !($isProfileRoute && $activeTab === 'settings'),
+                    'bg-primary-hover border-l-4 border-accent text-white' => request()->routeIs('profile.settings'),
+                    'text-white/80 hover:bg-primary-hover hover:text-white' => !request()->routeIs('profile.settings'),
                 ])>
                     <svg class="w-5 h-5 shrink-0 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
-                        'text-accent' => $isProfileRoute && $activeTab === 'settings',
-                        'text-white/70' => !($isProfileRoute && $activeTab === 'settings'),
+                        'text-accent' => request()->routeIs('profile.settings'),
+                        'text-white/70' => !request()->routeIs('profile.settings'),
                     ])>
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m13.46 8.291 3.849-3.849a1.5 1.5 0 0 1 2.122 0l.127.127a1.5 1.5 0 0 1 0 2.122l-3.84 3.838a4 4 0 0 0-2.258-2.238Zm0 0a4 4 0 0 1 2.263 2.238l3.662-3.662a8.961 8.961 0 0 1 0 10.27l-3.676-3.676m-2.25-5.17 3.678-3.676a8.961 8.961 0 0 0-10.27 0l3.662 3.662a4 4 0 0 0-2.238 2.258L4.615 6.863a8.96 8.96 0 0 0 0 10.27l3.662-3.662a4 4 0 0 0 2.258 2.238l-3.672 3.676a8.96 8.96 0 0 0 10.27 0l-3.662-3.662a4.001 4.001 0 0 0 2.238-2.262m0 0 3.849 3.848a1.5 1.5 0 0 1 0 2.122l-.127.126a1.499 1.499 0 0 1-2.122 0l-3.838-3.838a4 4 0 0 0 2.238-2.258Zm.29-1.461a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm-7.718 1.471-3.84 3.838a1.5 1.5 0 0 0 0 2.122l.128.126a1.5 1.5 0 0 0 2.122 0l3.848-3.848a4 4 0 0 1-2.258-2.238Zm2.248-5.19L6.69 4.442a1.5 1.5 0 0 0-2.122 0l-.127.127a1.5 1.5 0 0 0 0 2.122l3.849 3.848a4 4 0 0 1 2.238-2.258Z" />
                     </svg>

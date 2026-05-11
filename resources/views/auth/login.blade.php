@@ -11,9 +11,9 @@
     </head>
     <body class="min-h-screen bg-grayTheme-light text-grayTheme-dark antialiased">
         <main class="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(43,45,126,0.12),_transparent_34%),radial-gradient(circle_at_80%_20%,_rgba(43,45,126,0.08),_transparent_28%),linear-gradient(135deg,_#f8f9ff_0%,_#f2f4f8_45%,_#f8fafc_100%)]">
-            <div class="absolute inset-0 bg-[linear-gradient(rgba(107,114,128,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(107,114,128,0.08)_1px,transparent_1px)] bg-[size:72px_72px] opacity-40"></div>
+            <div class="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(rgba(107,114,128,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(107,114,128,0.08)_1px,transparent_1px)] bg-[size:72px_72px] opacity-40"></div>
 
-            <div class="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-between px-6 py-8 lg:px-10">
+            <div class="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-between px-6 py-8 lg:px-10">
                 <div class="grid flex-1 items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
                     <section class="max-w-xl">
                         <a href="/" class="inline-flex items-center gap-3 text-grayTheme-dark">

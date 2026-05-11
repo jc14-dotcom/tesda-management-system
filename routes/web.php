@@ -17,7 +17,12 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile', [ProfileController::class, 'dashboard'])->name('profile.dashboard');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile/certificates', [ProfileController::class, 'certificates'])->name('profile.certificates');
+    Route::get('/profile/documents', [ProfileController::class, 'documents'])->name('profile.documents');
+    Route::get('/profile/notifications', [ProfileController::class, 'notifications'])->name('profile.notifications');
+    Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/details', [ProfileDetailsController::class, 'update'])->name('profile.details.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
