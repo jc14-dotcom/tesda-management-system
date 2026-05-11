@@ -1,0 +1,175 @@
+@php
+    $activeTab = request('tab', 'dashboard');
+    $isProfileRoute = request()->routeIs('profile.edit');
+    $isAdminRoute = request()->routeIs('admin.*');
+    $isAdminUser = auth()->user()?->hasRole('admin');
+@endphp
+
+<div x-show="mobileOpen" x-cloak class="fixed inset-0 z-30 bg-grayTheme-dark/40 sm:hidden" @click="closeMobileSidebar()" aria-hidden="true"></div>
+
+<aside
+    id="app-sidebar"
+    :class="{
+        'translate-x-0': mobileOpen,
+        '-translate-x-full': !mobileOpen,
+        'sm:translate-x-0': true,
+        'sm:w-16': desktopCollapsed,
+        'sm:w-64': !desktopCollapsed,
+    }"
+    class="fixed top-0 left-0 z-50 h-screen w-64 transform transition-all duration-200 ease-out"
+    aria-label="Sidebar"
+>
+    <div class="flex h-full flex-col bg-primary text-white shadow-sidebar">
+        <div class="sticky top-0 z-20 border-b border-white/10 bg-primary px-4 py-4">
+            <div class="relative flex items-center justify-center">
+                <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-2 text-center" aria-label="Go to dashboard">
+                    <img src="{{ asset('assets/alcatt-logo.png') }}" alt="Alcatt system logo" class="h-14 w-14 object-contain sm:h-16 sm:w-16" />
+                    <span x-show="!desktopCollapsed" x-transition class="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/85">
+                        Alcatt Portal
+                    </span>
+                </a>
+
+                <button type="button" @click="toggleDesktopSidebar()" aria-controls="app-sidebar" :aria-expanded="(!desktopCollapsed).toString()" class="absolute right-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary-hover bg-white text-primary shadow-card transition hover:bg-primary-soft hover:text-primary-hover">
+                    <span class="sr-only">Toggle sidebar</span>
+                    <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path :class="{'hidden': !desktopCollapsed, 'inline-flex': desktopCollapsed }" class="hidden" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4 12h16" />
+                        <path :class="{'hidden': desktopCollapsed, 'inline-flex': ! desktopCollapsed }" class="inline-flex" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-4 py-6" :class="desktopCollapsed ? 'sm:px-2' : 'sm:px-4'">
+        <ul class="space-y-2 font-medium">
+            <li>
+                <a href="{{ route('dashboard') }}" @class([
+                    'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
+                    'bg-primary-hover border-l-4 border-accent text-white' => request()->routeIs('dashboard'),
+                    'text-white/80 hover:bg-primary-hover hover:text-white' => !request()->routeIs('dashboard'),
+                ])>
+                    <svg class="w-5 h-5 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
+                        'text-accent' => request()->routeIs('dashboard'),
+                        'text-white/70' => !request()->routeIs('dashboard'),
+                    ])>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M10 6.025A7.5 7.5 0 1 0 17.975 14H10V6.025Z" />
+                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M13.5 3c-.169 0-.334.014-.5.025V11h7.975c.011-.166.025-.331.025-.5A7.5 7.5 0 0 0 13.5 3Z" />
+                    </svg>
+                    <span x-show="!desktopCollapsed" x-transition class="ms-3 whitespace-nowrap">Dashboard</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('profile.edit', ['tab' => 'profile']) }}" @class([
+                    'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
+                    'bg-primary-hover border-l-4 border-accent text-white' => $isProfileRoute && $activeTab === 'profile',
+                    'text-white/80 hover:bg-primary-hover hover:text-white' => !($isProfileRoute && $activeTab === 'profile'),
+                ])>
+                    <svg class="w-5 h-5 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
+                        'text-accent' => $isProfileRoute && $activeTab === 'profile',
+                        'text-white/70' => !($isProfileRoute && $activeTab === 'profile'),
+                    ])>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
+                    <span x-show="!desktopCollapsed" x-transition class="ms-3 whitespace-nowrap">My Profile</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('profile.edit', ['tab' => 'certificates']) }}" @class([
+                    'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
+                    'bg-primary-hover border-l-4 border-accent text-white' => $isProfileRoute && $activeTab === 'certificates',
+                    'text-white/80 hover:bg-primary-hover hover:text-white' => !($isProfileRoute && $activeTab === 'certificates'),
+                ])>
+                    <svg class="w-5 h-5 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
+                        'text-accent' => $isProfileRoute && $activeTab === 'certificates',
+                        'text-white/70' => !($isProfileRoute && $activeTab === 'certificates'),
+                    ])>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6m-6 4h6" />
+                    </svg>
+                    <span x-show="!desktopCollapsed" x-transition class="ms-3 whitespace-nowrap">My Certificates</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('profile.edit', ['tab' => 'documents']) }}" @class([
+                    'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
+                    'bg-primary-hover border-l-4 border-accent text-white' => $isProfileRoute && $activeTab === 'documents',
+                    'text-white/80 hover:bg-primary-hover hover:text-white' => !($isProfileRoute && $activeTab === 'documents'),
+                ])>
+                    <svg class="w-5 h-5 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
+                        'text-accent' => $isProfileRoute && $activeTab === 'documents',
+                        'text-white/70' => !($isProfileRoute && $activeTab === 'documents'),
+                    ])>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 13h3.439a.991.991 0 0 1 .908.6 3.978 3.978 0 0 0 7.306 0 .99.99 0 0 1 .908-.6H20M4 13v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6M4 13l2-9h12l2 9M9 7h6m-7 3h8" />
+                    </svg>
+                    <span x-show="!desktopCollapsed" x-transition class="ms-3 whitespace-nowrap">My Documents</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('profile.edit', ['tab' => 'notifications']) }}" @class([
+                    'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
+                    'bg-primary-hover border-l-4 border-accent text-white' => $isProfileRoute && $activeTab === 'notifications',
+                    'text-white/80 hover:bg-primary-hover hover:text-white' => !($isProfileRoute && $activeTab === 'notifications'),
+                ])>
+                    <svg class="w-5 h-5 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
+                        'text-accent' => $isProfileRoute && $activeTab === 'notifications',
+                        'text-white/70' => !($isProfileRoute && $activeTab === 'notifications'),
+                    ])>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 13h16M6 9h12m-8 8h4" />
+                    </svg>
+                    <span x-show="!desktopCollapsed" x-transition class="ms-3 whitespace-nowrap">Notifications</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ route('profile.edit', ['tab' => 'settings']) }}" @class([
+                    'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
+                    'bg-primary-hover border-l-4 border-accent text-white' => $isProfileRoute && $activeTab === 'settings',
+                    'text-white/80 hover:bg-primary-hover hover:text-white' => !($isProfileRoute && $activeTab === 'settings'),
+                ])>
+                    <svg class="w-5 h-5 shrink-0 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
+                        'text-accent' => $isProfileRoute && $activeTab === 'settings',
+                        'text-white/70' => !($isProfileRoute && $activeTab === 'settings'),
+                    ])>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m13.46 8.291 3.849-3.849a1.5 1.5 0 0 1 2.122 0l.127.127a1.5 1.5 0 0 1 0 2.122l-3.84 3.838a4 4 0 0 0-2.258-2.238Zm0 0a4 4 0 0 1 2.263 2.238l3.662-3.662a8.961 8.961 0 0 1 0 10.27l-3.676-3.676m-2.25-5.17 3.678-3.676a8.961 8.961 0 0 0-10.27 0l3.662 3.662a4 4 0 0 0-2.238 2.258L4.615 6.863a8.96 8.96 0 0 0 0 10.27l3.662-3.662a4 4 0 0 0 2.258 2.238l-3.672 3.676a8.96 8.96 0 0 0 10.27 0l-3.662-3.662a4.001 4.001 0 0 0 2.238-2.262m0 0 3.849 3.848a1.5 1.5 0 0 1 0 2.122l-.127.126a1.499 1.499 0 0 1-2.122 0l-3.838-3.838a4 4 0 0 0 2.238-2.258Zm.29-1.461a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm-7.718 1.471-3.84 3.838a1.5 1.5 0 0 0 0 2.122l.128.126a1.5 1.5 0 0 0 2.122 0l3.848-3.848a4 4 0 0 1-2.258-2.238Zm2.248-5.19L6.69 4.442a1.5 1.5 0 0 0-2.122 0l-.127.127a1.5 1.5 0 0 0 0 2.122l3.849 3.848a4 4 0 0 1 2.238-2.258Z" />
+                    </svg>
+                    <span x-show="!desktopCollapsed" x-transition class="ms-3 whitespace-nowrap">Account Settings</span>
+                </a>
+            </li>
+
+            @if ($isAdminUser)
+                <li>
+                    <button type="button" class="flex items-center w-full justify-between px-2 py-1.5 rounded-lg text-white/80 hover:bg-primary-hover hover:text-white group" aria-controls="admin-menu" data-collapse-toggle="admin-menu">
+                        <span class="flex items-center gap-3">
+                            <svg class="w-5 h-5 shrink-0 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10V6a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v4m3-2 .917 11.923A1 1 0 0 1 17.92 21H6.08a1 1 0 0 1-.997-1.077L6 8h12Z" />
+                            </svg>
+                            <span x-show="!desktopCollapsed" x-transition class="whitespace-nowrap">Administration</span>
+                        </span>
+                                <svg x-show="!desktopCollapsed" x-transition class="w-4 h-4 text-white/70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <ul id="admin-menu" @class([
+                        'py-2 space-y-1',
+                        'hidden' => ! $isAdminRoute,
+                    ])>
+                        <li>
+                            <a href="{{ route('admin.dashboard') }}" class="pl-10 flex items-center px-2 py-1.5 rounded-lg transition duration-250 group {{ $isAdminRoute && request()->routeIs('admin.dashboard') ? 'bg-primary-hover border-l-4 border-accent text-white' : 'text-white/80 hover:bg-primary-hover hover:text-white' }}" x-show="!desktopCollapsed" x-transition>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.users.index') }}" class="pl-10 flex items-center px-2 py-1.5 rounded-lg transition duration-250 group {{ $isAdminRoute && request()->routeIs('admin.users.*') ? 'bg-primary-hover border-l-4 border-accent text-white' : 'text-white/80 hover:bg-primary-hover hover:text-white' }}" x-show="!desktopCollapsed" x-transition>
+                                Users
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            @endif
+        </ul>
+        </div>
+    </div>
+</aside>

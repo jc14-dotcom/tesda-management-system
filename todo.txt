@@ -1,0 +1,11 @@
+- create account ng user (register)
+- upload ng documents 
+- data privacy policy
+- basic information ng user
+- notif ng expiration ng mga documents 
+
+
+color theme
+- royal blue
+- yellow
+- gray
