@@ -1,4 +1,15 @@
 <section class="surface p-6 sm:p-8">
+    @php
+        $initialPositionRoles = old('position_roles', []);
+
+        if (empty($initialPositionRoles) && filled($profile?->position_title)) {
+            $initialPositionRoles = collect(preg_split('/\s*,\s*/', $profile->position_title, -1, PREG_SPLIT_NO_EMPTY))
+                ->map(fn ($role) => strtolower(trim($role)))
+                ->values()
+                ->all();
+        }
+    @endphp
+
     <header>
         <h2 class="text-lg font-medium text-gray-900">
             {{ __('Personal and Employment Details') }}
@@ -9,116 +20,391 @@
         </p>
     </header>
 
-    <form method="post" action="{{ route('account.profile.details') }}" class="mt-6 space-y-6">
+    <form
+        method="post"
+        action="{{ route('account.profile.details') }}"
+        class="mt-6 space-y-8"
+        x-data='profileDetailsForm({
+            initialFirstName: @json(old('first_name', $profile?->first_name)),
+            initialMiddleName: @json(old('middle_name', $profile?->middle_name)),
+            initialLastName: @json(old('last_name', $profile?->last_name)),
+            initialSuffix: @json(old('suffix', $profile?->suffix)),
+            initialDateOfBirth: @json(old('date_of_birth', $profile?->date_of_birth?->format('Y-m-d'))),
+            initialGender: @json(old('gender', $profile?->gender)),
+            initialContactNumber: @json(old('contact_number', $profile?->contact_number)),
+            initialAddress: @json(old('address', $profile?->address)),
+            initialCompanyId: @json(old('company_id', $profile?->company_id)),
+            initialPositionRoles: @json($initialPositionRoles),
+            initialEmploymentStatus: @json(old('employment_status', $profile?->employment_status)),
+            initialDateHired: @json(old('date_hired', $profile?->date_hired?->format('Y-m-d'))),
+            initialTesdaRegistryNumber: @json(old('tesda_registry_number', $profile?->tesda_registry_number)),
+            initialQualificationTitle: @json(old('qualification_title', $profile?->qualification_title)),
+            initialRemarks: @json(old('remarks', $profile?->remarks))
+        })'
+        @submit.prevent="submitForm($event)"
+    >
         @csrf
         @method('patch')
 
-        <div class="grid gap-4 md:grid-cols-2">
-            <div>
-                <x-input-label for="middle_name" :value="__('Middle Name')" />
-                <x-text-input id="middle_name" name="middle_name" type="text" class="mt-1 block w-full" :value="old('middle_name', $profile?->middle_name)" />
-                <x-input-error class="mt-2" :messages="$errors->get('middle_name')" />
-            </div>
+        <div class="space-y-4">
+            <h3 class="text-base font-semibold text-grayTheme-dark">Personal Details</h3>
 
-            <div>
-                <x-input-label for="suffix" :value="__('Suffix')" />
-                <x-text-input id="suffix" name="suffix" type="text" class="mt-1 block w-full" :value="old('suffix', $profile?->suffix)" />
-                <x-input-error class="mt-2" :messages="$errors->get('suffix')" />
-            </div>
+            <div class="grid gap-6 md:grid-cols-2">
+                <div>
+                    <x-input-label for="first_name" :value="__('First Name')" />
+                    <x-text-input
+                        id="first_name"
+                        name="first_name"
+                        type="text"
+                        class="mt-1 block w-full"
+                        x-bind:class="showError('firstName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                        :value="old('first_name', $profile?->first_name)"
+                        placeholder="Juan"
+                        maxlength="255"
+                        required
+                        x-model.trim="firstName"
+                        @input="touched.firstName = true; handleNameInput('firstName')"
+                        @blur="touched.firstName = true; updateValidation()"
+                        x-bind:aria-invalid="showError('firstName')"
+                        x-bind:aria-describedby="showError('firstName') ? 'first-name-error' : null"
+                    />
+                    <p id="first-name-error" x-show="showError('firstName')" class="mt-2 text-sm text-red-600" x-text="errors.firstName"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('first_name')" />
+                </div>
 
-            <div>
-                <x-input-label for="date_of_birth" :value="__('Date of Birth')" />
-                <x-text-input id="date_of_birth" name="date_of_birth" type="date" class="mt-1 block w-full" :value="old('date_of_birth', $profile?->date_of_birth?->format('Y-m-d'))" />
-                <x-input-error class="mt-2" :messages="$errors->get('date_of_birth')" />
-            </div>
+                <div>
+                    <x-input-label for="middle_name" :value="__('Middle Name')" />
+                    <x-text-input
+                        id="middle_name"
+                        name="middle_name"
+                        type="text"
+                        class="mt-1 block w-full"
+                        x-bind:class="showError('middleName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                        :value="old('middle_name', $profile?->middle_name)"
+                        placeholder="Dela"
+                        maxlength="255"
+                        required
+                        x-model.trim="middleName"
+                        @input="touched.middleName = true; handleNameInput('middleName')"
+                        @blur="touched.middleName = true; updateValidation()"
+                        x-bind:aria-invalid="showError('middleName')"
+                        x-bind:aria-describedby="showError('middleName') ? 'middle-name-error' : null"
+                    />
+                    <p id="middle-name-error" x-show="showError('middleName')" class="mt-2 text-sm text-red-600" x-text="errors.middleName"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('middle_name')" />
+                </div>
 
-            <div>
-                <x-input-label for="gender" :value="__('Sex')" />
-                <select id="gender" name="gender" class="mt-1 form-input">
-                    @php($selectedSex = old('gender', $profile?->gender))
-                    <option value="male" @selected($selectedSex === 'male')>Male</option>
-                    <option value="female" @selected($selectedSex === 'female')>Female</option>
-                </select>
-                <x-input-error class="mt-2" :messages="$errors->get('gender')" />
-            </div>
+                <div>
+                    <x-input-label for="last_name" :value="__('Last Name')" />
+                    <x-text-input
+                        id="last_name"
+                        name="last_name"
+                        type="text"
+                        class="mt-1 block w-full"
+                        x-bind:class="showError('lastName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                        :value="old('last_name', $profile?->last_name)"
+                        placeholder="Cruz"
+                        maxlength="255"
+                        required
+                        x-model.trim="lastName"
+                        @input="touched.lastName = true; handleNameInput('lastName')"
+                        @blur="touched.lastName = true; updateValidation()"
+                        x-bind:aria-invalid="showError('lastName')"
+                        x-bind:aria-describedby="showError('lastName') ? 'last-name-error' : null"
+                    />
+                    <p id="last-name-error" x-show="showError('lastName')" class="mt-2 text-sm text-red-600" x-text="errors.lastName"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('last_name')" />
+                </div>
 
-            <div>
-                <x-input-label for="contact_number" :value="__('Contact Number')" />
-                <x-text-input id="contact_number" name="contact_number" type="text" class="mt-1 block w-full" :value="old('contact_number', $profile?->contact_number)" />
-                <x-input-error class="mt-2" :messages="$errors->get('contact_number')" />
-            </div>
+                <div>
+                    <x-input-label for="suffix" :value="__('Suffix')" />
+                    <select
+                        id="suffix"
+                        name="suffix"
+                        class="mt-1 form-input"
+                        x-model="suffix"
+                        @change="updateValidation()"
+                    >
+                        <option value="">None</option>
+                        <option value="jr">Jr.</option>
+                        <option value="sr">Sr.</option>
+                        <option value="ii">II</option>
+                        <option value="iii">III</option>
+                        <option value="iv">IV</option>
+                        <option value="v">V</option>
+                    </select>
+                    <x-input-error class="mt-2" :messages="$errors->get('suffix')" />
+                </div>
 
-            <div>
-                <x-input-label for="company_id" :value="__('Company ID')" />
-                <x-text-input id="company_id" name="company_id" type="text" class="mt-1 block w-full" :value="old('company_id', $profile?->company_id)" />
-                <x-input-error class="mt-2" :messages="$errors->get('company_id')" />
-            </div>
+                <div>
+                    <x-input-label for="date_of_birth" :value="__('Date of Birth')" />
+                    <x-text-input
+                        id="date_of_birth"
+                        name="date_of_birth"
+                        type="date"
+                        class="mt-1 block w-full"
+                        x-bind:class="showError('dateOfBirth') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                        :value="old('date_of_birth', $profile?->date_of_birth?->format('Y-m-d'))"
+                        x-model="dateOfBirth"
+                        required
+                        @change="touched.dateOfBirth = true; updateValidation()"
+                        x-bind:aria-invalid="showError('dateOfBirth')"
+                        x-bind:aria-describedby="showError('dateOfBirth') ? 'date-of-birth-error' : null"
+                    />
+                    <p id="date-of-birth-error" x-show="showError('dateOfBirth')" class="mt-2 text-sm text-red-600" x-text="errors.dateOfBirth"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('date_of_birth')" />
+                </div>
 
-            <div>
-                <x-input-label for="position_title" :value="__('Position / Job Title')" />
-                <x-text-input id="position_title" name="position_title" type="text" class="mt-1 block w-full" :value="old('position_title', $profile?->position_title)" />
-                <x-input-error class="mt-2" :messages="$errors->get('position_title')" />
-            </div>
+                <div>
+                    <x-input-label for="gender" :value="__('Sex')" />
+                    <select
+                        id="gender"
+                        name="gender"
+                        class="mt-1 form-input"
+                        x-bind:class="showError('gender') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                        x-model="gender"
+                        required
+                        @change="touched.gender = true; updateValidation()"
+                        x-bind:aria-invalid="showError('gender')"
+                        x-bind:aria-describedby="showError('gender') ? 'gender-error' : null"
+                    >
+                        <option value="">Select sex</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                    <p id="gender-error" x-show="showError('gender')" class="mt-2 text-sm text-red-600" x-text="errors.gender"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('gender')" />
+                </div>
 
-            <div>
-                <x-input-label for="employment_status" :value="__('Employment Status')" />
-                <x-text-input id="employment_status" name="employment_status" type="text" class="mt-1 block w-full" :value="old('employment_status', $profile?->employment_status)" />
-                <x-input-error class="mt-2" :messages="$errors->get('employment_status')" />
-            </div>
-
-            <div class="md:col-span-2 rounded-card border border-grayTheme-border bg-grayTheme-light px-4 py-3">
-                <div class="text-sm font-semibold text-grayTheme-dark">Account Status</div>
-                <p class="mt-1 text-sm text-grayTheme-medium">
-                    {{ ucfirst($profile?->status ?? 'active') }}
-                </p>
-                <p class="mt-1 text-xs text-grayTheme-medium">This should be managed by admin or HR, not edited directly by the user.</p>
-            </div>
-
-            <div>
-                <x-input-label for="date_hired" :value="__('Date Hired')" />
-                <x-text-input id="date_hired" name="date_hired" type="date" class="mt-1 block w-full" :value="old('date_hired', $profile?->date_hired?->format('Y-m-d'))" />
-                <x-input-error class="mt-2" :messages="$errors->get('date_hired')" />
-            </div>
-
-            <div>
-                <x-input-label for="region" :value="__('Region')" />
-                <x-text-input id="region" name="region" type="text" class="mt-1 block w-full" :value="old('region', $profile?->region)" />
-                <x-input-error class="mt-2" :messages="$errors->get('region')" />
-            </div>
-
-            <div>
-                <x-input-label for="branch" :value="__('Branch')" />
-                <x-text-input id="branch" name="branch" type="text" class="mt-1 block w-full" :value="old('branch', $profile?->branch)" />
-                <x-input-error class="mt-2" :messages="$errors->get('branch')" />
-            </div>
-
-            <div>
-                <x-input-label for="tesda_registry_number" :value="__('TESDA Registry Number')" />
-                <x-text-input id="tesda_registry_number" name="tesda_registry_number" type="text" class="mt-1 block w-full" :value="old('tesda_registry_number', $profile?->tesda_registry_number)" />
-                <x-input-error class="mt-2" :messages="$errors->get('tesda_registry_number')" />
-            </div>
-
-            <div>
-                <x-input-label for="qualification_title" :value="__('Qualification Title')" />
-                <x-text-input id="qualification_title" name="qualification_title" type="text" class="mt-1 block w-full" :value="old('qualification_title', $profile?->qualification_title)" />
-                <x-input-error class="mt-2" :messages="$errors->get('qualification_title')" />
+                <div>
+                    <x-input-label for="contact_number" :value="__('Contact Number')" />
+                    <x-text-input
+                        id="contact_number"
+                        name="contact_number"
+                        type="text"
+                        class="mt-1 block w-full"
+                        x-bind:class="showError('contactNumber') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                        :value="old('contact_number', $profile?->contact_number)"
+                        placeholder="09123456789"
+                        inputmode="numeric"
+                        autocomplete="tel"
+                        maxlength="11"
+                        pattern="^09\d{9}$"
+                        required
+                        x-model="contactNumber"
+                        @input="touched.contactNumber = true; handleContactInput()"
+                        @blur="touched.contactNumber = true; updateValidation()"
+                        x-bind:aria-invalid="showError('contactNumber')"
+                        x-bind:aria-describedby="showError('contactNumber') ? 'contact-number-error' : null"
+                    />
+                    <p id="contact-number-error" x-show="showError('contactNumber')" class="mt-2 text-sm text-red-600" x-text="errors.contactNumber"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('contact_number')" />
+                </div>
             </div>
         </div>
 
         <div>
-            <x-input-label for="address" :value="__('Address')" />
-            <textarea id="address" name="address" class="mt-1 form-input" rows="3">{{ old('address', $profile?->address) }}</textarea>
+            <x-input-label class="text-base sm:text-[1.05rem]" for="address" :value="__('Address')" />
+            <textarea
+                id="address"
+                name="address"
+                class="mt-2 form-input min-h-[8rem]"
+                x-bind:class="showError('address') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                rows="3"
+                placeholder="Enter complete address"
+                required
+                x-model.trim="address"
+                @input="touched.address = true; updateValidation()"
+                @blur="touched.address = true; updateValidation()"
+                x-bind:aria-invalid="showError('address')"
+                x-bind:aria-describedby="showError('address') ? 'address-error' : null"
+            >{{ old('address', $profile?->address) }}</textarea>
+            <p class="mt-2 text-base leading-relaxed text-grayTheme-medium">Street name, building number, subdivision, barangay, city, and other necessary address details.</p>
+            <p id="address-error" x-show="showError('address')" class="mt-2 text-sm text-red-600" x-text="errors.address"></p>
             <x-input-error class="mt-2" :messages="$errors->get('address')" />
+        </div>
+
+        <div class="space-y-4">
+            <h3 class="text-base font-semibold text-grayTheme-dark">Employment Details</h3>
+
+            <div class="grid gap-6 md:grid-cols-2">
+                <div>
+                    <x-input-label for="employment_status" :value="__('Employment Status')" />
+                    <select
+                        id="employment_status"
+                        name="employment_status"
+                        class="mt-1 form-input"
+                        x-bind:class="showError('employmentStatus') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                        x-model="employmentStatus"
+                        required
+                        @change="updateValidation()"
+                        @blur="touched.employmentStatus = true; updateValidation()"
+                        x-bind:aria-invalid="showError('employmentStatus')"
+                        x-bind:aria-describedby="showError('employmentStatus') ? 'employment-status-error' : null"
+                    >
+                        <option value="">Select status</option>
+                        <option value="regular">Regular</option>
+                        <option value="probationary">Probationary</option>
+                        <option value="contractual">Contractual</option>
+                        <option value="part-time">Part-time</option>
+                        <option value="internship">Internship</option>
+                        <option value="self-employed">Self-employed</option>
+                        <option value="unemployed">Unemployed</option>
+                    </select>
+                    <p id="employment-status-error" x-show="showError('employmentStatus')" class="mt-2 text-sm text-red-600" x-text="errors.employmentStatus"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('employment_status')" />
+                </div>
+
+                <div class="md:col-span-2">
+                    <x-input-label class="text-base sm:text-[1.05rem]" :value="__('Position / Job Role')" />
+                    <p class="mt-1 text-base leading-relaxed text-grayTheme-medium">Select one role or both roles if the user is assigned as both a trainer and an assessor.</p>
+                    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                        <label class="flex items-center gap-3 rounded-lg border border-grayTheme-border bg-white px-4 py-3 text-sm font-medium text-grayTheme-dark shadow-sm transition hover:border-primary/50">
+                            <input
+                                type="checkbox"
+                                name="position_roles[]"
+                                value="trainer"
+                                class="rounded border-grayTheme-border text-primary focus:ring-primary/30"
+                                x-model="positionRoles"
+                                @change="touched.positionRoles = true; updateValidation()"
+                            />
+                            <span>Trainer</span>
+                        </label>
+
+                        <label class="flex items-center gap-3 rounded-lg border border-grayTheme-border bg-white px-4 py-3 text-sm font-medium text-grayTheme-dark shadow-sm transition hover:border-primary/50">
+                            <input
+                                type="checkbox"
+                                name="position_roles[]"
+                                value="assessor"
+                                class="rounded border-grayTheme-border text-primary focus:ring-primary/30"
+                                x-model="positionRoles"
+                                @change="touched.positionRoles = true; updateValidation()"
+                            />
+                            <span>Assessor</span>
+                        </label>
+
+                    </div>
+                    <p id="position-roles-error" x-show="showError('positionRoles')" class="mt-2 text-sm text-red-600" x-text="errors.positionRoles"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('position_roles')" />
+                </div>
+
+                <div>
+                    <x-input-label for="company_id" :value="__('Company ID')" />
+                    <x-text-input
+                        id="company_id"
+                        name="company_id"
+                        type="text"
+                        class="mt-1 block w-full"
+                        x-bind:class="showError('companyId') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                        :value="old('company_id', $profile?->company_id)"
+                        placeholder="EMP-00123"
+                        maxlength="255"
+                        required
+                        x-model.trim="companyId"
+                        @input="touched.companyId = true; updateValidation()"
+                        @blur="touched.companyId = true; updateValidation()"
+                        x-bind:aria-invalid="showError('companyId')"
+                        x-bind:aria-describedby="showError('companyId') ? 'company-id-error' : null"
+                    />
+                    <p id="company-id-error" x-show="showError('companyId')" class="mt-2 text-sm text-red-600" x-text="errors.companyId"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('company_id')" />
+                </div>
+
+                <div>
+                    <x-input-label for="date_hired" :value="__('Date Hired')" />
+                    <x-text-input
+                        id="date_hired"
+                        name="date_hired"
+                        type="date"
+                        class="mt-1 block w-full"
+                        x-bind:class="showError('dateHired') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                        :value="old('date_hired', $profile?->date_hired?->format('Y-m-d'))"
+                        x-model="dateHired"
+                        required
+                        @change="touched.dateHired = true; updateValidation()"
+                        x-bind:aria-invalid="showError('dateHired')"
+                        x-bind:aria-describedby="showError('dateHired') ? 'date-hired-error' : null"
+                    />
+                    <p id="date-hired-error" x-show="showError('dateHired')" class="mt-2 text-sm text-red-600" x-text="errors.dateHired"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('date_hired')" />
+                </div>
+
+                <div>
+                    <x-input-label for="tesda_registry_number" :value="__('TESDA Registry Number')" />
+                    <x-text-input
+                        id="tesda_registry_number"
+                        name="tesda_registry_number"
+                        type="text"
+                        class="mt-1 block w-full"
+                        x-bind:class="showError('tesdaRegistryNumber') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                        :value="old('tesda_registry_number', $profile?->tesda_registry_number)"
+                        placeholder="TESDA-2026-0001"
+                        maxlength="255"
+                        required
+                        x-model.trim="tesdaRegistryNumber"
+                        @input="touched.tesdaRegistryNumber = true; updateValidation()"
+                        @blur="touched.tesdaRegistryNumber = true; updateValidation()"
+                        x-bind:aria-invalid="showError('tesdaRegistryNumber')"
+                        x-bind:aria-describedby="showError('tesdaRegistryNumber') ? 'tesda-registry-error' : null"
+                    />
+                    <p id="tesda-registry-error" x-show="showError('tesdaRegistryNumber')" class="mt-2 text-sm text-red-600" x-text="errors.tesdaRegistryNumber"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('tesda_registry_number')" />
+                </div>
+
+                <div>
+                    <x-input-label for="qualification_title" :value="__('Qualification Title')" />
+                    <x-text-input
+                        id="qualification_title"
+                        name="qualification_title"
+                        type="text"
+                        class="mt-1 block w-full"
+                        x-bind:class="showError('qualificationTitle') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                        :value="old('qualification_title', $profile?->qualification_title)"
+                        placeholder="Automotive Servicing NC II"
+                        maxlength="255"
+                        x-model.trim="qualificationTitle"
+                        @input="updateValidation()"
+                        @blur="touched.qualificationTitle = true; updateValidation()"
+                        x-bind:aria-invalid="showError('qualificationTitle')"
+                        x-bind:aria-describedby="showError('qualificationTitle') ? 'qualification-title-error' : null"
+                    />
+                    <p id="qualification-title-error" x-show="showError('qualificationTitle')" class="mt-2 text-sm text-red-600" x-text="errors.qualificationTitle"></p>
+                    <x-input-error class="mt-2" :messages="$errors->get('qualification_title')" />
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-card border border-grayTheme-border bg-grayTheme-light px-4 py-3">
+            <div class="text-sm font-semibold text-grayTheme-dark">Account Status</div>
+            <p class="mt-1 text-sm text-grayTheme-medium">
+                {{ ucfirst($profile?->status ?? 'active') }}
+            </p>
+            <p class="mt-1 text-xs text-grayTheme-medium">This should be managed by admin or HR, not edited directly by the user.</p>
         </div>
 
         <div>
             <x-input-label for="remarks" :value="__('Remarks')" />
-            <textarea id="remarks" name="remarks" class="mt-1 form-input" rows="3">{{ old('remarks', $profile?->remarks) }}</textarea>
+            <textarea
+                id="remarks"
+                name="remarks"
+                class="mt-1 form-input"
+                x-bind:class="showError('remarks') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                rows="3"
+                placeholder="Add any additional notes"
+                x-model.trim="remarks"
+                @input="updateValidation()"
+                @blur="touched.remarks = true; updateValidation()"
+                x-bind:aria-invalid="showError('remarks')"
+                x-bind:aria-describedby="showError('remarks') ? 'remarks-error' : null"
+            >{{ old('remarks', $profile?->remarks) }}</textarea>
+            <p id="remarks-error" x-show="showError('remarks')" class="mt-2 text-sm text-red-600" x-text="errors.remarks"></p>
             <x-input-error class="mt-2" :messages="$errors->get('remarks')" />
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-primary-button x-bind:disabled="loading || !isDirty() || hasErrors()" x-bind:class="(loading || !isDirty() || hasErrors()) ? 'opacity-60 cursor-not-allowed' : ''">
+                {{ __('Save') }}
+            </x-primary-button>
 
             @if (session('status') === 'profile-details-updated')
                 <p

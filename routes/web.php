@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/account/notifications', [ProfileController::class, 'notifications'])->name('account.notifications');
     Route::get('/account/settings', [ProfileController::class, 'settings'])->name('account.settings');
     Route::patch('/account/profile', [ProfileController::class, 'update'])->name('account.profile.update');
+    Route::patch('/account/profile/photo', [ProfileController::class, 'removePhoto'])->name('account.profile.photo.remove');
     Route::patch('/account/profile/details', [ProfileDetailsController::class, 'update'])->name('account.profile.details');
     Route::delete('/account/profile', [ProfileController::class, 'destroy'])->name('account.profile.destroy');
 

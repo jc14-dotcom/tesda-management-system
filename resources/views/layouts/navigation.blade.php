@@ -4,9 +4,20 @@
 >
     <!-- Primary Navigation Menu -->
     <div class="page-container">
-        <div class="flex justify-end h-16">
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+        <div class="flex h-16 items-center">
+            <div class="hidden sm:flex items-center">
+                <button type="button" @click="toggleDesktopSidebar()" aria-controls="app-sidebar" :aria-expanded="(!desktopCollapsed).toString()" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary-hover bg-white text-primary shadow-card transition hover:bg-primary-soft hover:text-primary-hover">
+                    <span class="sr-only">Toggle sidebar</span>
+                    <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path :class="{'hidden': !desktopCollapsed, 'inline-flex': desktopCollapsed }" class="hidden" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4 12h16" />
+                        <path :class="{'hidden': desktopCollapsed, 'inline-flex': ! desktopCollapsed }" class="inline-flex" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex flex-1 items-center justify-end">
+                <!-- Settings Dropdown -->
+                <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-semibold text-grayTheme-medium bg-white hover:text-primary hover:bg-primary-soft focus:outline-none transition ease-in-out duration-150">
@@ -37,17 +48,18 @@
                         </form>
                     </x-slot>
                 </x-dropdown>
-            </div>
+                </div>
 
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="mobileOpen = ! mobileOpen" aria-controls="app-sidebar" :aria-expanded="mobileOpen.toString()" class="inline-flex items-center justify-center rounded-md p-2 text-grayTheme-medium transition duration-150 ease-in-out hover:bg-primary-soft hover:text-primary focus:bg-primary-soft focus:text-primary focus:outline-none">
-                    <span class="sr-only">Toggle sidebar</span>
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': mobileOpen, 'inline-flex': ! mobileOpen }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! mobileOpen, 'inline-flex': mobileOpen }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+                <!-- Hamburger -->
+                <div class="-me-2 flex items-center sm:hidden">
+                    <button @click="mobileOpen = ! mobileOpen" aria-controls="app-sidebar" :aria-expanded="mobileOpen.toString()" class="inline-flex items-center justify-center rounded-md p-2 text-grayTheme-medium transition duration-150 ease-in-out hover:bg-primary-soft hover:text-primary focus:bg-primary-soft focus:text-primary focus:outline-none">
+                        <span class="sr-only">Toggle sidebar</span>
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path :class="{'hidden': mobileOpen, 'inline-flex': ! mobileOpen }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path :class="{'hidden': ! mobileOpen, 'inline-flex': mobileOpen }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

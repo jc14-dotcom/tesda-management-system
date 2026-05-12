@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Certificate;
+use App\Models\User;
 use App\Support\CacheBuster;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -140,7 +141,7 @@ class ProfileController extends Controller
         $cacheVersion = CacheBuster::userVersion($user->id);
         $tabCacheTtl = now()->addMinutes(30);
 
-        $cacheKey = "user:{$user->id}:certificates:v{$cacheVersion}:status={$certStatus}:window={$certWindow}:page={$page}";
+        $cacheKey = "user:{$user->id}:certificates-ids:v{$cacheVersion}:status={$certStatus}:window={$certWindow}:page={$page}";
 
         $cached = Cache::remember($cacheKey, $tabCacheTtl, function () use ($user, $certStatus, $certWindow, $page, $perPage) {
             $makeQuery = function () use ($user, $certStatus, $certWindow) {
@@ -224,28 +225,40 @@ class ProfileController extends Controller
         $tabCacheTtl = now()->addMinutes(30);
         $selectCacheTtl = now()->addHours(2);
 
-        $cacheKey = "user:{$user->id}:documents:v{$cacheVersion}:type={$docType}:page={$page}";
+        $cacheKey = "user:{$user->id}:documents-ids:v{$cacheVersion}:type={$docType}:page={$page}";
 
         $cached = Cache::remember($cacheKey, $tabCacheTtl, function () use ($user, $docType, $page, $perPage) {
-            $baseQuery = $user->documents();
+            $makeQuery = function () use ($user, $docType) {
+                $q = $user->documents();
+                if ($docType !== 'all') {
+                    $q->where('type', $docType);
+                }
+                return $q;
+            };
 
-            if ($docType !== 'all') {
-                $baseQuery->where('type', $docType);
-            }
-
-            $total = (clone $baseQuery)->count();
-
-            $items = (clone $baseQuery)
-                ->select(['id', 'user_id', 'type', 'document_name', 'certificate_no', 'issued_on', 'valid_until', 'original_name', 'created_at'])
+            $total = $makeQuery()->count();
+            $ids   = $makeQuery()
                 ->orderByDesc('created_at')
                 ->forPage($page, $perPage)
-                ->get();
+                ->pluck('id')
+                ->all();
 
-            return ['items' => $items, 'total' => $total];
+            return ['ids' => $ids, 'total' => $total];
         });
 
+        $documentsItems = collect();
+        if (!empty($cached['ids'])) {
+            $idPositions = array_flip($cached['ids']);
+            $documentsItems = $user->documents()
+                ->select(['id', 'user_id', 'type', 'document_name', 'certificate_no', 'issued_on', 'valid_until', 'original_name', 'created_at'])
+                ->whereIn('id', $cached['ids'])
+                ->get()
+                ->sortBy(fn($d) => $idPositions[$d->id] ?? PHP_INT_MAX)
+                ->values();
+        }
+
         $documents = new LengthAwarePaginator(
-            $cached['items'],
+            $documentsItems,
             $cached['total'],
             $perPage,
             $page,
@@ -325,7 +338,7 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request)
     {
         $user = $request->user();
         $validated = $request->validated();
@@ -359,7 +372,42 @@ class ProfileController extends Controller
         CacheBuster::bumpUser($user->id);
         CacheBuster::bumpAdminUsers();
 
+        if ($request->expectsJson()) {
+            $user->refresh();
+            return response()->json([
+                'message' => 'Profile updated',
+                'profile_photo_url' => $user->profile?->profile_photo_url ?? null,
+            ]);
+        }
+
         return Redirect::route('account.profile')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Remove the user's profile photo.
+     */
+    public function removePhoto(Request $request)
+    {
+        $user = $request->user()->load('profile');
+        $profile = $user->profile;
+
+        if ($profile?->profile_photo_path && Storage::disk('public')->exists($profile->profile_photo_path)) {
+            Storage::disk('public')->delete($profile->profile_photo_path);
+        }
+
+        $user->profile()->updateOrCreate(
+            ['user_id' => $user->id],
+            ['profile_photo_path' => null]
+        );
+
+        CacheBuster::bumpUser($user->id);
+        CacheBuster::bumpAdminUsers();
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Profile photo removed']);
+        }
+
+        return Redirect::route('account.profile')->with('status', 'profile-photo-removed');
     }
 
     /**
@@ -375,7 +423,7 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        User::destroy($user->id);
 
         CacheBuster::bumpAdminUsers();
 

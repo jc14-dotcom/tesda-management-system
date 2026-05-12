@@ -26,13 +26,6 @@
                     </span>
                 </a>
 
-                <button type="button" @click="toggleDesktopSidebar()" aria-controls="app-sidebar" :aria-expanded="(!desktopCollapsed).toString()" class="absolute right-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary-hover bg-white text-primary shadow-card transition hover:bg-primary-soft hover:text-primary-hover">
-                    <span class="sr-only">Toggle sidebar</span>
-                    <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': !desktopCollapsed, 'inline-flex': desktopCollapsed }" class="hidden" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4 12h16" />
-                        <path :class="{'hidden': desktopCollapsed, 'inline-flex': ! desktopCollapsed }" class="inline-flex" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
             </div>
         </div>
 
