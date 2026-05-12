@@ -1,4 +1,4 @@
-<section class="space-y-6">
+<section>
     <header>
         <h2 class="text-lg font-medium text-gray-900">
             {{ __('Delete Account') }}
@@ -15,7 +15,7 @@
     >{{ __('Delete Account') }}</x-danger-button>
 
     <x-modal name="confirm-user-deletion" :show="$errors->userDeletion->isNotEmpty()" focusable>
-        <form method="post" action="{{ route('profile.destroy') }}" class="p-6">
+        <form method="post" action="{{ route('account.profile.destroy') }}" class="p-6">
             @csrf
             @method('delete')
 

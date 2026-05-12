@@ -110,7 +110,7 @@
                 </select>
             </div>
             <div>
-                <label class="text-xs font-semibold uppercase text-grayTheme-medium" for="cert_window">Expiration Window</label>
+                <label class="text-xs font-semibold uppercase text.grayTheme-medium" for="cert_window">Expiration Window</label>
                 <select id="cert_window" name="cert_window" class="mt-1 form-input">
                     <option value="0" @selected($certWindow === 0)>All dates</option>
                     <option value="30" @selected($certWindow === 30)>Next 30 days</option>
@@ -144,7 +144,7 @@
                                 <td colspan="7" class="py-4 text-center text-gray-500">No certificates yet.</td>
                             </tr>
                         @else
-                            @include('user.profile.partials.certificate-rows', ['certificates' => $certificates])
+                            @include('user.certificates.partials.certificate-rows', ['certificates' => $certificates])
                         @endif
                     </tbody>
                 </table>

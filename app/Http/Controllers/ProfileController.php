@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Certificate;
 use App\Support\CacheBuster;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,11 +33,84 @@ class ProfileController extends Controller
             ];
         });
 
-        return view('user.profile.dashboard', [
+        $sectionsKey = "user:{$user->id}:dashboard:sections:v{$cacheVersion}";
+        $sections = Cache::remember($sectionsKey, now()->addMinutes(30), function () use ($user) {
+            $now = now()->toDateString();
+
+            $expiring30 = $user->certificates()->whereNotNull('expiration_date')
+                ->where('expiration_date', '>=', $now)
+                ->where('expiration_date', '<=', now()->addDays(30)->toDateString())
+                ->count();
+
+            $expiring60 = $user->certificates()->whereNotNull('expiration_date')
+                ->where('expiration_date', '>=', $now)
+                ->where('expiration_date', '<=', now()->addDays(60)->toDateString())
+                ->count();
+
+            $expiring90 = $user->certificates()->whereNotNull('expiration_date')
+                ->where('expiration_date', '>=', $now)
+                ->where('expiration_date', '<=', now()->addDays(90)->toDateString())
+                ->count();
+
+            $expiringList = $user->certificates()
+                ->select(['id', 'certificate_name', 'certificate_type', 'expiration_date', 'status'])
+                ->whereNotNull('expiration_date')
+                ->where('expiration_date', '>=', $now)
+                ->orderBy('expiration_date')
+                ->limit(5)
+                ->get()
+                ->map(fn($c) => [
+                    'name' => $c->certificate_name,
+                    'type' => $c->certificate_type_label,
+                    'date' => $c->expiration_date->format('Y-m-d'),
+                    'status' => ucfirst($c->status),
+                ])->all();
+
+            $recentUploads = $user->documents()
+                ->select(['id', 'document_name', 'original_name', 'type', 'created_at'])
+                ->orderByDesc('created_at')
+                ->limit(3)
+                ->get()
+                ->map(fn($d) => [
+                    'file' => $d->document_name ?? $d->original_name,
+                    'type' => ucfirst($d->type ?? 'document'),
+                    'time' => $d->created_at->diffForHumans(),
+                ])->all();
+
+            $typeCounts = $user->certificates()
+                ->select(['certificate_type'])
+                ->get()
+                ->countBy('certificate_type');
+            $total = $typeCounts->sum();
+            $programs = $typeCounts->sortDesc()->take(4)->map(function ($count, $type) use ($total) {
+                return [
+                    'label' => Certificate::TYPE_LABELS[$type] ?? ucfirst((string) $type),
+                    'value' => $count,
+                    'percent' => $total > 0 ? (int) round($count / $total * 100) : 0,
+                ];
+            })->values()->all();
+
+            return [
+                'expiring30' => $expiring30,
+                'expiring60' => $expiring60,
+                'expiring90' => $expiring90,
+                'expiringList' => $expiringList,
+                'recentUploads' => $recentUploads,
+                'programs' => $programs,
+            ];
+        });
+
+        return view('user.dashboard', [
             'user' => $user,
             'profile' => $user->profile,
             'certificatesCount' => $counts['certificatesCount'],
             'documentsCount' => $counts['documentsCount'],
+            'expiringSoon30' => $sections['expiring30'],
+            'expiring60' => $sections['expiring60'],
+            'expiring90' => $sections['expiring90'],
+            'expiring' => $sections['expiringList'],
+            'uploads' => $sections['recentUploads'],
+            'programs' => $sections['programs'],
         ]);
     }
 
@@ -47,7 +121,7 @@ class ProfileController extends Controller
     {
         $user = $request->user()->load('profile');
 
-        return view('user.profile.info', [
+        return view('user.profile.index', [
             'user' => $user,
             'profile' => $user->profile,
         ]);
@@ -69,7 +143,7 @@ class ProfileController extends Controller
         $cacheKey = "user:{$user->id}:certificates:v{$cacheVersion}:status={$certStatus}:window={$certWindow}:page={$page}";
 
         $cached = Cache::remember($cacheKey, $tabCacheTtl, function () use ($user, $certStatus, $certWindow, $page, $perPage) {
-            $baseQuery = $user->certificates()->select(['id']);
+            $baseQuery = $user->certificates();
 
             if ($certStatus !== 'all') {
                 $baseQuery->where('status', $certStatus);
@@ -84,40 +158,24 @@ class ProfileController extends Controller
                     ]);
             }
 
-            $ids = (clone $baseQuery)
-                ->orderByDesc('expiration_date')
-                ->forPage($page, $perPage)
-                ->pluck('id')
-                ->all();
+            $total = (clone $baseQuery)->count();
 
-            return [
-                'ids' => $ids,
-                'total' => (clone $baseQuery)->count(),
-            ];
-        });
-
-        $certificatesItems = collect();
-
-        if (!empty($cached['ids'])) {
-            $idPositions = array_flip($cached['ids']);
-
-            $certificatesItems = $user->certificates()
+            $items = (clone $baseQuery)
                 ->select(['id', 'user_id', 'certificate_name', 'certificate_type', 'qualification_title', 'expiration_date', 'status'])
                 ->with(['documents' => function ($query) {
                     $query->select(['id', 'certificate_id', 'document_name', 'original_name', 'created_at'])
                         ->latest();
                 }])
-                ->whereIn('id', $cached['ids'])
-                ->get()
-                ->sortBy(function ($certificate) use ($idPositions) {
-                    return $idPositions[$certificate->id] ?? PHP_INT_MAX;
-                })
-                ->values();
-        }
+                ->orderByDesc('expiration_date')
+                ->forPage($page, $perPage)
+                ->get();
+
+            return ['items' => $items, 'total' => $total];
+        });
 
         $certificates = new LengthAwarePaginator(
-            $certificatesItems,
-            $cached['total'] ?? 0,
+            $cached['items'],
+            $cached['total'],
             $perPage,
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
@@ -127,14 +185,14 @@ class ProfileController extends Controller
 
         if ($request->boolean('certificates_partial')) {
             return response()->json([
-                'html' => view('profile.partials.certificate-rows', [
+                'html' => view('user.certificates.partials.certificate-rows', [
                     'certificates' => $certificates,
                 ])->render(),
                 'nextUrl' => $certificates->nextPageUrl(),
             ]);
         }
 
-        return view('user.profile.certificates', [
+        return view('user.certificates.index', [
             'user' => $user,
             'profile' => $user->profile,
             'certificates' => $certificates,
@@ -159,42 +217,26 @@ class ProfileController extends Controller
         $cacheKey = "user:{$user->id}:documents:v{$cacheVersion}:type={$docType}:page={$page}";
 
         $cached = Cache::remember($cacheKey, $tabCacheTtl, function () use ($user, $docType, $page, $perPage) {
-            $baseQuery = $user->documents()->select(['id']);
+            $baseQuery = $user->documents();
 
             if ($docType !== 'all') {
                 $baseQuery->where('type', $docType);
             }
 
-            $ids = (clone $baseQuery)
+            $total = (clone $baseQuery)->count();
+
+            $items = (clone $baseQuery)
+                ->select(['id', 'user_id', 'type', 'document_name', 'certificate_no', 'issued_on', 'valid_until', 'original_name', 'created_at'])
                 ->orderByDesc('created_at')
                 ->forPage($page, $perPage)
-                ->pluck('id')
-                ->all();
+                ->get();
 
-            return [
-                'ids' => $ids,
-                'total' => (clone $baseQuery)->count(),
-            ];
+            return ['items' => $items, 'total' => $total];
         });
 
-        $documentsItems = collect();
-
-        if (!empty($cached['ids'])) {
-            $idPositions = array_flip($cached['ids']);
-
-            $documentsItems = $user->documents()
-                ->select(['id', 'user_id', 'type', 'document_name', 'certificate_no', 'issued_on', 'valid_until', 'original_name', 'created_at'])
-                ->whereIn('id', $cached['ids'])
-                ->get()
-                ->sortBy(function ($document) use ($idPositions) {
-                    return $idPositions[$document->id] ?? PHP_INT_MAX;
-                })
-                ->values();
-        }
-
         $documents = new LengthAwarePaginator(
-            $documentsItems,
-            $cached['total'] ?? 0,
+            $cached['items'],
+            $cached['total'],
             $perPage,
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
@@ -228,14 +270,14 @@ class ProfileController extends Controller
 
         if ($request->boolean('documents_partial')) {
             return response()->json([
-                'html' => view('profile.partials.document-cards', [
+                'html' => view('user.documents.partials.document-cards', [
                     'documents' => $documents,
                 ])->render(),
                 'nextUrl' => $documents->nextPageUrl(),
             ]);
         }
 
-        return view('user.profile.documents', [
+        return view('user.documents.index', [
             'user' => $user,
             'profile' => $user->profile,
             'documents' => $documents,
@@ -251,7 +293,7 @@ class ProfileController extends Controller
     {
         $user = $request->user()->load('profile');
 
-        return view('user.profile.notifications', [
+        return view('user.notifications.index', [
             'user' => $user,
             'profile' => $user->profile,
         ]);
@@ -264,7 +306,7 @@ class ProfileController extends Controller
     {
         $user = $request->user()->load('profile');
 
-        return view('user.profile.settings', [
+        return view('user.settings.index', [
             'user' => $user,
             'profile' => $user->profile,
         ]);
@@ -307,7 +349,7 @@ class ProfileController extends Controller
         CacheBuster::bumpUser($user->id);
         CacheBuster::bumpAdminUsers();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return Redirect::route('account.profile')->with('status', 'profile-updated');
     }
 
     /**

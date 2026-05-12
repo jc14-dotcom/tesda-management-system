@@ -10,11 +10,11 @@
             <section class="p-4 sm:p-8 surface">
                 <div class="mt-6 space-y-6">
                     <div id="update-password" class="max-w-xl">
-                        @include('user.profile.partials.update-password-form')
+                        @include('user.settings.partials.update-password-form')
                     </div>
 
                     <div id="delete-account" class="max-w-xl">
-                        @include('user.profile.partials.delete-user-form')
+                        @include('user.settings.partials.delete-user-form')
                     </div>
                 </div>
             </section>

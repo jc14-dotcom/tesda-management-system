@@ -8,24 +8,21 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileDetailsController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::view('/', 'welcome');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [ProfileController::class, 'dashboard'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'dashboard'])->name('profile.dashboard');
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::get('/profile/certificates', [ProfileController::class, 'certificates'])->name('profile.certificates');
-    Route::get('/profile/documents', [ProfileController::class, 'documents'])->name('profile.documents');
-    Route::get('/profile/notifications', [ProfileController::class, 'notifications'])->name('profile.notifications');
-    Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::patch('/profile/details', [ProfileDetailsController::class, 'update'])->name('profile.details.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/account/profile', [ProfileController::class, 'edit'])->name('account.profile');
+    Route::get('/account/certificates', [ProfileController::class, 'certificates'])->name('account.certificates');
+    Route::get('/account/documents', [ProfileController::class, 'documents'])->name('account.documents');
+    Route::get('/account/notifications', [ProfileController::class, 'notifications'])->name('account.notifications');
+    Route::get('/account/settings', [ProfileController::class, 'settings'])->name('account.settings');
+    Route::patch('/account/profile', [ProfileController::class, 'update'])->name('account.profile.update');
+    Route::patch('/account/profile/details', [ProfileDetailsController::class, 'update'])->name('account.profile.details');
+    Route::delete('/account/profile', [ProfileController::class, 'destroy'])->name('account.profile.destroy');
 
     Route::post('/certificates', [CertificateController::class, 'store'])->name('certificates.store');
     Route::delete('/certificates/{certificate}', [CertificateController::class, 'destroy'])->name('certificates.destroy');

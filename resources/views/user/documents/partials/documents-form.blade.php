@@ -43,7 +43,7 @@
         <div class="grid gap-4 md:grid-cols-2">
             <div class="md:col-span-2">
                 <x-input-label for="document_name" :value="__('Document Name')" />
-                <x-text-input id="document_name" name="document_name" type="text" class="mt-1 block w-full" :value="old('document_name')" required placeholder="e.g. Driver’s License, Diploma, NBI Clearance" />
+                <x-text-input id="document_name" name="document_name" type="text" class="mt-1 block w-full" :value="old('document_name')" required placeholder="e.g. Driver's License, Diploma, NBI Clearance" />
                 <x-input-error class="mt-2" :messages="$errors->get('document_name')" />
             </div>
 
@@ -133,7 +133,7 @@
                 <p class="text-sm text-gray-500">No documents uploaded.</p>
             @else
                 <div class="space-y-3" x-ref="list">
-                    @include('user.profile.partials.document-cards', ['documents' => $documents])
+                    @include('user.documents.partials.document-cards', ['documents' => $documents])
                 </div>
             @endif
 
@@ -187,7 +187,7 @@
                     ></iframe>
                 </div>
 
-                <aside class="border-t border-slate-200 bg-white p-5 lg:border-t-0 lg:border-l">
+                <aside class="border-t border-slate-200 bg-white p-5 lg:border-t-0 lg;border-l">
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <div class="text-sm font-semibold text-slate-700">Actions</div>
                         <div class="mt-4 space-y-3">

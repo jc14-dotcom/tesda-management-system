@@ -8,137 +8,48 @@
             />
 
             @php
-                $useSampleData = true;
-
                 $statCards = [
                     [
                         'label' => 'Total Users',
-                        'value' => $useSampleData ? 128 : $usersCount,
-                        'note' => '8 new this month',
+                        'value' => $usersCount,
+                        'note' => 'Registered accounts',
                         'tone' => 'bg-primary-soft text-primary',
                         'icon' => 'M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
                     ],
                     [
                         'label' => 'Active Users',
-                        'value' => $useSampleData ? 96 : null,
-                        'note' => '75% active this week',
+                        'value' => null,
+                        'note' => '—',
                         'tone' => 'bg-success-soft text-success',
                         'icon' => 'M9 12l2 2 4-4m5 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
                     ],
                     [
                         'label' => 'Certificates Tracked',
-                        'value' => $useSampleData ? 312 : $certificatesCount,
-                        'note' => '14 expiring soon',
+                        'value' => $certificatesCount,
+                        'note' => 'All certificates',
                         'tone' => 'bg-primary-soft text-primary',
                         'icon' => 'M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm5 4h6m-6 4h6',
                     ],
                     [
                         'label' => 'Documents Uploaded',
-                        'value' => $useSampleData ? 540 : null,
-                        'note' => '26 pending review',
+                        'value' => $documentsCount,
+                        'note' => 'All documents',
                         'tone' => 'bg-info-soft text-info',
                         'icon' => 'M5 4h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm4 4h6m-6 4h6',
                     ],
                     [
                         'label' => 'Expiring Soon',
-                        'value' => $useSampleData ? 14 : $expiringSoonCount,
+                        'value' => $expiringSoonCount,
                         'note' => 'Next 30 days',
                         'tone' => 'bg-warning-soft text-warning',
                         'icon' => 'M12 8v4l3 3m7-3A10 10 0 1 1 2 12a10 10 0 0 1 20 0Z',
                     ],
                     [
                         'label' => 'Expired',
-                        'value' => $useSampleData ? 6 : $expiredCount,
+                        'value' => $expiredCount,
                         'note' => 'Needs follow-up',
                         'tone' => 'bg-danger-soft text-danger',
                         'icon' => 'M12 9v4m0 4h.01m8.938-2A10 10 0 1 1 3.062 8a10 10 0 0 1 17.876 7Z',
-                    ],
-                ];
-
-                $expiringCertificates = [
-                    [
-                        'user' => 'Maria Santos',
-                        'certificate' => 'Bookkeeping NC II',
-                        'expires' => '2026-06-18',
-                        'status' => 'Expiring',
-                        'tone' => 'bg-warning-soft text-warning',
-                    ],
-                    [
-                        'user' => 'Ramon Cruz',
-                        'certificate' => 'Cookery NC III',
-                        'expires' => '2026-06-24',
-                        'status' => 'Expiring',
-                        'tone' => 'bg-warning-soft text-warning',
-                    ],
-                    [
-                        'user' => 'Aira Villanueva',
-                        'certificate' => 'NTTC Level I',
-                        'expires' => '2026-07-02',
-                        'status' => 'Renew',
-                        'tone' => 'bg-accent-soft text-accent-hover',
-                    ],
-                ];
-
-                $recentActivity = [
-                    [
-                        'title' => 'User profile updated',
-                        'meta' => 'Maria Santos · Profile details',
-                        'time' => '10 mins ago',
-                    ],
-                    [
-                        'title' => 'Certificate uploaded',
-                        'meta' => 'Ramon Cruz · Cookery NC III',
-                        'time' => '1 hour ago',
-                    ],
-                    [
-                        'title' => 'Admin reset password',
-                        'meta' => 'Admin · John dela Cruz',
-                        'time' => '3 hours ago',
-                    ],
-                ];
-
-                $recentUsers = [
-                    [
-                        'name' => 'John dela Cruz',
-                        'email' => 'john.delacruz@example.com',
-                        'role' => 'User',
-                        'joined' => 'May 03, 2026',
-                        'status' => 'Active',
-                    ],
-                    [
-                        'name' => 'Angelica Reyes',
-                        'email' => 'angelica.reyes@example.com',
-                        'role' => 'User',
-                        'joined' => 'May 06, 2026',
-                        'status' => 'Active',
-                    ],
-                    [
-                        'name' => 'Eric Mendoza',
-                        'email' => 'eric.mendoza@example.com',
-                        'role' => 'Admin',
-                        'joined' => 'May 08, 2026',
-                        'status' => 'Active',
-                    ],
-                ];
-
-                $recentUploads = [
-                    [
-                        'file' => 'Bookkeeping_NCII.pdf',
-                        'user' => 'Maria Santos',
-                        'type' => 'Certificate',
-                        'time' => '2 days ago',
-                    ],
-                    [
-                        'file' => 'Employment_Letter.pdf',
-                        'user' => 'Angelica Reyes',
-                        'type' => 'Document',
-                        'time' => '4 days ago',
-                    ],
-                    [
-                        'file' => 'Cookery_NCIII.jpg',
-                        'user' => 'Ramon Cruz',
-                        'type' => 'Certificate',
-                        'time' => '1 week ago',
                     ],
                 ];
             @endphp
