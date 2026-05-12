@@ -143,38 +143,48 @@ class ProfileController extends Controller
         $cacheKey = "user:{$user->id}:certificates:v{$cacheVersion}:status={$certStatus}:window={$certWindow}:page={$page}";
 
         $cached = Cache::remember($cacheKey, $tabCacheTtl, function () use ($user, $certStatus, $certWindow, $page, $perPage) {
-            $baseQuery = $user->certificates();
+            $makeQuery = function () use ($user, $certStatus, $certWindow) {
+                $q = $user->certificates();
+                if ($certStatus !== 'all') {
+                    $q->where('status', $certStatus);
+                }
+                if ($certWindow > 0) {
+                    $q->whereNotNull('expiration_date')
+                      ->whereBetween('expiration_date', [
+                          now()->toDateString(),
+                          now()->addDays($certWindow)->toDateString(),
+                      ]);
+                }
+                return $q;
+            };
 
-            if ($certStatus !== 'all') {
-                $baseQuery->where('status', $certStatus);
-            }
+            $total = $makeQuery()->count();
+            $ids   = $makeQuery()
+                ->orderByDesc('expiration_date')
+                ->forPage($page, $perPage)
+                ->pluck('id')
+                ->all();
 
-            if ($certWindow > 0) {
-                $baseQuery
-                    ->whereNotNull('expiration_date')
-                    ->whereBetween('expiration_date', [
-                        now()->toDateString(),
-                        now()->addDays($certWindow)->toDateString(),
-                    ]);
-            }
+            return ['ids' => $ids, 'total' => $total];
+        });
 
-            $total = (clone $baseQuery)->count();
-
-            $items = (clone $baseQuery)
+        $certificatesItems = collect();
+        if (!empty($cached['ids'])) {
+            $idPositions = array_flip($cached['ids']);
+            $certificatesItems = $user->certificates()
                 ->select(['id', 'user_id', 'certificate_name', 'certificate_type', 'qualification_title', 'expiration_date', 'status'])
                 ->with(['documents' => function ($query) {
                     $query->select(['id', 'certificate_id', 'document_name', 'original_name', 'created_at'])
-                        ->latest();
+                          ->latest();
                 }])
-                ->orderByDesc('expiration_date')
-                ->forPage($page, $perPage)
-                ->get();
-
-            return ['items' => $items, 'total' => $total];
-        });
+                ->whereIn('id', $cached['ids'])
+                ->get()
+                ->sortBy(fn($c) => $idPositions[$c->id] ?? PHP_INT_MAX)
+                ->values();
+        }
 
         $certificates = new LengthAwarePaginator(
-            $cached['items'],
+            $certificatesItems,
             $cached['total'],
             $perPage,
             $page,

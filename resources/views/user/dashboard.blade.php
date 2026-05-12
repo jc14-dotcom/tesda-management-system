@@ -1,11 +1,6 @@
 <x-app-layout>
     <div class="py-12">
         <div class="page-container space-y-6">
-            <x-page-header
-                title="Dashboard"
-                subtitle="Quick snapshot of your certificates, documents, and alerts."
-                eyebrow="Account"
-            />
 
             @php
                 $statCards = [
