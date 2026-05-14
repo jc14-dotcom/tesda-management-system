@@ -11,7 +11,7 @@
     $inputId = $id ?? $name;
 @endphp
 
-<div class="space-y-2" x-data="{ fileName: @js($placeholder) }">
+<div class="space-y-2" data-file-input>
     <input
         id="{{ $inputId }}"
         name="{{ $name }}"
@@ -21,8 +21,6 @@
         @endif
         @required($required)
         class="sr-only"
-        x-ref="input"
-        x-on:change="fileName = $event.target.files && $event.target.files.length ? $event.target.files[0].name : @js($placeholder)"
     />
 
     <label
@@ -42,7 +40,7 @@
                 <path d="m7 10 5-5 5 5" />
                 <path d="M12 5v12" />
             </svg>
-            <span class="max-w-[10rem] truncate" x-text="fileName"></span>
+            <span class="max-w-[10rem] truncate" data-file-name data-placeholder="{{ $placeholder }}">{{ $placeholder }}</span>
         </span>
     </label>
 </div>

@@ -19,6 +19,7 @@ class SendCertificateExpiryNotifications extends Command
      */
     public function handle()
     {
+        $notificationsEnabled = (bool) config('certificates.notifications_enabled', false);
         $days = collect(config('certificates.expiry_notice_days', [30, 14, 7, 3, 1]))
             ->map(fn ($value) => (int) $value)
             ->filter(fn ($value) => $value >= 0)
@@ -26,9 +27,13 @@ class SendCertificateExpiryNotifications extends Command
             ->sort()
             ->values();
 
-        if ($days->isEmpty()) {
+        if ($notificationsEnabled && $days->isEmpty()) {
             $this->warn('No expiry notice days configured.');
             return Command::SUCCESS;
+        }
+
+        if (! $notificationsEnabled) {
+            $this->info('Certificate expiry notifications are disabled; status updates will still run.');
         }
 
         $maxDays = (int) $days->max();
@@ -61,7 +66,7 @@ class SendCertificateExpiryNotifications extends Command
                 $certificate->status = 'valid';
             }
 
-            if ($daysUntil >= 0 && $days->contains($daysUntil)) {
+            if ($notificationsEnabled && $daysUntil >= 0 && $days->contains($daysUntil)) {
                 $notifiedDays = $certificate->notified_days ?? [];
                 if (! in_array($daysUntil, $notifiedDays, true)) {
                     $certificate->user->notify(new CertificateExpiryNotification($certificate, $daysUntil));

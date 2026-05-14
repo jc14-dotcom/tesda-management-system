@@ -86,18 +86,33 @@ class UserController extends Controller
 
         if ($request->boolean('certificates_partial')) {
             return response()->json([
-                'html' => view('admin.users.partials.certificates-rows', [
-                    'certificates' => $certificates,
-                ])->render(),
+                'items' => $certificates->map(function ($cert) {
+                    return [
+                        'id'           => $cert->id,
+                        'name'         => $cert->certificate_name,
+                        'type'         => $cert->certificate_type_label,
+                        'qualification'=> $cert->qualification_title ?? '—',
+                        'number'       => $cert->certificate_number ?? '—',
+                        'expirationDate' => $cert->expiration_date?->format('Y-m-d') ?? '—',
+                        'status'       => ucfirst($cert->status),
+                        'documents'    => $cert->documents->map(fn($d) => [
+                            'name'        => $d->document_name ?? $d->original_name,
+                            'downloadUrl' => route('documents.download', $d),
+                        ])->values()->all(),
+                    ];
+                })->values(),
                 'nextUrl' => $certificates->nextPageUrl(),
             ]);
         }
 
         if ($request->boolean('documents_partial')) {
             return response()->json([
-                'html' => view('admin.users.partials.documents-items', [
-                    'documents' => $documents,
-                ])->render(),
+                'items' => $documents->map(fn($doc) => [
+                    'id'          => $doc->id,
+                    'type'        => strtoupper($doc->type),
+                    'name'        => $doc->document_name ?? $doc->original_name,
+                    'downloadUrl' => route('documents.download', $doc),
+                ])->values(),
                 'nextUrl' => $documents->nextPageUrl(),
             ]);
         }

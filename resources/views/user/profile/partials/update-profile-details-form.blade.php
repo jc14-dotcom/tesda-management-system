@@ -10,14 +10,20 @@
         }
     @endphp
 
-    <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Personal and Employment Details') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __('Update your TESDA-related profile information.') }}
-        </p>
+    <header class="flex items-center gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft">
+            <svg class="h-5 w-5 text-accent-active" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+        </div>
+        <div>
+            <h2 class="text-base font-bold text-grayTheme-dark">
+                {{ __('Personal and Employment Details') }}
+            </h2>
+            <p class="mt-0.5 text-sm text-grayTheme-medium">
+                {{ __('Update your TESDA-related profile information.') }}
+            </p>
+        </div>
     </header>
 
     <form
@@ -47,7 +53,14 @@
         @method('patch')
 
         <div class="space-y-4">
-            <h3 class="text-base font-semibold text-grayTheme-dark">Personal Details</h3>
+        <div class="flex items-center gap-2 border-b border-grayTheme-border pb-3">
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-soft">
+                <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </div>
+            <h3 class="text-sm font-bold text-grayTheme-dark">Personal Details</h3>
+        </div>
 
             <div class="grid gap-6 md:grid-cols-2">
                 <div>
@@ -225,7 +238,14 @@
         </div>
 
         <div class="space-y-4">
-            <h3 class="text-base font-semibold text-grayTheme-dark">Employment Details</h3>
+        <div class="flex items-center gap-2 border-b border-grayTheme-border pb-3">
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
+                <svg class="h-4 w-4 text-accent-active" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h3 class="text-sm font-bold text-grayTheme-dark">Employment Details</h3>
+        </div>
 
             <div class="grid gap-6 md:grid-cols-2">
                 <div>
@@ -374,12 +394,24 @@
             </div>
         </div>
 
-        <div class="rounded-card border border-grayTheme-border bg-grayTheme-light px-4 py-3">
-            <div class="text-sm font-semibold text-grayTheme-dark">Account Status</div>
-            <p class="mt-1 text-sm text-grayTheme-medium">
-                {{ ucfirst($profile?->status ?? 'active') }}
-            </p>
-            <p class="mt-1 text-xs text-grayTheme-medium">This should be managed by admin or HR, not edited directly by the user.</p>
+        <div class="rounded-card border border-grayTheme-border bg-grayTheme-light px-4 py-4">
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <svg class="h-4 w-4 shrink-0 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    <span class="text-sm font-semibold text-grayTheme-dark">Account Status</span>
+                </div>
+                @php
+                    $status = $profile?->status ?? 'active';
+                    $statusClasses = match(strtolower($status)) {
+                        'active'   => 'bg-green-100 text-green-700 ring-1 ring-green-200',
+                        'inactive' => 'bg-red-100 text-red-700 ring-1 ring-red-200',
+                        'pending'  => 'bg-yellow-100 text-yellow-700 ring-1 ring-yellow-200',
+                        default    => 'bg-grayTheme-border text-grayTheme-medium ring-1 ring-grayTheme-border',
+                    };
+                @endphp
+                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold {{ $statusClasses }}">{{ ucfirst($status) }}</span>
+            </div>
+            <p class="mt-2 text-xs text-grayTheme-medium">This is managed by admin or HR and cannot be edited directly.</p>
         </div>
 
         <div>
@@ -402,8 +434,11 @@
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button x-bind:disabled="loading || !isDirty() || hasErrors()" x-bind:class="(loading || !isDirty() || hasErrors()) ? 'opacity-60 cursor-not-allowed' : ''">
-                {{ __('Save') }}
+            <x-primary-button class="gap-2" x-bind:disabled="loading || !isDirty() || hasErrors()" x-bind:class="(loading || !isDirty() || hasErrors()) ? 'opacity-60 cursor-not-allowed' : ''">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                {{ __('Save changes') }}
             </x-primary-button>
 
             @if (session('status') === 'profile-details-updated')
@@ -412,8 +447,11 @@
                     x-show="show"
                     x-transition
                     x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600"
-                >{{ __('Saved.') }}</p>
+                    class="inline-flex items-center gap-1.5 text-sm font-semibold text-green-600"
+                >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    {{ __('Saved.') }}
+                </p>
             @endif
         </div>
     </form>

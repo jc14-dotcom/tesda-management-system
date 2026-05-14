@@ -8,4 +8,23 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                // Split Alpine and Flowbite into named vendor chunks so browsers
+                // can cache them independently from application code.
+                // Vite 8+ requires manualChunks to be a function.
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('alpinejs')) {
+                            return 'vendor-alpine';
+                        }
+                        if (id.includes('flowbite')) {
+                            return 'vendor-flowbite';
+                        }
+                    }
+                },
+            },
+        },
+    },
 });

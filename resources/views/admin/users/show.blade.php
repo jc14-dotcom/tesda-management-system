@@ -91,6 +91,19 @@
                 <div
                     class="mt-4"
                     x-data="loadMoreList({ nextUrl: @js($certificates->nextPageUrl()), partialParam: 'certificates_partial' })"
+                    x-init="items = @js($certificates->map(fn($cert) => [
+                        'id'            => $cert->id,
+                        'name'          => $cert->certificate_name,
+                        'type'          => $cert->certificate_type_label,
+                        'qualification' => $cert->qualification_title ?? '—',
+                        'number'        => $cert->certificate_number ?? '—',
+                        'expirationDate'=> $cert->expiration_date?->format('Y-m-d') ?? '—',
+                        'status'        => ucfirst($cert->status),
+                        'documents'     => $cert->documents->map(fn($d) => [
+                            'name'        => $d->document_name ?? $d->original_name,
+                            'downloadUrl' => route('documents.download', $d),
+                        ])->values()->all(),
+                    ]))"
                 >
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
@@ -105,14 +118,32 @@
                                     <th class="py-2">Documents</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y" x-ref="list">
-                                @if ($certificates->isEmpty())
+                            <tbody class="divide-y">
+                                <template x-if="items.length === 0">
                                     <tr>
                                         <td colspan="7" class="py-4 text-center text-grayTheme-medium">No certificates found.</td>
                                     </tr>
-                                @else
-                                    @include('admin.users.partials.certificates-rows', ['certificates' => $certificates])
-                                @endif
+                                </template>
+                                <template x-for="cert in items" :key="cert.id">
+                                    <tr>
+                                        <td class="py-2 font-medium text-grayTheme-dark" x-text="cert.name"></td>
+                                        <td class="py-2" x-text="cert.type"></td>
+                                        <td class="py-2" x-text="cert.qualification"></td>
+                                        <td class="py-2" x-text="cert.number"></td>
+                                        <td class="py-2" x-text="cert.expirationDate"></td>
+                                        <td class="py-2" x-text="cert.status"></td>
+                                        <td class="py-2">
+                                            <template x-if="cert.documents.length === 0">
+                                                <span class="text-grayTheme-medium">—</span>
+                                            </template>
+                                            <template x-for="doc in cert.documents" :key="doc.downloadUrl">
+                                                <div>
+                                                    <a class="text-primary hover:text-primary-hover" :href="doc.downloadUrl" x-text="doc.name"></a>
+                                                </div>
+                                            </template>
+                                        </td>
+                                    </tr>
+                                </template>
                             </tbody>
                         </table>
                     </div>
@@ -156,14 +187,27 @@
                 <div
                     class="mt-4"
                     x-data="loadMoreList({ nextUrl: @js($documents->nextPageUrl()), partialParam: 'documents_partial' })"
+                    x-init="items = @js($documents->map(fn($doc) => [
+                        'id'          => $doc->id,
+                        'type'        => strtoupper($doc->type),
+                        'name'        => $doc->document_name ?? $doc->original_name,
+                        'downloadUrl' => route('documents.download', $doc),
+                    ]))"
                 >
-                    @if ($documents->isEmpty())
+                    <template x-if="items.length === 0">
                         <p class="text-sm text-grayTheme-medium">No documents uploaded.</p>
-                    @else
-                        <div class="space-y-2" x-ref="list">
-                            @include('admin.users.partials.documents-items', ['documents' => $documents])
-                        </div>
-                    @endif
+                    </template>
+                    <div class="space-y-2">
+                        <template x-for="doc in items" :key="doc.id">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm text-grayTheme-medium" x-text="doc.type"></div>
+                                    <div class="text-grayTheme-dark" x-text="doc.name"></div>
+                                </div>
+                                <a class="text-primary hover:text-primary-hover" :href="doc.downloadUrl">Download</a>
+                            </div>
+                        </template>
+                    </div>
 
                     <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
                         {{ $documents->links() }}

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class Profile extends Model
 {
@@ -45,6 +44,10 @@ class Profile extends Model
 
     public function getProfilePhotoUrlAttribute(): ?string
     {
-        return $this->profile_photo_path ? Storage::url($this->profile_photo_path) : null;
+        if (! $this->profile_photo_path) {
+            return null;
+        }
+
+        return route('account.profile.photo');
     }
 }

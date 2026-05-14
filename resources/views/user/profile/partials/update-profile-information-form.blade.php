@@ -1,12 +1,18 @@
 <section>
-    <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Profile Information') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __("Update your account's profile information and email address.") }}
-        </p>
+    <header class="flex items-center gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
+            <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+        </div>
+        <div>
+            <h2 class="text-base font-bold text-grayTheme-dark">
+                {{ __('Profile Information') }}
+            </h2>
+            <p class="mt-0.5 text-sm text-grayTheme-medium">
+                {{ __("Update your account's profile information and email address.") }}
+            </p>
+        </div>
     </header>
 
     <form id="send-verification" method="post" action="{{ route('verification.send') }}">
@@ -58,7 +64,7 @@
                 </div>
 
                 <p class="text-center text-sm font-semibold text-primary">Click or hover the circle to manage your photo</p>
-                <p class="text-center text-xs text-gray-500">Accepted formats: JPG, PNG, WebP, GIF, and other image files.</p>
+                <p class="text-center text-xs text-grayTheme-medium">Accepted formats: JPG, PNG, WebP, GIF, and other image files.</p>
 
                 <x-input-error class="mt-2" :messages="$errors->get('profile_photo')" />
             </div>
@@ -130,8 +136,11 @@
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button x-bind:disabled="loading || !isDirty() || hasErrors()" x-bind:class="(loading || !isDirty() || hasErrors()) ? 'opacity-60 cursor-not-allowed' : ''">
-                {{ __('Save') }}
+            <x-primary-button class="gap-2" x-bind:disabled="loading || !isDirty() || hasErrors()" x-bind:class="(loading || !isDirty() || hasErrors()) ? 'opacity-60 cursor-not-allowed' : ''">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                {{ __('Save changes') }}
             </x-primary-button>
 
             @if (session('status') === 'profile-updated')
@@ -140,8 +149,11 @@
                     x-show="show"
                     x-transition
                     x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600"
-                >{{ __('Saved.') }}</p>
+                    class="inline-flex items-center gap-1.5 text-sm font-semibold text-green-600"
+                >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    {{ __('Saved.') }}
+                </p>
             @endif
         </div>
     </form>

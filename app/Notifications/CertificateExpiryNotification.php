@@ -25,6 +25,10 @@ class CertificateExpiryNotification extends Notification
      */
     public function via(object $notifiable): array
     {
+        if (! config('certificates.notifications_enabled', false)) {
+            return [];
+        }
+
         return ['mail', 'database'];
     }
 
@@ -40,7 +44,7 @@ class CertificateExpiryNotification extends Notification
             ->subject('Certificate Expiry Notice')
             ->line("Your {$this->certificate->certificate_type_label} certificate '{$this->certificate->certificate_name}' is expiring soon.")
             ->line("Expires in {$this->daysUntilExpiry} {$daysLabel} (" . ($expirationDate ?? 'date not set') . ").")
-            ->action('View your profile', route('profile.edit'))
+                ->action('View your profile', route('account.profile'))
             ->line('Please renew or update your certificate details.');
     }
 

@@ -16,9 +16,13 @@ Route::get('/dashboard', [ProfileController::class, 'dashboard'])
 
 Route::middleware('auth')->group(function () {
     Route::get('/account/profile', [ProfileController::class, 'edit'])->name('account.profile');
+    Route::get('/account/profile/photo', [ProfileController::class, 'photo'])->name('account.profile.photo');
     Route::get('/account/certificates', [ProfileController::class, 'certificates'])->name('account.certificates');
     Route::get('/account/documents', [ProfileController::class, 'documents'])->name('account.documents');
     Route::get('/account/notifications', [ProfileController::class, 'notifications'])->name('account.notifications');
+    Route::patch('/account/notifications/read-all', [ProfileController::class, 'notificationsMarkAllRead'])->name('account.notifications.mark-all-read');
+    Route::patch('/account/notifications/{id}/read', [ProfileController::class, 'notificationMarkRead'])->name('account.notifications.mark-read');
+    Route::delete('/account/notifications/{id}', [ProfileController::class, 'notificationDelete'])->name('account.notifications.delete');
     Route::get('/account/settings', [ProfileController::class, 'settings'])->name('account.settings');
     Route::patch('/account/profile', [ProfileController::class, 'update'])->name('account.profile.update');
     Route::patch('/account/profile/photo', [ProfileController::class, 'removePhoto'])->name('account.profile.photo.remove');

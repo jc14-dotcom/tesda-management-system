@@ -2,39 +2,6 @@
     <div class="py-12">
         <div class="page-container space-y-6">
 
-            @php
-                $statCards = [
-                    [
-                        'label' => 'Total Certificates',
-                        'value' => $certificatesCount,
-                        'note' => 'All certificates',
-                        'tone' => 'bg-primary-soft text-primary',
-                        'icon' => 'M5 4h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm4 4h6m-6 4h6',
-                    ],
-                    [
-                        'label' => 'Expiring Soon',
-                        'value' => $expiringSoon30,
-                        'note' => 'Within 30 days',
-                        'tone' => 'bg-accent-soft text-accent-hover',
-                        'icon' => 'M12 8v4l3 3m7-3A10 10 0 1 1 2 12a10 10 0 0 1 20 0Z',
-                    ],
-                    [
-                        'label' => 'Documents Uploaded',
-                        'value' => $documentsCount,
-                        'note' => 'All documents',
-                        'tone' => 'bg-primary-soft text-primary',
-                        'icon' => 'M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm5 4h6m-6 4h6',
-                    ],
-                    [
-                        'label' => 'Notifications',
-                        'value' => 0,
-                        'note' => 'No new alerts',
-                        'tone' => 'bg-primary-soft text-primary',
-                        'icon' => 'M6 8a6 6 0 1 1 12 0c0 7 3 7 3 7H3s3 0 3-7Zm3 11a3 3 0 0 0 6 0',
-                    ],
-                ];
-            @endphp
-
             <div class="space-y-6">
                 <section class="rounded-3xl border border-primary/15 bg-gradient-to-br from-primary to-primary-hover p-6 text-white shadow-card sm:p-8">
                     <div class="max-w-3xl">

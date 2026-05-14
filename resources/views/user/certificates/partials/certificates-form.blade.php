@@ -123,7 +123,25 @@
 
         <div
             class="mt-3"
-            x-data="loadMoreList({ nextUrl: @js($certificates->nextPageUrl()), partialParam: 'certificates_partial' })"
+            x-data="loadMoreList({ 
+                nextUrl: @js($certificates->nextPageUrl()), 
+                partialParam: 'certificates_partial' 
+            })"
+            x-init="items = @js($certificates->map(function($cert) {
+                $firstDoc = $cert->documents->first();
+                return [
+                    'id' => $cert->id,
+                    'name' => $cert->certificate_name,
+                    'type' => $cert->certificate_type_label,
+                    'qualification' => $cert->qualification_title ?? '—',
+                    'expirationDate' => $cert->expiration_date ? $cert->expiration_date->format('M d, Y') : '—',
+                    'status' => $cert->status,
+                    'statusLabel' => ucfirst($cert->status),
+                    'hasFile' => (bool) $firstDoc,
+                    'fileUrl' => $firstDoc ? route('documents.view', $firstDoc) : null,
+                    'deleteUrl' => route('certificates.destroy', $cert),
+                ];
+            }))"
         >
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
@@ -139,13 +157,50 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y" x-ref="list">
-                        @if ($certificates->isEmpty())
+                        <template x-if="items.length === 0">
                             <tr>
                                 <td colspan="7" class="py-4 text-center text-gray-500">No certificates yet.</td>
                             </tr>
-                        @else
-                            @include('user.certificates.partials.certificate-rows', ['certificates' => $certificates])
-                        @endif
+                        </template>
+                        
+                        <template x-for="cert in items" :key="cert.id">
+                            <tr>
+                                <td class="py-2 font-medium text-grayTheme-dark" x-text="cert.name"></td>
+                                <td class="py-2 text-sm text-grayTheme-medium" x-text="cert.type"></td>
+                                <td class="py-2 text-sm text-grayTheme-medium" x-text="cert.qualification"></td>
+                                <td class="py-2">
+                                    <a 
+                                        x-show="cert.hasFile" 
+                                        :href="cert.fileUrl" 
+                                        target="_blank" 
+                                        class="text-sm font-semibold text-primary hover:underline"
+                                    >
+                                        View file
+                                    </a>
+                                    <span x-show="!cert.hasFile" class="text-xs text-grayTheme-medium">No file</span>
+                                </td>
+                                <td class="py-2 text-sm text-grayTheme-medium" x-text="cert.expirationDate"></td>
+                                <td class="py-2">
+                                    <span 
+                                        class="rounded-full px-2 py-0.5 text-xs font-semibold"
+                                        :class="{
+                                            'bg-success-soft text-success': cert.status === 'valid',
+                                            'bg-warning-soft text-warning': cert.status === 'expiring',
+                                            'bg-danger-soft text-danger': cert.status === 'expired',
+                                            'bg-grayTheme-hover text-grayTheme-medium': !['valid', 'expiring', 'expired'].includes(cert.status)
+                                        }"
+                                        x-text="cert.statusLabel"
+                                    ></span>
+                                </td>
+                                <td class="py-2">
+                                    <form method="post" :action="cert.deleteUrl" onsubmit="return confirm('Delete this certificate and all its files?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-sm font-semibold text-red-600 hover:text-red-800">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </template>
                     </tbody>
                 </table>
             </div>

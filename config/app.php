@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'perf_log_enabled' => env('PERF_LOG_ENABLED', false),
+
 ];

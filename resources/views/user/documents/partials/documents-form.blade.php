@@ -127,15 +127,82 @@
 
         <div
             class="mt-3"
-            x-data="loadMoreList({ nextUrl: @js($documents->nextPageUrl()), partialParam: 'documents_partial' })"
+            x-data="loadMoreList({ 
+                nextUrl: @js($documents->nextPageUrl()), 
+                partialParam: 'documents_partial' 
+            })"
+            x-init="items = @js($documents->map(function($doc) {
+                return [
+                    'id' => $doc->id,
+                    'name' => $doc->document_name ?? $doc->original_name,
+                    'originalName' => $doc->original_name,
+                    'type' => strtoupper($doc->type),
+                    'previewUrl' => route('documents.preview', $doc),
+                    'downloadUrl' => route('documents.download', $doc),
+                    'viewUrl' => route('documents.view', $doc),
+                    'deleteUrl' => route('documents.destroy', $doc),
+                ];
+            }))"
         >
-            @if ($documents->isEmpty())
+            <template x-if="items.length === 0">
                 <p class="text-sm text-gray-500">No documents uploaded.</p>
-            @else
-                <div class="space-y-3" x-ref="list">
-                    @include('user.documents.partials.document-cards', ['documents' => $documents])
-                </div>
-            @endif
+            </template>
+            
+            <div class="space-y-3" x-ref="list" x-show="items.length > 0">
+                <template x-for="doc in items" :key="doc.id">
+                    <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                        <button
+                            type="button"
+                            class="block w-full text-left"
+                            @click="openDocument({
+                                title: doc.name,
+                                type: doc.type,
+                                previewUrl: doc.previewUrl,
+                                downloadUrl: doc.downloadUrl,
+                                originalName: doc.originalName,
+                                viewUrl: doc.viewUrl,
+                            })"
+                        >
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="min-w-0">
+                                    <div class="text-xs font-semibold uppercase tracking-wide text-gray-500" x-text="doc.type"></div>
+                                    <div class="mt-1 truncate text-base font-semibold text-gray-900" x-text="doc.name"></div>
+                                    <div class="mt-1 text-sm text-gray-500">Click to view or print</div>
+                                </div>
+                                <div class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">Open</div>
+                            </div>
+                        </button>
+
+                        <div class="mt-4 flex flex-wrap items-center gap-3">
+                            <button 
+                                type="button" 
+                                class="text-sm font-semibold text-primary hover:text-blue-800" 
+                                @click="openDocument({
+                                    title: doc.name,
+                                    type: doc.type,
+                                    previewUrl: doc.previewUrl,
+                                    downloadUrl: doc.downloadUrl,
+                                    originalName: doc.originalName,
+                                    viewUrl: doc.viewUrl,
+                                })"
+                            >
+                                View
+                            </button>
+                            <a class="text-sm font-semibold text-primary hover:text-blue-800" :href="doc.downloadUrl">
+                                Download
+                            </a>
+
+                            <form method="post" :action="doc.deleteUrl" onsubmit="return confirm('Delete this document?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-sm font-semibold text-red-600 hover:text-red-800">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </template>
+            </div>
 
             <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
                 {{ $documents->links() }}

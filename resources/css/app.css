@@ -1,3 +1,15 @@
+@import "@fontsource/sora/400.css";
+@import "@fontsource/sora/600.css";
+@import "@fontsource/sora/700.css";
+@import "@fontsource/figtree/400.css";
+@import "@fontsource/figtree/600.css";
+@import "@fontsource/figtree/700.css";
+
+/* Ensure all @fontsource faces use font-display:swap so text stays visible
+   during font load (avoids FOIT on slower connections). */
+@font-face { font-family: 'Sora';    font-display: swap; src: local(''); }
+@font-face { font-family: 'Figtree'; font-display: swap; src: local(''); }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -111,3 +123,63 @@
 		animation: gradientShift 3s ease infinite;
 	}
 }
+
+/* ─── Sidebar layout state ───────────────────────────────────────────────────
+   html.sidebar-collapsed is applied before first paint by an inline <script>
+   in layouts/app.blade.php, eliminating layout shift on every navigation.  */
+@media (min-width: 640px) {
+	#app-sidebar                        { width: 16rem; transform: translateX(0); }
+	html.sidebar-collapsed #app-sidebar { width: 4rem; }
+
+	.layout-nav                              { margin-left: 16rem; width: calc(100% - 16rem); }
+	html.sidebar-collapsed .layout-nav       { margin-left: 4rem;  width: calc(100% - 4rem); }
+
+	.layout-main                             { margin-left: 16rem; }
+	html.sidebar-collapsed .layout-main      { margin-left: 4rem; }
+
+	.sidebar-label                           { display: inline; }
+	html.sidebar-collapsed .sidebar-label    { display: none; }
+
+	/* Desktop toggle: icon-collapsed shows when sidebar IS collapsed, icon-expanded otherwise */
+	#sidebar-desktop-toggle .icon-collapsed  { display: none; }
+	#sidebar-desktop-toggle .icon-expanded   { display: inline-flex; }
+	html.sidebar-collapsed #sidebar-desktop-toggle .icon-collapsed { display: inline-flex; }
+	html.sidebar-collapsed #sidebar-desktop-toggle .icon-expanded  { display: none; }
+}
+
+@media (max-width: 639px) {
+	#app-sidebar              { transform: translateX(-100%); width: 16rem; }
+	#app-sidebar.mobile-open  { transform: translateX(0); }
+}
+
+/* ─── Dropdown menu ──────────────────────────────────────────────────────────── */
+.dropdown-menu {
+	transform-origin: top right;
+	transition: opacity 150ms ease-out, transform 150ms ease-out;
+	opacity: 0;
+	transform: scale(0.95);
+	pointer-events: none;
+}
+.dropdown-menu.dropdown-open {
+	opacity: 1;
+	transform: scale(1);
+	pointer-events: auto;
+}
+
+/* ─── Toast ──────────────────────────────────────────────────────────────────── */
+.toast-item.toast-success { @apply border-green-200; }
+.toast-item.toast-success .toast-icon { @apply bg-green-100 text-green-600; }
+.toast-item.toast-success .toast-bar  { @apply bg-green-500; }
+
+.toast-item.toast-error { @apply border-red-200; }
+.toast-item.toast-error .toast-icon   { @apply bg-red-100 text-danger; }
+.toast-item.toast-error .toast-bar    { @apply bg-danger; }
+
+.toast-item.toast-info { @apply border-primary/20; }
+.toast-item.toast-info .toast-icon    { @apply bg-primary-soft text-primary; }
+.toast-item.toast-info .toast-bar     { @apply bg-primary; }
+
+.toast-item.toast-warning { @apply border-accent/20; }
+.toast-item.toast-warning .toast-icon { @apply bg-accent-soft text-accent-active; }
+.toast-item.toast-warning .toast-bar  { @apply bg-accent; }
+
