@@ -6,6 +6,11 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/alcatt-logo.png') }}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/alcatt-logo.png') }}">
 
         {{-- Apply sidebar collapsed state before first paint (prevents layout shift) --}}
         <script>if(localStorage.getItem('sidebar-collapsed')==='true'){document.documentElement.classList.add('sidebar-collapsed');}</script>

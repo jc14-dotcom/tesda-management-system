@@ -13,7 +13,13 @@
             </div>
 
             <div class="flex flex-1 items-center justify-end gap-2">
-                @php $unreadCount = Auth::user()->unreadNotifications()->count(); @endphp
+                @php
+                    $unreadCount = Auth::user()->unreadNotifications()->count();
+                    $isAdminUser = Auth::user()->hasRole('admin');
+                    $notificationsIndexUrl = $isAdminUser && Route::has('admin.notifications.index')
+                        ? route('admin.notifications.index')
+                        : route('account.notifications');
+                @endphp
 
                 <!-- Notification Bell + Panel (desktop) -->
                 <div class="relative hidden sm:block" id="notif-panel-wrapper">
@@ -65,7 +71,7 @@
                                     data-read="{{ $notif->read_at ? '1' : '0' }}"
                                     data-read-url="{{ route('account.notifications.mark-read', $notif->id) }}"
                                     data-delete-url="{{ route('account.notifications.delete', $notif->id) }}"
-                                    data-view-url="{{ route('account.notifications') }}"
+                                    data-view-url="{{ $notificationsIndexUrl }}"
                                     role="button"
                                     tabindex="0"
                                 >
@@ -108,7 +114,7 @@
 
                         {{-- Footer --}}
                         <div class="border-t border-grayTheme-border bg-grayTheme-light px-4 py-3">
-                            <a href="{{ route('account.notifications') }}" class="flex w-full items-center justify-center gap-1.5 text-sm font-semibold text-primary transition hover:text-primary-hover">
+                            <a href="{{ $notificationsIndexUrl }}" class="flex w-full items-center justify-center gap-1.5 text-sm font-semibold text-primary transition hover:text-primary-hover">
                                 View all notifications
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -158,6 +164,7 @@
                             <form method="POST" action="{{ route('logout') }}" id="logout-form">
                                 @csrf
                                 <x-dropdown-link :href="route('logout')"
+                                        data-turbo="false"
                                         onclick="event.preventDefault(); window.showConfirm({ title: 'Log Out?', message: 'You will be signed out of your account.', confirmText: 'Log Out', onConfirm: () => document.getElementById('logout-form').submit() })">
                                     <div class="flex items-center gap-2 text-danger">
                                         <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
