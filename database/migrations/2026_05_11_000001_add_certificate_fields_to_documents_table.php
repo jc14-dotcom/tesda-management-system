@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('documents', function (Blueprint $table) {
-            $table->string('certificate_no')->nullable()->after('document_name');
-            $table->date('issued_on')->nullable()->after('certificate_no');
-            $table->date('valid_until')->nullable()->after('issued_on');
-        });
+        // Consolidated into create_documents_table — skip if columns already exist.
+        if (! Schema::hasColumn('documents', 'certificate_no')) {
+            Schema::table('documents', function (Blueprint $table) {
+                $table->string('certificate_no')->nullable()->after('document_name');
+                $table->date('issued_on')->nullable()->after('certificate_no');
+                $table->date('valid_until')->nullable()->after('issued_on');
+            });
+        }
     }
 
     /**

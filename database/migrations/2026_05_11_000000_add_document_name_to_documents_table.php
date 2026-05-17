@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('documents', function (Blueprint $table) {
-            $table->string('document_name')->nullable()->after('certificate_id');
-        });
+        // Consolidated into create_documents_table — skip if column already exists.
+        if (! Schema::hasColumn('documents', 'document_name')) {
+            Schema::table('documents', function (Blueprint $table) {
+                $table->string('document_name')->nullable()->after('certificate_id');
+            });
+        }
     }
 
     /**

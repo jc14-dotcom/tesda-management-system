@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('profiles', function (Blueprint $table) {
-            $table->string('first_name')->nullable()->after('user_id');
-            $table->string('last_name')->nullable()->after('middle_name');
-        });
+        // Consolidated into create_profiles_table — skip if columns already exist.
+        if (! Schema::hasColumn('profiles', 'first_name')) {
+            Schema::table('profiles', function (Blueprint $table) {
+                $table->string('first_name')->nullable()->after('user_id');
+                $table->string('last_name')->nullable()->after('middle_name');
+            });
+        }
     }
 
     /**

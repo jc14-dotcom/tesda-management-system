@@ -107,6 +107,8 @@ class ProfileController extends Controller
             ];
         });
 
+        $unreadNotificationsCount = $user->unreadNotifications()->count();
+
         $statCards = [
             [
                 'label' => 'Total Certificates',
@@ -131,9 +133,9 @@ class ProfileController extends Controller
             ],
             [
                 'label' => 'Notifications',
-                'value' => 0,
-                'note' => 'No new alerts',
-                'tone' => 'bg-primary-soft text-primary',
+                'value' => $unreadNotificationsCount,
+                'note' => $unreadNotificationsCount > 0 ? "{$unreadNotificationsCount} unread" : 'No new alerts',
+                'tone' => $unreadNotificationsCount > 0 ? 'bg-accent-soft text-accent-hover' : 'bg-primary-soft text-primary',
                 'icon' => 'M6 8a6 6 0 1 1 12 0c0 7 3 7 3 7H3s3 0 3-7Zm3 11a3 3 0 0 0 6 0',
             ],
         ];
@@ -481,5 +483,33 @@ class ProfileController extends Controller
                 $storage->delete($path);
             }
         }
+    }
+
+    /**
+     * Serve a specific user's profile photo (admin can view any user, users can only view their own).
+     */
+    public function photoForUser(Request $request, User $user): BinaryFileResponse
+    {
+        if (! $request->user()->hasRole('admin') && $request->user()->id !== $user->id) {
+            abort(403);
+        }
+
+        $photoPath = $user->profile?->profile_photo_path;
+
+        if (! $photoPath) {
+            abort(404);
+        }
+
+        $localDisk = Storage::disk('local');
+        if ($localDisk->exists($photoPath)) {
+            return response()->file($localDisk->path($photoPath));
+        }
+
+        $publicDisk = Storage::disk('public');
+        if ($publicDisk->exists($photoPath)) {
+            return response()->file($publicDisk->path($photoPath));
+        }
+
+        abort(404);
     }
 }

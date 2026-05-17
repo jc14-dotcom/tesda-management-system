@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 
 class DocumentController extends Controller
 {
@@ -22,7 +23,7 @@ class DocumentController extends Controller
             'issued_on' => ['nullable', 'date'],
             'valid_until' => ['nullable', 'date', 'after_or_equal:issued_on'],
             'certificate_id' => ['nullable', 'integer', 'exists:certificates,id'],
-            'file' => ['required', 'file', 'max:10240'],
+            'file' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp,gif,bmp,tif,tiff,doc,docx,xls,xlsx,ppt,pptx,txt,csv'],
         ]);
 
         $user = $request->user();
@@ -112,8 +113,14 @@ class DocumentController extends Controller
             abort(404);
         }
 
+        $disposition = HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_INLINE,
+            $document->document_name ?: $document->original_name,
+            'document'
+        );
+
         return response()->file(Storage::disk('local')->path($document->path), [
-            'Content-Disposition' => 'inline; filename="'.addslashes($document->document_name ?: $document->original_name).'"',
+            'Content-Disposition' => $disposition,
         ]);
     }
 

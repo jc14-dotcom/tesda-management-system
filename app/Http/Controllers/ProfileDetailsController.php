@@ -27,6 +27,8 @@ class ProfileDetailsController extends Controller
             'date_hired' => ['required', 'date'],
             'tesda_registry_number' => ['required', 'string', 'max:255'],
             'qualification_title' => ['nullable', 'string', 'max:255'],
+            'region' => ['nullable', 'string', 'max:100'],
+            'branch' => ['nullable', 'string', 'max:100'],
             'remarks' => ['nullable', 'string', 'max:1000'],
         ]);
 
@@ -61,7 +63,7 @@ class ProfileDetailsController extends Controller
         }
 
         $data['position_title'] = implode(', ', array_map(static fn (string $role) => ucfirst($role), $data['position_roles']));
-        unset($data['position_roles']);
+        // Keep position_roles as a JSON array for queryability alongside the display string
 
         $request->user()->profile()->updateOrCreate(
             ['user_id' => $request->user()->id],

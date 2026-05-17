@@ -28,11 +28,12 @@
                 <input id="profile_photo" name="profile_photo" type="file" class="sr-only" accept="image/*" x-ref="profilePhotoInput" @change="selectFile($event)" />
 
                 <div class="group relative mx-auto h-40 w-40">
+                    {{-- Circle: click anywhere → open file picker --}}
                     <button
                         type="button"
-                        class="block h-40 w-40 overflow-hidden rounded-full border border-grayTheme-border bg-gray-100 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/30"
-                        @click="toggleMenu()"
-                        aria-label="Profile picture actions"
+                        class="block h-40 w-40 cursor-pointer overflow-hidden rounded-full border-2 border-grayTheme-border bg-gray-100 shadow-sm transition duration-200 group-hover:border-primary/40 group-hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2"
+                        @click="triggerUpload()"
+                        aria-label="Upload profile photo"
                     >
                         <img
                             x-show="previewUrl"
@@ -43,28 +44,41 @@
                         />
                         <div
                             x-show="!previewUrl"
-                            class="flex h-full w-full items-center justify-center text-sm font-semibold uppercase tracking-wide text-gray-400"
+                            class="flex h-full w-full flex-col items-center justify-center gap-2 text-gray-400"
                             @if ($profile?->profile_photo_url) style="display: none;" @endif
-                        >No Photo</div>
+                        >
+                            <svg class="h-12 w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                            </svg>
+                            <span class="text-xs font-semibold uppercase tracking-wider">No Photo</span>
+                        </div>
                     </button>
 
+                    {{-- Hover overlay: camera icon centered, "Remove" pill at bottom --}}
                     <div
-                        class="absolute inset-0 flex items-end justify-center rounded-full bg-grayTheme-dark/55 p-2 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100"
-                        x-bind:class="menuOpen ? 'opacity-100' : ''"
+                        class="absolute inset-0 flex flex-col items-center justify-center rounded-full bg-black/55 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                        @click="triggerUpload()"
                     >
-                        <div class="flex flex-col items-center gap-2">
-                            <button type="button" class="rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold leading-none text-primary shadow-sm transition hover:bg-white" @click.stop="triggerUpload()">
-                                Upload new photo
-                            </button>
-                            <button type="button" class="rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold leading-none text-white ring-1 ring-white/30 transition hover:bg-white/25" x-show="previewUrl" @click.stop="confirmRemovePhoto()">
-                                Remove photo
-                            </button>
+                        <div class="pointer-events-none flex flex-col items-center gap-1.5">
+                            <svg class="h-8 w-8 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                                <path d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                            </svg>
+                            <span class="text-xs font-bold tracking-wide text-white drop-shadow">Change Photo</span>
                         </div>
+                        <button
+                            type="button"
+                            x-show="previewUrl"
+                            class="absolute bottom-5 rounded-full bg-white/20 px-3.5 py-1 text-xs font-semibold text-white ring-1 ring-white/40 backdrop-blur-sm transition hover:bg-danger hover:ring-danger focus:outline-none"
+                            @click.stop="confirmRemovePhoto()"
+                            style="display: none;"
+                        >
+                            Remove
+                        </button>
                     </div>
                 </div>
 
-                <p class="text-center text-sm font-semibold text-primary">Click or hover the circle to manage your photo</p>
-                <p class="text-center text-xs text-grayTheme-medium">Accepted formats: JPG, PNG, WebP, GIF, and other image files.</p>
+                <p class="text-center text-xs text-grayTheme-medium">JPG, PNG, WebP, GIF &middot; Max 5 MB</p>
 
                 <x-input-error class="mt-2" :messages="$errors->get('profile_photo')" />
             </div>

@@ -31,6 +31,102 @@
                 </div>
             </div>
 
+            {{-- Manage Account --}}
+            <div class="surface p-6">
+                <h3 class="text-lg font-semibold text-grayTheme-dark">Manage Account</h3>
+
+                @if (session('status') === 'user-updated')
+                    <div class="mt-3 rounded-lg bg-success-soft px-4 py-2 text-sm font-semibold text-success">Account updated successfully.</div>
+                @endif
+
+                @if (session('status') === 'user-created')
+                    <div class="mt-3 rounded-lg bg-success-soft px-4 py-2 text-sm font-semibold text-success">Account created successfully.</div>
+                @endif
+
+                @if (session('status') === 'password-reset')
+                    <div class="mt-3 rounded-lg bg-success-soft px-4 py-2 text-sm font-semibold text-success">Password has been reset successfully.</div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="mt-3 rounded-lg bg-danger-soft px-4 py-2 text-sm text-danger">
+                        <ul class="list-inside list-disc space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('admin.users.update', $user) }}" class="mt-4 grid gap-5 md:grid-cols-2">
+                    @csrf
+                    @method('PATCH')
+
+                    <div>
+                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="mgmt_name">Full Name</label>
+                        <input id="mgmt_name" type="text" name="name" value="{{ old('name', $user->name) }}"
+                            class="mt-1 form-input w-full" required maxlength="255" />
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="mgmt_email">Email Address</label>
+                        <input id="mgmt_email" type="email" name="email" value="{{ old('email', $user->email) }}"
+                            class="mt-1 form-input w-full" required maxlength="255" />
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="mgmt_role">Role</label>
+                        <select id="mgmt_role" name="role" class="mt-1 form-input w-full">
+                            <option value="user" @selected(! $user->hasRole('admin'))>User</option>
+                            <option value="admin" @selected($user->hasRole('admin'))>Admin</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="mgmt_status">Account Status</label>
+                        <select id="mgmt_status" name="status" class="mt-1 form-input w-full">
+                            <option value="active" @selected(($user->profile?->status ?? 'active') === 'active')>Active</option>
+                            <option value="inactive" @selected(($user->profile?->status ?? 'active') === 'inactive')>Inactive</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-end md:col-span-2">
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                    </div>
+                </form>
+
+                {{-- Reset Password --}}
+                <div class="mt-8 border-t border-grayTheme-border pt-6">
+                    <h4 class="text-sm font-bold text-grayTheme-dark">Reset Password</h4>
+                    <p class="mt-1 text-sm text-grayTheme-medium">Set a new password for this account. The user will need to use this password on their next login.</p>
+                    <form method="POST" action="{{ route('admin.users.reset-password', $user) }}" class="mt-4 grid gap-4 md:grid-cols-2">
+                        @csrf
+                        <div>
+                            <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="new_password">New Password</label>
+                            <input id="new_password" type="password" name="password" class="mt-1 form-input w-full" required minlength="8" autocomplete="new-password" />
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="new_password_confirmation">Confirm New Password</label>
+                            <input id="new_password_confirmation" type="password" name="password_confirmation" class="mt-1 form-input w-full" required minlength="8" autocomplete="new-password" />
+                        </div>
+                        <div class="flex items-center justify-end md:col-span-2">
+                            <button type="submit" class="btn-secondary">Reset Password</button>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- Danger Zone --}}
+                <div class="mt-8 border-t border-red-200 pt-6">
+                    <h4 class="text-sm font-bold text-danger">Danger Zone</h4>
+                    <p class="mt-1 text-sm text-grayTheme-medium">Permanently deletes this user account, their profile, all certificates, and uploaded files. This cannot be undone.</p>
+                    <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="mt-4"
+                          onsubmit="return confirm('Permanently delete {{ addslashes($user->name) }}\'s account? This cannot be undone.')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn-danger">Delete Account</button>
+                    </form>
+                </div>
+            </div>
+
             <div class="surface p-6">
                 <h3 class="text-lg font-semibold text-grayTheme-dark">Profile Details</h3>
                 @if ($user->profile)
@@ -92,14 +188,15 @@
                     class="mt-4"
                     x-data="loadMoreList({ nextUrl: @js($certificates->nextPageUrl()), partialParam: 'certificates_partial' })"
                     x-init="items = @js($certificates->map(fn($cert) => [
-                        'id'            => $cert->id,
-                        'name'          => $cert->certificate_name,
-                        'type'          => $cert->certificate_type_label,
-                        'qualification' => $cert->qualification_title ?? '—',
-                        'number'        => $cert->certificate_number ?? '—',
-                        'expirationDate'=> $cert->expiration_date?->format('Y-m-d') ?? '—',
-                        'status'        => ucfirst($cert->status),
-                        'documents'     => $cert->documents->map(fn($d) => [
+                        'id'                 => $cert->id,
+                        'name'               => $cert->certificate_name,
+                        'type'               => $cert->certificate_type_label,
+                        'qualification'      => $cert->qualification_title ?? '—',
+                        'number'             => $cert->certificate_number ?? '—',
+                        'expirationDate'     => $cert->expiration_date?->format('Y-m-d') ?? '—',
+                        'status'             => ucfirst($cert->status),
+                        'verificationStatus' => ucfirst($cert->verification_status ?? 'pending'),
+                        'documents'          => $cert->documents->map(fn($d) => [
                             'name'        => $d->document_name ?? $d->original_name,
                             'downloadUrl' => route('documents.download', $d),
                         ])->values()->all(),
@@ -115,13 +212,14 @@
                                     <th class="py-2">Number</th>
                                     <th class="py-2">Expires</th>
                                     <th class="py-2">Status</th>
+                                    <th class="py-2">Verified</th>
                                     <th class="py-2">Documents</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y">
                                 <template x-if="items.length === 0">
                                     <tr>
-                                        <td colspan="7" class="py-4 text-center text-grayTheme-medium">No certificates found.</td>
+                                        <td colspan="8" class="py-4 text-center text-grayTheme-medium">No certificates found.</td>
                                     </tr>
                                 </template>
                                 <template x-for="cert in items" :key="cert.id">
@@ -132,6 +230,17 @@
                                         <td class="py-2" x-text="cert.number"></td>
                                         <td class="py-2" x-text="cert.expirationDate"></td>
                                         <td class="py-2" x-text="cert.status"></td>
+                                        <td class="py-2">
+                                            <span
+                                                x-text="cert.verificationStatus"
+                                                :class="{
+                                                    'bg-success-soft text-success': cert.verificationStatus === 'Verified',
+                                                    'bg-danger-soft text-danger':   cert.verificationStatus === 'Rejected',
+                                                    'bg-warning-soft text-warning': cert.verificationStatus === 'Pending',
+                                                }"
+                                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                                            ></span>
+                                        </td>
                                         <td class="py-2">
                                             <template x-if="cert.documents.length === 0">
                                                 <span class="text-grayTheme-medium">—</span>

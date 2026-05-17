@@ -5,10 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Certificate extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['certificate_name', 'certificate_type', 'status', 'verification_status'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     public const TYPE_LABELS = [
         'nc_i' => 'NC I',

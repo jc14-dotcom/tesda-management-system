@@ -19,7 +19,7 @@
                         <div class="text-sm font-semibold uppercase tracking-wide text-slate-500">{{ strtoupper($document->type) }}</div>
                         <div class="text-lg font-semibold text-slate-900">{{ $document->document_name ?: $document->original_name }}</div>
                         <div class="mt-1 text-sm text-slate-500">{{ $document->original_name }}</div>
-                        @if (in_array($document->type, ['nc', 'nttc']))
+                        @if ($document->type === 'certificate')
                             <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
                                 @if ($document->certificate_no)
                                     <span class="rounded-full bg-slate-100 px-3 py-1">Cert No.: {{ $document->certificate_no }}</span>

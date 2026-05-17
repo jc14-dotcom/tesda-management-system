@@ -415,6 +415,34 @@
         </div>
 
         <div>
+            <x-input-label for="region" :value="__('Region')" />
+            <x-text-input
+                id="region"
+                name="region"
+                class="mt-1 block w-full"
+                type="text"
+                maxlength="100"
+                placeholder="e.g. Region IV-A (CALABARZON)"
+                :value="old('region', $profile?->region)"
+            />
+            <x-input-error class="mt-2" :messages="$errors->get('region')" />
+        </div>
+
+        <div>
+            <x-input-label for="branch" :value="__('Branch / Office')" />
+            <x-text-input
+                id="branch"
+                name="branch"
+                class="mt-1 block w-full"
+                type="text"
+                maxlength="100"
+                placeholder="e.g. TESDA Batangas Provincial Office"
+                :value="old('branch', $profile?->branch)"
+            />
+            <x-input-error class="mt-2" :messages="$errors->get('branch')" />
+        </div>
+
+        <div>
             <x-input-label for="remarks" :value="__('Remarks')" />
             <textarea
                 id="remarks"

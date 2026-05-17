@@ -4,27 +4,82 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\CacheBuster;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    public function create(): View
+    {
+        return view('admin.users.create');
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)],
+            'password' => ['required', 'confirmed', Password::min(8)],
+            'role'     => ['required', 'string', 'in:admin,user'],
+        ]);
+
+        $user = User::create([
+            'name'              => $data['name'],
+            'email'             => $data['email'],
+            'password'          => Hash::make($data['password']),
+            'email_verified_at' => now(),
+        ]);
+
+        $user->assignRole($data['role']);
+        $user->profile()->create(['status' => 'active']);
+
+        CacheBuster::bumpAdminUsers();
+
+        return redirect()->route('admin.users.show', $user)->with('status', 'user-created');
+    }
+
+    public function resetPassword(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ]);
+
+        $user->update(['password' => Hash::make($data['password'])]);
+
+        return back()->with('status', 'password-reset');
+    }
+
     public function index(Request $request): View
     {
-        $page = (int) $request->query('page', 1);
+        $search = trim((string) $request->query('search', ''));
+        $role   = $request->query('role', 'all');
+        $status = $request->query('status', 'all');
+
         $users = User::query()
             ->select(['id', 'name', 'email'])
-            ->with([
-                'profile:id,user_id,status',
-                'roles:id,name',
-            ])
+            ->with(['profile:id,user_id,status', 'roles:id,name'])
             ->withCount('certificates')
+            ->when($search, fn ($q) => $q->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            }))
+            ->when($role === 'admin', fn ($q) => $q->role('admin'))
+            ->when($role === 'user', fn ($q) => $q->role('user'))
+            ->when($status !== 'all', fn ($q) => $q->whereHas('profile', fn ($pq) => $pq->where('status', $status)))
             ->orderBy('name')
-            ->paginate(20, ['*'], 'page', $page)
+            ->paginate(20)
             ->withQueryString();
 
         return view('admin.users.index', [
-            'users' => $users,
+            'users'  => $users,
+            'search' => $search,
+            'role'   => $role,
+            'status' => $status,
         ]);
     }
 
@@ -48,6 +103,7 @@ class UserController extends Controller
                 'certificate_number',
                 'expiration_date',
                 'status',
+                'verification_status',
             ])
             ->with(['documents' => function ($query) {
                 $query->select(['id', 'certificate_id', 'document_name', 'original_name']);
@@ -88,14 +144,15 @@ class UserController extends Controller
             return response()->json([
                 'items' => $certificates->map(function ($cert) {
                     return [
-                        'id'           => $cert->id,
-                        'name'         => $cert->certificate_name,
-                        'type'         => $cert->certificate_type_label,
-                        'qualification'=> $cert->qualification_title ?? '—',
-                        'number'       => $cert->certificate_number ?? '—',
-                        'expirationDate' => $cert->expiration_date?->format('Y-m-d') ?? '—',
-                        'status'       => ucfirst($cert->status),
-                        'documents'    => $cert->documents->map(fn($d) => [
+                        'id'                 => $cert->id,
+                        'name'               => $cert->certificate_name,
+                        'type'               => $cert->certificate_type_label,
+                        'qualification'      => $cert->qualification_title ?? '—',
+                        'number'             => $cert->certificate_number ?? '—',
+                        'expirationDate'     => $cert->expiration_date?->format('Y-m-d') ?? '—',
+                        'status'             => ucfirst($cert->status),
+                        'verificationStatus' => ucfirst($cert->verification_status ?? 'pending'),
+                        'documents'          => $cert->documents->map(fn($d) => [
                             'name'        => $d->document_name ?? $d->original_name,
                             'downloadUrl' => route('documents.download', $d),
                         ])->values()->all(),
@@ -118,12 +175,64 @@ class UserController extends Controller
         }
 
         return view('admin.users.show', [
-            'user' => $user,
+            'user'         => $user,
             'certificates' => $certificates,
-            'documents' => $documents,
-            'certStatus' => $certStatus,
-            'certWindow' => $certWindow,
-            'docType' => $docType,
+            'documents'    => $documents,
+            'certStatus'   => $certStatus,
+            'certWindow'   => $certWindow,
+            'docType'      => $docType,
         ]);
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'name'   => ['required', 'string', 'max:255'],
+            'email'  => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'role'   => ['required', 'string', 'in:admin,user'],
+            'status' => ['required', 'string', 'in:active,inactive'],
+        ]);
+
+        $user->update([
+            'name'  => $data['name'],
+            'email' => $data['email'],
+        ]);
+
+        $user->syncRoles([$data['role']]);
+
+        $user->profile()->updateOrCreate(
+            ['user_id' => $user->id],
+            ['status'  => $data['status']]
+        );
+
+        CacheBuster::bumpUser($user->id);
+        CacheBuster::bumpAdminUsers();
+
+        return back()->with('status', 'user-updated');
+    }
+
+    public function destroy(Request $request, User $user)
+    {
+        if ($request->user()->id === $user->id) {
+            abort(403, 'You cannot delete your own account.');
+        }
+
+        $user->load(['documents:id,user_id,path', 'profile:id,user_id,profile_photo_path']);
+
+        foreach ($user->documents as $document) {
+            if ($document->path && Storage::disk('local')->exists($document->path)) {
+                Storage::disk('local')->delete($document->path);
+            }
+        }
+
+        if ($user->profile?->profile_photo_path && Storage::disk('local')->exists($user->profile->profile_photo_path)) {
+            Storage::disk('local')->delete($user->profile->profile_photo_path);
+        }
+
+        CacheBuster::bumpAdminUsers();
+
+        $user->delete();
+
+        return redirect()->route('admin.users.index')->with('status', 'user-deleted');
     }
 }

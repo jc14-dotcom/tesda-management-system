@@ -15,6 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('certificate_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->string('document_name')->nullable();
+            $table->string('certificate_no')->nullable();
+            $table->date('issued_on')->nullable();
+            $table->date('valid_until')->nullable();
             $table->string('type', 50);
             $table->string('path');
             $table->string('original_name');

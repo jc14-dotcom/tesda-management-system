@@ -22,6 +22,7 @@ class Profile extends Model
         'profile_photo_path',
         'company_id',
         'position_title',
+        'position_roles',
         'employment_status',
         'status',
         'date_hired',
@@ -33,8 +34,9 @@ class Profile extends Model
     ];
 
     protected $casts = [
-        'date_of_birth' => 'date',
-        'date_hired' => 'date',
+        'date_of_birth'  => 'date',
+        'date_hired'     => 'date',
+        'position_roles' => 'array',
     ];
 
     public function user()
@@ -48,6 +50,6 @@ class Profile extends Model
             return null;
         }
 
-        return route('account.profile.photo');
+        return route('profile.photo', ['user' => $this->user_id]);
     }
 }

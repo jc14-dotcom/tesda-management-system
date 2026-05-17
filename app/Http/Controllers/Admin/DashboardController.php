@@ -15,6 +15,7 @@ class DashboardController extends Controller
     {
         $metrics = Cache::remember('admin:dashboard:metrics', now()->addMinutes(2), function () {
             $usersCount = User::count();
+            $activeUsersCount = User::whereHas('profile', fn ($q) => $q->where('status', 'active'))->count();
             $certificatesCount = Certificate::count();
             $documentsCount = Document::count();
             $expiringSoonCount = Certificate::whereNotNull('expiration_date')
@@ -67,7 +68,8 @@ class DashboardController extends Controller
                 ])->all();
 
             return [
-                'usersCount' => $usersCount,
+                'usersCount'       => $usersCount,
+                'activeUsersCount' => $activeUsersCount,
                 'certificatesCount' => $certificatesCount,
                 'documentsCount' => $documentsCount,
                 'expiringSoonCount' => $expiringSoonCount,
@@ -98,8 +100,8 @@ class DashboardController extends Controller
                 ],
                 [
                     'label' => 'Active Users',
-                    'value' => null,
-                    'note'  => '—',
+                    'value' => $metrics['activeUsersCount'],
+                    'note'  => 'Active accounts',
                     'tone'  => 'bg-success-soft text-success',
                     'icon'  => 'M9 12l2 2 4-4m5 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
                 ],
