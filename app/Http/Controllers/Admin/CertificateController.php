@@ -44,6 +44,12 @@ class CertificateController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $stats = [
+            'total'    => Certificate::count(),
+            'pending'  => Certificate::where('verification_status', 'pending')->count(),
+            'expiring' => Certificate::where('status', 'expiring')->count(),
+        ];
+
         return view('admin.certificates.index', [
             'certificates' => $certificates,
             'search'       => $search,
@@ -53,7 +59,14 @@ class CertificateController extends Controller
             'window'       => $window,
             'userId'       => $userId,
             'typeLabels'   => Certificate::TYPE_LABELS,
+            'stats'        => $stats,
         ]);
+    }
+
+    public function show(Certificate $certificate): View
+    {
+        $certificate->load(['user.profile', 'documents', 'verifier']);
+        return view('admin.certificates.show', compact('certificate'));
     }
 
     public function verify(Request $request, Certificate $certificate)

@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\Certificate;
+use App\Models\User;
+use App\Notifications\Admin\CertificateExpiryAdminNotification;
 use App\Notifications\CertificateExpiryNotification;
 use App\Support\CacheBuster;
 use Illuminate\Support\Carbon;
@@ -48,6 +50,7 @@ class SendCertificateExpiryNotifications extends Command
 
         $notifiedCount = 0;
         $touchedUserIds = [];
+        $admins = null; // lazy-loaded on first use
 
         foreach ($certificates as $certificate) {
             /** @var \App\Models\Certificate $certificate */
@@ -58,12 +61,24 @@ class SendCertificateExpiryNotifications extends Command
             $expiration = Carbon::parse($certificate->expiration_date)->startOfDay();
             $daysUntil = $today->diffInDays($expiration, false);
 
+            $previousStatus = $certificate->status;
+
             if ($daysUntil < 0) {
                 $certificate->status = 'expired';
             } elseif ($daysUntil <= $statusExpiringDays) {
                 $certificate->status = 'expiring';
             } else {
                 $certificate->status = 'valid';
+            }
+
+            // Notify admins when a certificate first transitions to expired or expiring
+            $statusChanged = $certificate->isDirty('status');
+            if ($statusChanged && in_array($certificate->status, ['expired', 'expiring'], true)) {
+                $admins ??= User::role('admin')->get();
+                $adminDays = $certificate->status === 'expired' ? $daysUntil : (int) $daysUntil;
+                $admins->each(fn (User $admin) => $admin->notify(
+                    new CertificateExpiryAdminNotification($certificate, $adminDays)
+                ));
             }
 
             if ($notificationsEnabled && $daysUntil >= 0 && $days->contains($daysUntil)) {

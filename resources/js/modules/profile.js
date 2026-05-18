@@ -223,11 +223,7 @@ export function registerProfileComponents(Alpine) {
             initialGender = '',
             initialContactNumber = '',
             initialAddress = '',
-            initialCompanyId = '',
             initialPositionRoles = [],
-            initialEmploymentStatus = '',
-            initialDateHired = '',
-            initialTesdaRegistryNumber = '',
             initialQualificationTitle = '',
             initialRemarks = '',
         } = {}) => ({
@@ -238,14 +234,10 @@ export function registerProfileComponents(Alpine) {
             initialGender,
             initialContactNumber,
             initialAddress,
-            initialCompanyId,
             initialPositionRoles: Array.isArray(initialPositionRoles)
                 ? initialPositionRoles
                 : [],
-            initialEmploymentStatus,
             initialDateOfBirth,
-            initialDateHired,
-            initialTesdaRegistryNumber,
             initialQualificationTitle,
             initialRemarks,
 
@@ -257,11 +249,7 @@ export function registerProfileComponents(Alpine) {
             gender: initialGender,
             contactNumber: initialContactNumber,
             address: initialAddress,
-            companyId: initialCompanyId,
             positionRoles: Array.isArray(initialPositionRoles) ? initialPositionRoles : [],
-            employmentStatus: initialEmploymentStatus,
-            dateHired: initialDateHired,
-            tesdaRegistryNumber: initialTesdaRegistryNumber,
             qualificationTitle: initialQualificationTitle,
             remarks: initialRemarks,
 
@@ -274,11 +262,7 @@ export function registerProfileComponents(Alpine) {
                 gender: '',
                 contactNumber: '',
                 positionRoles: '',
-                employmentStatus: '',
-                companyId: '',
                 address: '',
-                dateHired: '',
-                tesdaRegistryNumber: '',
                 qualificationTitle: '',
                 remarks: '',
             },
@@ -291,11 +275,7 @@ export function registerProfileComponents(Alpine) {
                 gender: false,
                 contactNumber: false,
                 positionRoles: false,
-                employmentStatus: false,
-                companyId: false,
                 address: false,
-                dateHired: false,
-                tesdaRegistryNumber: false,
                 qualificationTitle: false,
                 remarks: false,
             },
@@ -309,10 +289,6 @@ export function registerProfileComponents(Alpine) {
                 this.suffix = (this.suffix ?? '').toString().toLowerCase().replace(/\./g, '');
                 this.gender = (this.gender ?? '').toString().toLowerCase();
                 this.contactNumber = sanitizeContactNumber(this.contactNumber);
-                this.employmentStatus = (this.employmentStatus ?? '')
-                    .toString()
-                    .trim()
-                    .toLowerCase();
                 this.positionRoles = Array.isArray(this.positionRoles)
                     ? this.positionRoles.map((r) => (r ?? '').toString().trim().toLowerCase())
                     : [];
@@ -322,8 +298,6 @@ export function registerProfileComponents(Alpine) {
                       )
                     : [];
                 this.address = normalizeTrim(this.address);
-                this.companyId = normalizeTrim(this.companyId);
-                this.tesdaRegistryNumber = normalizeTrim(this.tesdaRegistryNumber);
                 this.qualificationTitle = normalizeTrim(this.qualificationTitle);
                 this.remarks = normalizeTrim(this.remarks);
                 this.updateValidation();
@@ -351,13 +325,8 @@ export function registerProfileComponents(Alpine) {
                     normalizeTrim(this.contactNumber) !==
                         normalizeTrim(this.initialContactNumber) ||
                     normalizeTrim(this.address) !== normalizeTrim(this.initialAddress) ||
-                    normalizeTrim(this.companyId) !== normalizeTrim(this.initialCompanyId) ||
                     !this.arraysEqual(this.positionRoles, this.initialPositionRoles) ||
-                    (this.employmentStatus ?? '') !== (this.initialEmploymentStatus ?? '') ||
                     (this.dateOfBirth ?? '') !== (this.initialDateOfBirth ?? '') ||
-                    (this.dateHired ?? '') !== (this.initialDateHired ?? '') ||
-                    normalizeTrim(this.tesdaRegistryNumber) !==
-                        normalizeTrim(this.initialTesdaRegistryNumber) ||
                     normalizeTrim(this.qualificationTitle) !==
                         normalizeTrim(this.initialQualificationTitle) ||
                     normalizeTrim(this.remarks) !== normalizeTrim(this.initialRemarks)
@@ -388,17 +357,6 @@ export function registerProfileComponents(Alpine) {
                 if (!value) return 'Contact number is required.';
                 if (!/^09\d{9}$/.test(value))
                     return 'Use an 11-digit number starting with 09.';
-                return '';
-            },
-
-            validateEmploymentStatus() {
-                const allowed = [
-                    'regular', 'probationary', 'contractual', 'part-time',
-                    'internship', 'self-employed', 'unemployed',
-                ];
-                if (!this.employmentStatus) return 'Employment status is required.';
-                if (!allowed.includes(this.employmentStatus))
-                    return 'Select a valid employment status.';
                 return '';
             },
 
@@ -437,22 +395,7 @@ export function registerProfileComponents(Alpine) {
                 this.errors.gender = this.validateRequiredValue(this.gender, 'Sex');
                 this.errors.contactNumber = this.validateContactNumber();
                 this.errors.address = this.validateRequiredValue(this.address, 'Address', 500);
-                this.errors.employmentStatus = this.validateEmploymentStatus();
                 this.errors.positionRoles = this.validatePositionRoles();
-                this.errors.companyId = this.validateRequiredValue(
-                    this.companyId,
-                    'Company ID',
-                    255,
-                );
-                this.errors.dateHired = this.validateRequiredValue(
-                    this.dateHired,
-                    'Date hired',
-                );
-                this.errors.tesdaRegistryNumber = this.validateRequiredValue(
-                    this.tesdaRegistryNumber,
-                    'TESDA registry number',
-                    255,
-                );
                 this.errors.qualificationTitle = this.validateMaxLength(
                     this.qualificationTitle,
                     255,
@@ -509,12 +452,8 @@ export function registerProfileComponents(Alpine) {
                         this.initialGender = this.gender;
                         this.initialContactNumber = this.contactNumber;
                         this.initialAddress = this.address;
-                        this.initialCompanyId = this.companyId;
                         this.initialPositionRoles = [...this.positionRoles];
-                        this.initialEmploymentStatus = this.employmentStatus;
                         this.initialDateOfBirth = this.dateOfBirth;
-                        this.initialDateHired = this.dateHired;
-                        this.initialTesdaRegistryNumber = this.tesdaRegistryNumber;
                         this.initialQualificationTitle = this.qualificationTitle;
                         this.initialRemarks = this.remarks;
                     } else if (res.status === 422) {

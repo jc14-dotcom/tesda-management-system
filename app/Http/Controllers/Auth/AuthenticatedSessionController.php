@@ -28,6 +28,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn(Auth::user())
+            ->event('login')
+            ->log('User logged in');
+
         $redirectRoute = Auth::user()->hasRole('admin') ? 'admin.dashboard' : 'dashboard';
 
         return redirect()->intended(route($redirectRoute, absolute: false));
@@ -38,6 +44,16 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = Auth::guard('web')->user();
+
+        if ($user) {
+            activity()
+                ->causedBy($user)
+                ->performedOn($user)
+                ->event('logout')
+                ->log('User logged out');
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

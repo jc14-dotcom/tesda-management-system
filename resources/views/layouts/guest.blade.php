@@ -9,6 +9,21 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        {{-- bfcache guard: pre-hide body on pagehide so the snapshot is blank;
+             on restore reload for a fresh CSRF token and clean form state. --}}
+        <script>
+        (function(){
+            window.addEventListener('pagehide',function(){
+                document.body.style.display='none';
+            });
+            window.addEventListener('pageshow',function(e){
+                if(e.persisted){
+                    window.location.replace(window.location.href);
+                }
+            });
+        }());
+        </script>
     </head>
     <body class="font-sans text-grayTheme-dark antialiased bg-grayTheme-light">
         <div class="app-shell flex flex-col sm:justify-center items-center pt-6 sm:pt-0">

@@ -8,6 +8,30 @@
         <title>Alcatt Portal — Sign In</title>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        {{--
+            bfcache guard for the login page.
+            When the user fills in credentials, logs in, then later logs out and presses
+            back, the browser may restore this exact form state from bfcache — including
+            the previously typed username and (in some browsers) password placeholder.
+
+            pagehide pre-hides the body before the snapshot so no credentials flash.
+            pageshow (persisted) replaces the history entry with a fresh server request,
+            which: (1) clears all form fields, (2) issues a new CSRF token, (3) redirects
+            to the dashboard automatically if the user is still authenticated.
+        --}}
+        <script>
+        (function(){
+            window.addEventListener('pagehide',function(){
+                document.body.style.display='none';
+            });
+            window.addEventListener('pageshow',function(e){
+                if(e.persisted){
+                    window.location.replace(window.location.href);
+                }
+            });
+        }());
+        </script>
     </head>
     <body class="min-h-screen bg-grayTheme-light text-grayTheme-dark antialiased">
         <main class="flex min-h-screen">

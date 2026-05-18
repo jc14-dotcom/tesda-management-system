@@ -15,6 +15,49 @@
         {{-- Apply sidebar collapsed state before first paint (prevents layout shift) --}}
         <script>if(localStorage.getItem('sidebar-collapsed')==='true'){document.documentElement.classList.add('sidebar-collapsed');}</script>
 
+        {{--
+            bfcache guard — two-phase, zero-flash approach:
+
+            Phase 1 · pagehide: fires synchronously before the browser takes its bfcache
+            snapshot. Hiding the body HERE means the snapshot already contains a hidden
+            body, so the page is restored from bfcache already invisible — no flash.
+
+            Phase 2 · pageshow (persisted=true): the page has been restored from bfcache
+            with the body hidden. We check the JS-readable `auth_presence` cookie that
+            PreventBackHistory sets on every authenticated response:
+              • Cookie present  → session is still alive → reveal the body instantly (no
+                server round-trip, no reload).
+              • Cookie absent   → user has logged out → replace this history entry with
+                the login page so the stale authenticated page is never shown.
+
+            pageshow (persisted=false) → fresh server-rendered load; reset any inline
+            display style that was left if pagehide ran but the page wasn't cached.
+        --}}
+        <script>
+        (function(){
+            window.addEventListener('pagehide',function(){
+                document.body.style.display='none';
+            });
+            window.addEventListener('pageshow',function(e){
+                if(!e.persisted){
+                    // Fresh load — ensure body is not accidentally hidden.
+                    document.body.style.display='';
+                    return;
+                }
+                // bfcache restore: body is already hidden from the pagehide snapshot.
+                // Instant cookie check — no server round-trip required.
+                var ok=document.cookie.split(';').some(function(c){
+                    return c.trim().startsWith('auth_presence=');
+                });
+                if(ok){
+                    document.body.style.display='';
+                }else{
+                    window.location.replace('{{ route('login') }}');
+                }
+            });
+        }());
+        </script>
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
@@ -29,6 +72,11 @@
         </div>
         {{-- Toast container — populated by vanilla JS (layout.js) --}}
         <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none" aria-live="polite" aria-atomic="false"></div>
+
+        {{-- Bridge session flash messages to the global toast system --}}
+        @if(session('forbidden'))
+        <script>document.addEventListener('DOMContentLoaded',()=>window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'warning',title:'Access Denied',message:{{ Js::from(session('forbidden')) }}}})));</script>
+        @endif
 
         {{-- Global confirmation modal — trigger via window.showConfirm({...}) or data-confirm-message attribute --}}
         <div id="confirm-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">

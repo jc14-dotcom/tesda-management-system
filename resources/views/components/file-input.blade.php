@@ -28,7 +28,7 @@
         class="flex cursor-pointer items-center justify-between gap-4 rounded-card border border-dashed border-primary/25 bg-primary-soft/40 px-4 py-4 transition duration-250 hover:border-primary hover:bg-primary-soft"
     >
         <span class="min-w-0">
-            <span class="block text-sm font-semibold text-grayTheme-dark">{{ $slot }}</span>
+            <span class="block text-sm font-semibold text-grayTheme-dark">{{ $slot }}@if($required)<span class="ml-0.5 text-red-500" aria-hidden="true">*</span>@endif</span>
             @if ($help)
                 <span class="mt-1 block text-xs text-grayTheme-medium">{{ $help }}</span>
             @endif

@@ -7,16 +7,14 @@
                 eyebrow="Account"
             />
 
-            <section class="p-4 sm:p-8 surface">
-                <div class="mt-6 space-y-6">
-                    <div id="update-password" class="max-w-xl">
-                        @include('user.settings.partials.update-password-form')
-                    </div>
+            {{-- Password Section --}}
+            <section id="update-password" class="p-4 sm:p-8 surface">
+                @include('user.settings.partials.update-password-form')
+            </section>
 
-                    <div id="delete-account" class="max-w-xl">
-                        @include('user.settings.partials.delete-user-form')
-                    </div>
-                </div>
+            {{-- Danger Zone --}}
+            <section id="delete-account" class="overflow-hidden rounded-card border border-danger/30 bg-white shadow-card">
+                @include('user.settings.partials.delete-user-form')
             </section>
         </div>
     </div>

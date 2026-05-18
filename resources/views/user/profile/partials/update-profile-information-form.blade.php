@@ -85,7 +85,7 @@
 
             <div class="space-y-6">
                 <div>
-                    <x-input-label for="name" :value="__('Name')" />
+                    <x-input-label for="name" :value="__('Nickname')" :required="true" />
                     <x-text-input
                         id="name"
                         name="name"
@@ -107,7 +107,7 @@
                 </div>
 
                 <div>
-                    <x-input-label for="email" :value="__('Email')" />
+                    <x-input-label for="email" :value="__('Email')" :required="true" />
                     <x-text-input
                         id="email"
                         name="email"

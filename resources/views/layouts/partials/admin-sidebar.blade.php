@@ -139,7 +139,7 @@
             ])>
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M5 7v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7M9 11h6" />
             </svg>
-            <span class="sidebar-label ms-3 whitespace-nowrap">Backups</span>
+            <span class="sidebar-label ms-3 whitespace-nowrap">Backup &amp; Restore</span>
         </a>
     </li>
 

@@ -61,9 +61,11 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
         Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
         Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+        Route::patch('/users/{user}/status', [AdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
         Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
         Route::get('/certificates', [AdminCertificateController::class, 'index'])->name('certificates.index');
+        Route::get('/certificates/{certificate}', [AdminCertificateController::class, 'show'])->name('certificates.show');
         Route::patch('/certificates/{certificate}/verify', [AdminCertificateController::class, 'verify'])->name('certificates.verify');
         Route::get('/documents', [AdminDocumentController::class, 'index'])->name('documents.index');
         // Notifications
@@ -77,6 +79,9 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/backups/run', [AdminBackupController::class, 'run'])->name('backups.run');
         Route::get('/backups/download', [AdminBackupController::class, 'download'])->name('backups.download');
         Route::delete('/backups', [AdminBackupController::class, 'destroy'])->name('backups.destroy');
+        Route::post('/backups/restore', [AdminBackupController::class, 'restore'])->name('backups.restore');
+        Route::post('/backups/restore-upload', [AdminBackupController::class, 'restoreFromUpload'])->name('backups.restore-upload');
+        Route::post('/backups/schedule', [AdminBackupController::class, 'saveSchedule'])->name('backups.schedule');
         // Settings
         Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');

@@ -18,7 +18,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->append(\App\Http\Middleware\RequestPerformanceLogger::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\PreventBackHistory::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Redirect authenticated users away from restricted pages instead of showing a raw 403
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, \Illuminate\Http\Request $request) {
+            if (auth()->check()) {
+                return redirect()->route('dashboard')
+                    ->with('forbidden', "You don't have permission to access that page.");
+            }
+        });
     })->create();

@@ -45,7 +45,7 @@
 
                     <!-- Email -->
                     <div>
-                        <x-input-label for="email" :value="__('Email address')" />
+                        <x-input-label for="email" :value="__('Email address')" :required="true" />
                         <div class="relative mt-1.5">
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
                                 <svg class="h-4 w-4 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -59,7 +59,7 @@
 
                     <!-- New Password -->
                     <div>
-                        <x-input-label for="password" :value="__('New password')" />
+                        <x-input-label for="password" :value="__('New password')" :required="true" />
                         <div class="relative mt-1.5">
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
                                 <svg class="h-4 w-4 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -73,7 +73,7 @@
 
                     <!-- Confirm Password -->
                     <div>
-                        <x-input-label for="password_confirmation" :value="__('Confirm new password')" />
+                        <x-input-label for="password_confirmation" :value="__('Confirm new password')" :required="true" />
                         <div class="relative mt-1.5">
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
                                 <svg class="h-4 w-4 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

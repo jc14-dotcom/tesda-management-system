@@ -33,7 +33,7 @@
                     @csrf
 
                     <div>
-                        <x-input-label for="password" :value="__('Password')" />
+                        <x-input-label for="password" :value="__('Password')" :required="true" />
                         <div class="relative mt-1.5">
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
                                 <svg class="h-4 w-4 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

@@ -4,6 +4,10 @@ namespace App\Providers;
 
 use App\Models\Certificate;
 use App\Models\Document;
+use App\Models\User;
+use App\Observers\CertificateObserver;
+use App\Observers\DocumentObserver;
+use App\Observers\UserObserver;
 use App\Policies\CertificatePolicy;
 use App\Policies\DocumentPolicy;
 use Illuminate\Support\Facades\Gate;
@@ -34,6 +38,11 @@ class AppServiceProvider extends ServiceProvider
         // so the Spatie role query only runs once per hour per user instead of
         // on every single request.
         View::composer('layouts.sidebar', \App\View\Composers\SidebarComposer::class);
+
+        // Register model observers for admin notifications
+        Certificate::observe(CertificateObserver::class);
+        Document::observe(DocumentObserver::class);
+        User::observe(UserObserver::class);
 
         // Register model policies
         Gate::policy(Document::class, DocumentPolicy::class);

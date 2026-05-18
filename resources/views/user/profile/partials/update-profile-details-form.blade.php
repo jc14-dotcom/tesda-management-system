@@ -39,11 +39,7 @@
             initialGender: @json(old('gender', $profile?->gender)),
             initialContactNumber: @json(old('contact_number', $profile?->contact_number)),
             initialAddress: @json(old('address', $profile?->address)),
-            initialCompanyId: @json(old('company_id', $profile?->company_id)),
             initialPositionRoles: @json($initialPositionRoles),
-            initialEmploymentStatus: @json(old('employment_status', $profile?->employment_status)),
-            initialDateHired: @json(old('date_hired', $profile?->date_hired?->format('Y-m-d'))),
-            initialTesdaRegistryNumber: @json(old('tesda_registry_number', $profile?->tesda_registry_number)),
             initialQualificationTitle: @json(old('qualification_title', $profile?->qualification_title)),
             initialRemarks: @json(old('remarks', $profile?->remarks))
         })'
@@ -64,7 +60,7 @@
 
             <div class="grid gap-6 md:grid-cols-2">
                 <div>
-                    <x-input-label for="first_name" :value="__('First Name')" />
+                    <x-input-label for="first_name" :value="__('First Name')" :required="true" />
                     <x-text-input
                         id="first_name"
                         name="first_name"
@@ -86,7 +82,7 @@
                 </div>
 
                 <div>
-                    <x-input-label for="middle_name" :value="__('Middle Name')" />
+                    <x-input-label for="middle_name" :value="__('Middle Name')" :required="true" />
                     <x-text-input
                         id="middle_name"
                         name="middle_name"
@@ -108,7 +104,7 @@
                 </div>
 
                 <div>
-                    <x-input-label for="last_name" :value="__('Last Name')" />
+                    <x-input-label for="last_name" :value="__('Last Name')" :required="true" />
                     <x-text-input
                         id="last_name"
                         name="last_name"
@@ -150,7 +146,7 @@
                 </div>
 
                 <div>
-                    <x-input-label for="date_of_birth" :value="__('Date of Birth')" />
+                    <x-input-label for="date_of_birth" :value="__('Date of Birth')" :required="true" />
                     <x-text-input
                         id="date_of_birth"
                         name="date_of_birth"
@@ -169,7 +165,7 @@
                 </div>
 
                 <div>
-                    <x-input-label for="gender" :value="__('Sex')" />
+                    <x-input-label for="gender" :value="__('Sex')" :required="true" />
                     <select
                         id="gender"
                         name="gender"
@@ -190,7 +186,7 @@
                 </div>
 
                 <div>
-                    <x-input-label for="contact_number" :value="__('Contact Number')" />
+                    <x-input-label for="contact_number" :value="__('Contact Number')" :required="true" />
                     <x-text-input
                         id="contact_number"
                         name="contact_number"
@@ -217,7 +213,7 @@
         </div>
 
         <div>
-            <x-input-label class="text-base sm:text-[1.05rem]" for="address" :value="__('Address')" />
+            <x-input-label class="text-base sm:text-[1.05rem]" for="address" :value="__('Address')" :required="true" />
             <textarea
                 id="address"
                 name="address"
@@ -248,35 +244,8 @@
         </div>
 
             <div class="grid gap-6 md:grid-cols-2">
-                <div>
-                    <x-input-label for="employment_status" :value="__('Employment Status')" />
-                    <select
-                        id="employment_status"
-                        name="employment_status"
-                        class="mt-1 form-input"
-                        x-bind:class="showError('employmentStatus') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        x-model="employmentStatus"
-                        required
-                        @change="updateValidation()"
-                        @blur="touched.employmentStatus = true; updateValidation()"
-                        x-bind:aria-invalid="showError('employmentStatus')"
-                        x-bind:aria-describedby="showError('employmentStatus') ? 'employment-status-error' : null"
-                    >
-                        <option value="">Select status</option>
-                        <option value="regular">Regular</option>
-                        <option value="probationary">Probationary</option>
-                        <option value="contractual">Contractual</option>
-                        <option value="part-time">Part-time</option>
-                        <option value="internship">Internship</option>
-                        <option value="self-employed">Self-employed</option>
-                        <option value="unemployed">Unemployed</option>
-                    </select>
-                    <p id="employment-status-error" x-show="showError('employmentStatus')" class="mt-2 text-sm text-red-600" x-text="errors.employmentStatus"></p>
-                    <x-input-error class="mt-2" :messages="$errors->get('employment_status')" />
-                </div>
-
                 <div class="md:col-span-2">
-                    <x-input-label class="text-base sm:text-[1.05rem]" :value="__('Position / Job Role')" />
+                    <x-input-label class="text-base sm:text-[1.05rem]" :value="__('Position / Job Role')" :required="true" />
                     <p class="mt-1 text-base leading-relaxed text-grayTheme-medium">Select one role or both roles if the user is assigned as both a trainer and an assessor.</p>
                     <div class="mt-3 grid gap-3 sm:grid-cols-2">
                         <label class="flex items-center gap-3 rounded-lg border border-grayTheme-border bg-white px-4 py-3 text-sm font-medium text-grayTheme-dark shadow-sm transition hover:border-primary/50">
@@ -306,69 +275,6 @@
                     </div>
                     <p id="position-roles-error" x-show="showError('positionRoles')" class="mt-2 text-sm text-red-600" x-text="errors.positionRoles"></p>
                     <x-input-error class="mt-2" :messages="$errors->get('position_roles')" />
-                </div>
-
-                <div>
-                    <x-input-label for="company_id" :value="__('Company ID')" />
-                    <x-text-input
-                        id="company_id"
-                        name="company_id"
-                        type="text"
-                        class="mt-1 block w-full"
-                        x-bind:class="showError('companyId') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        :value="old('company_id', $profile?->company_id)"
-                        placeholder="EMP-00123"
-                        maxlength="255"
-                        required
-                        x-model.trim="companyId"
-                        @input="touched.companyId = true; updateValidation()"
-                        @blur="touched.companyId = true; updateValidation()"
-                        x-bind:aria-invalid="showError('companyId')"
-                        x-bind:aria-describedby="showError('companyId') ? 'company-id-error' : null"
-                    />
-                    <p id="company-id-error" x-show="showError('companyId')" class="mt-2 text-sm text-red-600" x-text="errors.companyId"></p>
-                    <x-input-error class="mt-2" :messages="$errors->get('company_id')" />
-                </div>
-
-                <div>
-                    <x-input-label for="date_hired" :value="__('Date Hired')" />
-                    <x-text-input
-                        id="date_hired"
-                        name="date_hired"
-                        type="date"
-                        class="mt-1 block w-full"
-                        x-bind:class="showError('dateHired') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        :value="old('date_hired', $profile?->date_hired?->format('Y-m-d'))"
-                        x-model="dateHired"
-                        required
-                        @change="touched.dateHired = true; updateValidation()"
-                        x-bind:aria-invalid="showError('dateHired')"
-                        x-bind:aria-describedby="showError('dateHired') ? 'date-hired-error' : null"
-                    />
-                    <p id="date-hired-error" x-show="showError('dateHired')" class="mt-2 text-sm text-red-600" x-text="errors.dateHired"></p>
-                    <x-input-error class="mt-2" :messages="$errors->get('date_hired')" />
-                </div>
-
-                <div>
-                    <x-input-label for="tesda_registry_number" :value="__('TESDA Registry Number')" />
-                    <x-text-input
-                        id="tesda_registry_number"
-                        name="tesda_registry_number"
-                        type="text"
-                        class="mt-1 block w-full"
-                        x-bind:class="showError('tesdaRegistryNumber') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        :value="old('tesda_registry_number', $profile?->tesda_registry_number)"
-                        placeholder="TESDA-2026-0001"
-                        maxlength="255"
-                        required
-                        x-model.trim="tesdaRegistryNumber"
-                        @input="touched.tesdaRegistryNumber = true; updateValidation()"
-                        @blur="touched.tesdaRegistryNumber = true; updateValidation()"
-                        x-bind:aria-invalid="showError('tesdaRegistryNumber')"
-                        x-bind:aria-describedby="showError('tesdaRegistryNumber') ? 'tesda-registry-error' : null"
-                    />
-                    <p id="tesda-registry-error" x-show="showError('tesdaRegistryNumber')" class="mt-2 text-sm text-red-600" x-text="errors.tesdaRegistryNumber"></p>
-                    <x-input-error class="mt-2" :messages="$errors->get('tesda_registry_number')" />
                 </div>
 
                 <div>
@@ -415,31 +321,44 @@
         </div>
 
         <div>
-            <x-input-label for="region" :value="__('Region')" />
-            <x-text-input
+            <x-input-label for="region" :value="__('Municipality / City')" />
+            <select
                 id="region"
                 name="region"
-                class="mt-1 block w-full"
-                type="text"
-                maxlength="100"
-                placeholder="e.g. Region IV-A (CALABARZON)"
-                :value="old('region', $profile?->region)"
-            />
+                class="mt-1 form-input"
+            >
+                <option value="">Select municipality or city</option>
+                @php($selectedRegion = old('region', $profile?->region))
+                <option value="Alaminos" @selected($selectedRegion === 'Alaminos')>Alaminos</option>
+                <option value="Bay" @selected($selectedRegion === 'Bay')>Bay</option>
+                <option value="Biñan" @selected($selectedRegion === 'Biñan')>Biñan (City)</option>
+                <option value="Cabuyao" @selected($selectedRegion === 'Cabuyao')>Cabuyao (City)</option>
+                <option value="Calamba" @selected($selectedRegion === 'Calamba')>Calamba (City)</option>
+                <option value="Calauan" @selected($selectedRegion === 'Calauan')>Calauan</option>
+                <option value="Cavinti" @selected($selectedRegion === 'Cavinti')>Cavinti</option>
+                <option value="Famy" @selected($selectedRegion === 'Famy')>Famy</option>
+                <option value="Kalayaan" @selected($selectedRegion === 'Kalayaan')>Kalayaan</option>
+                <option value="Liliw" @selected($selectedRegion === 'Liliw')>Liliw</option>
+                <option value="Los Baños" @selected($selectedRegion === 'Los Baños')>Los Baños</option>
+                <option value="Luisiana" @selected($selectedRegion === 'Luisiana')>Luisiana</option>
+                <option value="Lumban" @selected($selectedRegion === 'Lumban')>Lumban</option>
+                <option value="Mabitac" @selected($selectedRegion === 'Mabitac')>Mabitac</option>
+                <option value="Magdalena" @selected($selectedRegion === 'Magdalena')>Magdalena</option>
+                <option value="Majayjay" @selected($selectedRegion === 'Majayjay')>Majayjay</option>
+                <option value="Nagcarlan" @selected($selectedRegion === 'Nagcarlan')>Nagcarlan</option>
+                <option value="Pakil" @selected($selectedRegion === 'Pakil')>Pakil</option>
+                <option value="Pagsanjan" @selected($selectedRegion === 'Pagsanjan')>Pagsanjan</option>
+                <option value="Pila" @selected($selectedRegion === 'Pila')>Pila</option>
+                <option value="Rizal" @selected($selectedRegion === 'Rizal')>Rizal</option>
+                <option value="San Pablo" @selected($selectedRegion === 'San Pablo')>San Pablo (City)</option>
+                <option value="San Pedro" @selected($selectedRegion === 'San Pedro')>San Pedro (City)</option>
+                <option value="Santa Cruz" @selected($selectedRegion === 'Santa Cruz')>Santa Cruz (Provincial Capital)</option>
+                <option value="Santa Maria" @selected($selectedRegion === 'Santa Maria')>Santa Maria</option>
+                <option value="Santa Rosa" @selected($selectedRegion === 'Santa Rosa')>Santa Rosa (City)</option>
+                <option value="Siniloan" @selected($selectedRegion === 'Siniloan')>Siniloan</option>
+                <option value="Victoria" @selected($selectedRegion === 'Victoria')>Victoria</option>
+            </select>
             <x-input-error class="mt-2" :messages="$errors->get('region')" />
-        </div>
-
-        <div>
-            <x-input-label for="branch" :value="__('Branch / Office')" />
-            <x-text-input
-                id="branch"
-                name="branch"
-                class="mt-1 block w-full"
-                type="text"
-                maxlength="100"
-                placeholder="e.g. TESDA Batangas Provincial Office"
-                :value="old('branch', $profile?->branch)"
-            />
-            <x-input-error class="mt-2" :messages="$errors->get('branch')" />
         </div>
 
         <div>

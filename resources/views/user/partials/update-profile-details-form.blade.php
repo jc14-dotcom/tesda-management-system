@@ -49,53 +49,46 @@
             </div>
 
             <div>
-                <x-input-label for="company_id" :value="__('Company ID')" />
-                <x-text-input id="company_id" name="company_id" type="text" class="mt-1 block w-full" :value="old('company_id', $profile?->company_id)" />
-                <x-input-error class="mt-2" :messages="$errors->get('company_id')" />
-            </div>
-
-            <div>
                 <x-input-label for="position_title" :value="__('Position / Job Title')" />
                 <x-text-input id="position_title" name="position_title" type="text" class="mt-1 block w-full" :value="old('position_title', $profile?->position_title)" />
                 <x-input-error class="mt-2" :messages="$errors->get('position_title')" />
             </div>
 
             <div>
-                <x-input-label for="employment_status" :value="__('Employment Status')" />
-                <x-text-input id="employment_status" name="employment_status" type="text" class="mt-1 block w-full" :value="old('employment_status', $profile?->employment_status)" />
-                <x-input-error class="mt-2" :messages="$errors->get('employment_status')" />
-            </div>
-
-            <div class="md:col-span-2 rounded-card border border-grayTheme-border bg-grayTheme-light px-4 py-3">
-                <div class="text-sm font-semibold text-grayTheme-dark">Account Status</div>
-                <p class="mt-1 text-sm text-grayTheme-medium">
-                    {{ ucfirst($profile?->status ?? 'active') }}
-                </p>
-                <p class="mt-1 text-xs text-grayTheme-medium">This should be managed by admin or HR, not edited directly by the user.</p>
-            </div>
-
-            <div>
-                <x-input-label for="date_hired" :value="__('Date Hired')" />
-                <x-text-input id="date_hired" name="date_hired" type="date" class="mt-1 block w-full" :value="old('date_hired', $profile?->date_hired?->format('Y-m-d'))" />
-                <x-input-error class="mt-2" :messages="$errors->get('date_hired')" />
-            </div>
-
-            <div>
-                <x-input-label for="region" :value="__('Region')" />
-                <x-text-input id="region" name="region" type="text" class="mt-1 block w-full" :value="old('region', $profile?->region)" />
+                <x-input-label for="region" :value="__('Municipality / City')" />
+                <select id="region" name="region" class="mt-1 form-input">
+                    @php($selectedRegion = old('region', $profile?->region))
+                    <option value="">Select municipality or city</option>
+                    <option value="Alaminos" @selected($selectedRegion === 'Alaminos')>Alaminos</option>
+                    <option value="Bay" @selected($selectedRegion === 'Bay')>Bay</option>
+                    <option value="Biñan" @selected($selectedRegion === 'Biñan')>Biñan (City)</option>
+                    <option value="Cabuyao" @selected($selectedRegion === 'Cabuyao')>Cabuyao (City)</option>
+                    <option value="Calamba" @selected($selectedRegion === 'Calamba')>Calamba (City)</option>
+                    <option value="Calauan" @selected($selectedRegion === 'Calauan')>Calauan</option>
+                    <option value="Cavinti" @selected($selectedRegion === 'Cavinti')>Cavinti</option>
+                    <option value="Famy" @selected($selectedRegion === 'Famy')>Famy</option>
+                    <option value="Kalayaan" @selected($selectedRegion === 'Kalayaan')>Kalayaan</option>
+                    <option value="Liliw" @selected($selectedRegion === 'Liliw')>Liliw</option>
+                    <option value="Los Baños" @selected($selectedRegion === 'Los Baños')>Los Baños</option>
+                    <option value="Luisiana" @selected($selectedRegion === 'Luisiana')>Luisiana</option>
+                    <option value="Lumban" @selected($selectedRegion === 'Lumban')>Lumban</option>
+                    <option value="Mabitac" @selected($selectedRegion === 'Mabitac')>Mabitac</option>
+                    <option value="Magdalena" @selected($selectedRegion === 'Magdalena')>Magdalena</option>
+                    <option value="Majayjay" @selected($selectedRegion === 'Majayjay')>Majayjay</option>
+                    <option value="Nagcarlan" @selected($selectedRegion === 'Nagcarlan')>Nagcarlan</option>
+                    <option value="Pakil" @selected($selectedRegion === 'Pakil')>Pakil</option>
+                    <option value="Pagsanjan" @selected($selectedRegion === 'Pagsanjan')>Pagsanjan</option>
+                    <option value="Pila" @selected($selectedRegion === 'Pila')>Pila</option>
+                    <option value="Rizal" @selected($selectedRegion === 'Rizal')>Rizal</option>
+                    <option value="San Pablo" @selected($selectedRegion === 'San Pablo')>San Pablo (City)</option>
+                    <option value="San Pedro" @selected($selectedRegion === 'San Pedro')>San Pedro (City)</option>
+                    <option value="Santa Cruz" @selected($selectedRegion === 'Santa Cruz')>Santa Cruz (Provincial Capital)</option>
+                    <option value="Santa Maria" @selected($selectedRegion === 'Santa Maria')>Santa Maria</option>
+                    <option value="Santa Rosa" @selected($selectedRegion === 'Santa Rosa')>Santa Rosa (City)</option>
+                    <option value="Siniloan" @selected($selectedRegion === 'Siniloan')>Siniloan</option>
+                    <option value="Victoria" @selected($selectedRegion === 'Victoria')>Victoria</option>
+                </select>
                 <x-input-error class="mt-2" :messages="$errors->get('region')" />
-            </div>
-
-            <div>
-                <x-input-label for="branch" :value="__('Branch')" />
-                <x-text-input id="branch" name="branch" type="text" class="mt-1 block w-full" :value="old('branch', $profile?->branch)" />
-                <x-input-error class="mt-2" :messages="$errors->get('branch')" />
-            </div>
-
-            <div>
-                <x-input-label for="tesda_registry_number" :value="__('TESDA Registry Number')" />
-                <x-text-input id="tesda_registry_number" name="tesda_registry_number" type="text" class="mt-1 block w-full" :value="old('tesda_registry_number', $profile?->tesda_registry_number)" />
-                <x-input-error class="mt-2" :messages="$errors->get('tesda_registry_number')" />
             </div>
 
             <div>

@@ -18,21 +18,15 @@ class DocumentController extends Controller
     {
         $data = $request->validate([
             'document_name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:cv,certificate,other'],
+            'type' => ['required', 'string', 'in:cv,training,other'],
             'certificate_no' => ['nullable', 'string', 'max:255'],
             'issued_on' => ['nullable', 'date'],
             'valid_until' => ['nullable', 'date', 'after_or_equal:issued_on'],
             'certificate_id' => ['nullable', 'integer', 'exists:certificates,id'],
-            'file' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp,gif,bmp,tif,tiff,doc,docx,xls,xlsx,ppt,pptx,txt,csv'],
+            'file' => ['nullable', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp,gif,bmp,tif,tiff,doc,docx,xls,xlsx,ppt,pptx,txt,csv'],
         ]);
 
         $user = $request->user();
-
-        if ($data['type'] === 'certificate' && empty($data['certificate_id'])) {
-            return back()->withErrors([
-                'certificate_id' => 'Certificate is required for certificate uploads.',
-            ]);
-        }
 
         if (! empty($data['certificate_id'])) {
             $certificate = Certificate::where('id', $data['certificate_id'])
@@ -44,26 +38,29 @@ class DocumentController extends Controller
             }
         }
 
-        $file = $request->file('file');
-        $path = $file->store("documents/{$user->id}", 'local');
-
         if ($data['type'] === 'cv') {
             $user->documents()->where('type', 'cv')->update(['is_primary' => false]);
         }
 
-        $user->documents()->create([
+        $docData = [
             'certificate_id' => $data['certificate_id'] ?? null,
             'document_name' => $data['document_name'],
             'certificate_no' => $data['certificate_no'] ?? null,
             'issued_on' => $data['issued_on'] ?? null,
             'valid_until' => $data['valid_until'] ?? null,
             'type' => $data['type'],
-            'path' => $path,
-            'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize(),
             'is_primary' => $data['type'] === 'cv',
-        ]);
+        ];
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $docData['path'] = $file->store("documents/{$user->id}", 'local');
+            $docData['original_name'] = $file->getClientOriginalName();
+            $docData['mime_type'] = $file->getClientMimeType();
+            $docData['size'] = $file->getSize();
+        }
+
+        $user->documents()->create($docData);
 
         CacheBuster::bumpUser($user->id);
         CacheBuster::bumpAdminUsers();

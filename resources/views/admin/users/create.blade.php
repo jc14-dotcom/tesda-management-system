@@ -28,7 +28,7 @@
                     @csrf
 
                     <div>
-                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="name">Full Name</label>
+                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="name">Full Name<span class="ml-0.5 text-red-500" aria-hidden="true">*</span></label>
                         <input
                             id="name"
                             type="text"
@@ -42,7 +42,7 @@
                     </div>
 
                     <div>
-                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="email">Email Address</label>
+                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="email">Email Address<span class="ml-0.5 text-red-500" aria-hidden="true">*</span></label>
                         <input
                             id="email"
                             type="email"
@@ -66,7 +66,7 @@
                     <div class="hidden md:block"></div>
 
                     <div>
-                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="password">Password</label>
+                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="password">Password<span class="ml-0.5 text-red-500" aria-hidden="true">*</span></label>
                         <input
                             id="password"
                             type="password"
@@ -80,7 +80,7 @@
                     </div>
 
                     <div>
-                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="password_confirmation">Confirm Password</label>
+                        <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="password_confirmation">Confirm Password<span class="ml-0.5 text-red-500" aria-hidden="true">*</span></label>
                         <input
                             id="password_confirmation"
                             type="password"

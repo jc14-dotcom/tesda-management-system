@@ -15,11 +15,10 @@ class CertificateController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'certificate_name' => ['required', 'string', 'max:255'],
             'certificate_type' => ['required', 'string', 'in:nc_i,nc_ii,nc_iii,nc_iv,nttc,trainer,assessor,other'],
-            'qualification_title' => ['nullable', 'string', 'max:255'],
-            'certificate_number' => ['nullable', 'string', 'max:255'],
-            'issued_by' => ['nullable', 'string', 'max:255'],
+            'qualification_title' => ['required', 'string', 'max:255'],
+            'certificate_number' => ['required', 'string', 'max:255'],
+            'issued_by' => ['required', 'string', 'max:255'],
             'issue_date' => ['nullable', 'date'],
             'expiration_date' => ['nullable', 'date', 'after_or_equal:issue_date'],
             'certificate_file' => ['nullable', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp,gif,bmp,tif,tiff'],
@@ -37,6 +36,7 @@ class CertificateController extends Controller
         }
 
         $user = $request->user();
+        $data['certificate_name'] = $data['qualification_title'];
         $certificate = $user->certificates()->create([
             ...$data,
             'status' => $status,

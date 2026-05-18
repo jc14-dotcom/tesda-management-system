@@ -25,10 +25,17 @@ class DocumentController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $stats = [
+            'total'    => Document::count(),
+            'thisWeek' => Document::where('created_at', '>=', now()->startOfWeek())->count(),
+            'totalSize' => Document::sum('size'),
+        ];
+
         return view('admin.documents.index', [
             'documents' => $documents,
             'search'    => $search,
             'type'      => $type,
+            'stats'     => $stats,
         ]);
     }
 }
