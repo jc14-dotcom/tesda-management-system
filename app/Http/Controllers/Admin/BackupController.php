@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Support\DatabaseBackupRunner;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use ZipArchive;
@@ -17,6 +18,15 @@ class BackupController extends Controller
     private const TIME_KEY     = 'backup_schedule_time';
     private const WEEKDAY_KEY  = 'backup_schedule_weekday';
     private const MONTHDAY_KEY = 'backup_schedule_monthday';
+    private const TRANSIENT_TABLES = [
+        'cache',
+        'cache_locks',
+        'failed_jobs',
+        'job_batches',
+        'jobs',
+        'password_reset_tokens',
+        'sessions',
+    ];
 
     // ─── Index ────────────────────────────────────────────────────────────────
 
@@ -52,7 +62,7 @@ class BackupController extends Controller
         try {
             $dbConn = config('database.default');
             $dbName = config("database.connections.{$dbConn}.database");
-            $sizeRow = \DB::select('SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS sz FROM information_schema.tables WHERE table_schema = DATABASE()');
+            $sizeRow = DB::select('SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS sz FROM information_schema.tables WHERE table_schema = DATABASE()');
             $dbSizeMb = $sizeRow[0]->sz ?? 0;
         } catch (\Throwable) {
             $dbName   = config('database.connections.'.config('database.default').'.database', 'N/A');
@@ -82,21 +92,16 @@ class BackupController extends Controller
 
     // ─── Run ──────────────────────────────────────────────────────────────────
 
-    public function run(Request $request)
+    public function run(Request $request, DatabaseBackupRunner $runner)
     {
         try {
-            $exitCode = Artisan::call('backup:run', [
-                '--disable-notifications' => true,
-                '--only-db'               => true,
-            ]);
-            if ($exitCode !== 0) {
-                return back()
-                    ->with('status', 'backup-failed')
-                    ->with('backup_error', trim(Artisan::output()) ?: 'Backup command returned a non-zero exit code.');
-            }
-            return back()->with('status', 'backup-success');
+            $runner->run();
+
+            return redirect()->route('admin.backups.index')->with('status', 'backup-success');
         } catch (\Throwable $e) {
-            return back()->with('status', 'backup-failed')->with('backup_error', $e->getMessage());
+            return redirect()->route('admin.backups.index')
+                ->with('status', 'backup-failed')
+                ->with('backup_error', $e->getMessage());
         }
     }
 
@@ -111,7 +116,10 @@ class BackupController extends Controller
             abort(404);
         }
 
-        return Storage::disk($disk)->download($path, basename($path));
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        $storage = Storage::disk($disk);
+
+        return $storage->download($path, basename($path));
     }
 
     // ─── Delete ───────────────────────────────────────────────────────────────
@@ -127,7 +135,7 @@ class BackupController extends Controller
 
         Storage::disk($disk)->delete($path);
 
-        return back()->with('status', 'backup-deleted');
+        return redirect()->route('admin.backups.index')->with('status', 'backup-deleted');
     }
 
     // ─── Restore from existing backup ─────────────────────────────────────────
@@ -152,7 +160,7 @@ class BackupController extends Controller
             return $this->restoreFromZip($request, $tempDir, $zipPath);
 
         } catch (\Throwable $e) {
-            return back()
+            return redirect()->route('admin.backups.index')
                 ->with('status', 'backup-restore-failed')
                 ->with('backup_error', $e->getMessage());
         } finally {
@@ -178,7 +186,7 @@ class BackupController extends Controller
             return $this->restoreFromZip($request, $tempDir, $zipPath);
 
         } catch (\Throwable $e) {
-            return back()
+            return redirect()->route('admin.backups.index')
                 ->with('status', 'backup-restore-failed')
                 ->with('backup_error', $e->getMessage());
         } finally {
@@ -208,48 +216,16 @@ class BackupController extends Controller
             $sqlFile = $this->gunzip($sqlFile);
         }
 
-        $binary = $this->findMysqlBinary();
-        if (! $binary) {
-            throw new \RuntimeException(
-                'mysql binary not found in PATH. ' .
-                'Add your MySQL bin directory to the system PATH and try again, ' .
-                'or restore manually: mysql -u [user] -p [database] < ' . basename($sqlFile)
-            );
-        }
-
-        $db      = config('database.connections.' . config('database.default'));
-        $process = proc_open(
-            [
-                $binary,
-                '-h', $db['host'] ?? '127.0.0.1',
-                '-P', (string) ($db['port'] ?? 3306),
-                '-u', $db['username'],
-                '--password=' . $db['password'],
-                $db['database'],
-            ],
-            [0 => ['file', $sqlFile, 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-            $pipes
-        );
-
-        if (! is_resource($process)) {
-            throw new \RuntimeException('Failed to launch mysql process.');
-        }
-
-        $stderr   = stream_get_contents($pipes[2]);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-        $exitCode = proc_close($process);
-
-        if ($exitCode !== 0) {
-            throw new \RuntimeException('MySQL restore failed: ' . $stderr);
-        }
+        $this->restoreSqlDump($sqlFile);
+        $this->clearTransientTables();
 
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect()->route('login')
-            ->with('status', 'Database restored from backup. Please sign in again.');
+            ->with('status', 'Database restored from backup. Please sign in again.')
+            ->with('restore_success', 'Database restored from backup. Please sign in again.');
     }
 
     // ─── Save Schedule ────────────────────────────────────────────────────────
@@ -273,7 +249,7 @@ class BackupController extends Controller
             Setting::set(self::MONTHDAY_KEY, (string) $data['monthday']);
         }
 
-        return back()->with('status', 'schedule-saved');
+        return redirect()->route('admin.backups.index')->with('status', 'schedule-saved');
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -307,26 +283,32 @@ class BackupController extends Controller
         return $outPath;
     }
 
-    private function findMysqlBinary(): ?string
+    private function restoreSqlDump(string $sqlFile): void
     {
-        if (PHP_OS_FAMILY === 'Windows') {
-            exec('where mysql 2>NUL', $out, $code);
-            if ($code === 0 && ! empty($out[0]) && file_exists(trim($out[0]))) {
-                return trim($out[0]);
-            }
-            // Common Laragon install paths (MySQL and MariaDB)
-            foreach (['mysql-*', 'mariadb-*', 'mysql8*', 'mysql5*'] as $pattern) {
-                foreach (glob('C:\\laragon\\bin\\mysql\\' . $pattern . '\\bin\\mysql.exe') ?: [] as $p) {
-                    if (file_exists($p)) return $p;
+        $sql = file_get_contents($sqlFile);
+
+        if ($sql === false || trim($sql) === '') {
+            throw new \RuntimeException('The database dump is empty or cannot be read.');
+        }
+
+        DB::connection()->getPdo()->exec($sql);
+    }
+
+    private function clearTransientTables(): void
+    {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
+        try {
+            foreach (self::TRANSIENT_TABLES as $table) {
+                if (DB::getSchemaBuilder()->hasTable($table)) {
+                    DB::table($table)->truncate();
                 }
             }
-        } else {
-            exec('which mysql 2>/dev/null', $out, $code);
-            if ($code === 0 && ! empty($out[0])) {
-                return trim($out[0]);
-            }
+
+            cache()->flush();
+        } finally {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
         }
-        return null;
     }
 
     private function rmdirRecursive(string $dir): void

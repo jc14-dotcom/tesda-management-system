@@ -55,9 +55,7 @@
                 </div>
             </div>
 
-            @if (session('status') === 'user-deleted')
-                <div class="rounded-lg bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">User account deleted.</div>
-            @endif
+            {{-- Flash messages handled by toast notifications --}}
 
             {{-- Search / Filter --}}
             <div class="surface p-6">
@@ -294,4 +292,8 @@
         </div>
     </div>
 
+    {{-- Bridge session flash messages to toast notifications --}}
+    @if (session('status') === 'user-deleted')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'User Deleted',message:'The user account has been permanently removed.'}}));</script>
+    @endif
 </x-app-layout>

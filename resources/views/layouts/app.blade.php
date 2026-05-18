@@ -15,6 +15,21 @@
         {{-- Apply sidebar collapsed state before first paint (prevents layout shift) --}}
         <script>if(localStorage.getItem('sidebar-collapsed')==='true'){document.documentElement.classList.add('sidebar-collapsed');}</script>
 
+        {{-- Queue early toast events until the Vite module has registered the toast renderer. --}}
+        <script>
+        (function(){
+            if(window.__toastQueueInstalled) return;
+            window.__toastQueueInstalled = true;
+            window.__pendingToasts = window.__pendingToasts || [];
+            window.__toastReady = false;
+            window.addEventListener('show-toast', function(e){
+                if(!window.__toastReady){
+                    window.__pendingToasts.push(e.detail || {});
+                }
+            });
+        }());
+        </script>
+
         {{--
             bfcache guard — two-phase, zero-flash approach:
 
@@ -75,7 +90,7 @@
 
         {{-- Bridge session flash messages to the global toast system --}}
         @if(session('forbidden'))
-        <script>document.addEventListener('DOMContentLoaded',()=>window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'warning',title:'Access Denied',message:{{ Js::from(session('forbidden')) }}}})));</script>
+        <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'warning',title:'Access Denied',message:{{ Js::from(session('forbidden')) }}}}));</script>
         @endif
 
         {{-- Global confirmation modal — trigger via window.showConfirm({...}) or data-confirm-message attribute --}}

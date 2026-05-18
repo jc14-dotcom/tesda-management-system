@@ -55,12 +55,7 @@
                 </div>
             </div>
 
-            {{-- Flash messages --}}
-        @if(session('status') === 'notification-deleted')
-            <div class="mb-4 rounded-lg bg-success-soft px-4 py-3 text-sm font-semibold text-success">Notification deleted.</div>
-        @elseif(session('status') === 'all-notifications-deleted')
-            <div class="mb-4 rounded-lg bg-success-soft px-4 py-3 text-sm font-semibold text-success">All notifications cleared.</div>
-        @endif
+            {{-- Flash messages handled by toast notifications --}}
 
         {{-- Filters --}}
         <div class="surface p-6">
@@ -259,4 +254,11 @@
 
         </div>
     </div>
+
+    {{-- Bridge session flash messages to toast notifications --}}
+    @if(session('status') === 'notification-deleted')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Notification Deleted',message:'The notification has been removed.'}}));</script>
+    @elseif(session('status') === 'all-notifications-deleted')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'All Cleared',message:'All notifications have been deleted.'}}));</script>
+    @endif
 </x-app-layout>

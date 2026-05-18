@@ -166,20 +166,7 @@
 	pointer-events: auto;
 }
 
-/* ─── Toast ──────────────────────────────────────────────────────────────────── */
-.toast-item.toast-success { @apply border-green-200; }
-.toast-item.toast-success .toast-icon { @apply bg-green-100 text-green-600; }
-.toast-item.toast-success .toast-bar  { @apply bg-green-500; }
-
-.toast-item.toast-error { @apply border-red-200; }
-.toast-item.toast-error .toast-icon   { @apply bg-red-100 text-danger; }
-.toast-item.toast-error .toast-bar    { @apply bg-danger; }
-
-.toast-item.toast-info { @apply border-primary/20; }
-.toast-item.toast-info .toast-icon    { @apply bg-primary-soft text-primary; }
-.toast-item.toast-info .toast-bar     { @apply bg-primary; }
-
-.toast-item.toast-warning { @apply border-accent/20; }
-.toast-item.toast-warning .toast-icon { @apply bg-accent-soft text-accent-active; }
-.toast-item.toast-warning .toast-bar  { @apply bg-accent; }
+/* ─── Toast (Option C — gradient design) ────────────────────────────────────── */
+/* All toast styles are applied via inline styles in layout.js.                  */
+/* No CSS rules needed — keeping file clean.                                     */
 

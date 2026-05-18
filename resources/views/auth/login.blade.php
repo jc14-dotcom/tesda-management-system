@@ -7,6 +7,20 @@
 
         <title>Alcatt Portal — Sign In</title>
 
+        <script>
+        (function(){
+            if(window.__toastQueueInstalled) return;
+            window.__toastQueueInstalled = true;
+            window.__pendingToasts = window.__pendingToasts || [];
+            window.__toastReady = false;
+            window.addEventListener('show-toast', function(e){
+                if(!window.__toastReady){
+                    window.__pendingToasts.push(e.detail || {});
+                }
+            });
+        }());
+        </script>
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         {{--
@@ -33,8 +47,8 @@
         }());
         </script>
     </head>
-    <body class="min-h-screen bg-grayTheme-light text-grayTheme-dark antialiased">
-        <main class="flex min-h-screen">
+    <body class="h-dvh overflow-hidden bg-grayTheme-light text-grayTheme-dark antialiased">
+        <main class="flex h-dvh overflow-hidden">
             <!-- Left: Brand Panel -->
             <div class="relative hidden overflow-hidden lg:flex lg:w-[42%] lg:flex-col bg-primary">
                 <!-- Radial glow accents -->
@@ -44,7 +58,7 @@
                 <!-- Dot grid -->
                 <div class="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.10)_1px,transparent_1px)] bg-[size:28px_28px]"></div>
 
-                <div class="relative z-10 flex flex-1 flex-col px-10 py-10">
+                <div class="relative z-10 flex h-full flex-col px-10 py-10">
                     <!-- Logo -->
                     <a href="/" class="inline-flex items-center gap-3">
                         <img src="{{ asset('assets/alcatt-logo.png') }}" class="h-10 w-10 object-contain" alt="Alcatt Portal" />
@@ -61,7 +75,7 @@
                             Manage certificates, documents, and employee profiles from one unified, secure platform.
                         </p>
 
-                        <div class="mt-10 space-y-5">
+                        <div class="mt-8 space-y-4">
                             <div class="flex items-start gap-3">
                                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent">
                                     <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -105,7 +119,7 @@
             </div>
 
             <!-- Right: Form Panel -->
-            <div class="flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-12 bg-[radial-gradient(circle_at_top_right,_rgba(43,45,126,0.06),_transparent_40%),linear-gradient(135deg,_#f8f9ff_0%,_#f3f4f6_100%)]">
+            <div class="flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-8 lg:px-12 bg-[radial-gradient(circle_at_top_right,_rgba(43,45,126,0.06),_transparent_40%),linear-gradient(135deg,_#f8f9ff_0%,_#f3f4f6_100%)]">
                 <!-- Mobile logo -->
                 <div class="mb-8 flex items-center gap-3 lg:hidden">
                     <img src="{{ asset('assets/alcatt-logo.png') }}" class="h-10 w-10 object-contain" alt="Alcatt Portal" />
@@ -113,9 +127,9 @@
                 </div>
 
                 <div class="w-full max-w-md">
-                    <div class="rounded-[20px] border border-grayTheme-border bg-white p-8 shadow-modal sm:p-10">
+                    <div class="rounded-[20px] border border-grayTheme-border bg-white p-7 shadow-modal sm:p-8">
                         <!-- Heading -->
-                        <div class="mb-7">
+                        <div class="mb-6">
                             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft">
                                 <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -127,7 +141,7 @@
 
                         <x-auth-session-status class="mb-4" :status="session('status')" />
 
-                        <form method="POST" action="{{ route('login') }}" class="space-y-5">
+                        <form method="POST" action="{{ route('login') }}" class="space-y-4">
                             @csrf
 
                             <!-- Email -->
@@ -204,93 +218,13 @@
                 </div>
             </div>
         </main>
-    </body>
-</html>
+        <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none" aria-live="polite" aria-atomic="false"></div>
 
-                        <div class="mt-16 space-y-10">
-                            <article class="max-w-lg">
-                                <div class="flex items-start gap-4">
-                                    <div class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow-card">✓</div>
-                                    <div>
-                                        <h2 class="text-2xl font-extrabold tracking-tight text-grayTheme-dark">Get started quickly</h2>
-                                        <p class="mt-2 text-base leading-7 text-grayTheme-medium">Integrate with developer-friendly APIs or choose low-code.</p>
-                                    </div>
-                                </div>
-                            </article>
-
-                            <article class="max-w-lg">
-                                <div class="flex items-start gap-4">
-                                    <div class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow-card">✓</div>
-                                    <div>
-                                        <h2 class="text-2xl font-extrabold tracking-tight text-grayTheme-dark">Support any business model</h2>
-                                        <p class="mt-2 text-base leading-7 text-grayTheme-medium">Host code that you don't want to share with the world in private.</p>
-                                    </div>
-                                </div>
-                            </article>
-
-                            <article class="max-w-lg">
-                                <div class="flex items-start gap-4">
-                                    <div class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow-card">✓</div>
-                                    <div>
-                                        <h2 class="text-2xl font-extrabold tracking-tight text-grayTheme-dark">Join millions of businesses</h2>
-                                        <p class="mt-2 text-base leading-7 text-grayTheme-medium">Flowbite is trusted by ambitious startups and enterprises of every size.</p>
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
-                    </section>
-
-                    <section class="w-full">
-                        <div class="mx-auto w-full max-w-xl rounded-card border border-grayTheme-border bg-white p-8 shadow-modal sm:p-10">
-                            <h1 class="text-3xl font-extrabold tracking-tight text-grayTheme-dark">Welcome back</h1>
-
-                            <div class="mt-6 space-y-4">
-                                <x-auth-session-status :status="session('status')" />
-
-                                <form method="POST" action="{{ route('login') }}" class="space-y-5">
-                                    @csrf
-
-                                    <div>
-                                        <x-input-label for="email" :value="__('Email')" class="text-grayTheme-dark" />
-                                        <x-text-input id="email" class="mt-2 block w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="Enter your email" />
-                                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                                    </div>
-
-                                    <div>
-                                        <x-input-label for="password" :value="__('Password')" class="text-grayTheme-dark" />
-                                        <x-text-input id="password" class="mt-2 block w-full" type="password" name="password" required autocomplete="current-password" placeholder="••••••••" />
-                                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                                    </div>
-
-                                    <div class="flex items-center justify-between gap-4">
-                                        <label for="remember_me" class="inline-flex items-center gap-3">
-                                            <input id="remember_me" type="checkbox" class="h-4 w-4 rounded border-grayTheme-border bg-white text-primary focus:ring-primary/30" name="remember" {{ old('remember') ? 'checked' : '' }}>
-                                            <span class="text-sm text-grayTheme-medium">{{ __('Remember me') }}</span>
-                                        </label>
-
-                                        @if (Route::has('password.request'))
-                                            <a class="text-sm font-semibold text-primary transition hover:text-primary-hover" href="{{ route('password.request') }}">
-                                                {{ __('Forgot password?') }}
-                                            </a>
-                                        @endif
-                                    </div>
-
-                                    <x-primary-button class="w-full justify-center text-base tracking-wide">
-                                        {{ __('Sign in to your account') }}
-                                    </x-primary-button>
-
-                                    @if (Route::has('register'))
-                                        <p class="pt-2 text-sm text-grayTheme-medium">
-                                            {{ __('Don\'t have an account yet?') }}
-                                            <a class="font-semibold text-primary transition hover:text-primary-hover" href="{{ route('register') }}">{{ __('Sign up here') }}</a>
-                                        </p>
-                                    @endif
-                                </form>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        </main>
+        @if(session('restore_success'))
+        <script data-turbo-eval="true">
+            window.Turbo?.cache?.clear?.();
+            window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Database Restored',message:{{ Js::from(session('restore_success')) }}}}));
+        </script>
+        @endif
     </body>
 </html>

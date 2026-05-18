@@ -1,5 +1,5 @@
 ﻿<x-app-layout>
-    <div class="py-12" x-data="{
+    <div class="py-12" data-backup-page x-data="{
         confirmOpen: false,
         confirmTitle: '',
         confirmMessage: '',
@@ -12,8 +12,18 @@
             this.pendingFormRef  = formRef;
             this.confirmOpen     = true;
         },
+        saveScroll() {
+            try { sessionStorage.setItem('backups:scrollY', String(window.scrollY)); } catch (e) {}
+        },
+        submitForm(ref) {
+            this.saveScroll();
+            const form = this.$refs[ref];
+            if (!form) return;
+            if (form.requestSubmit) form.requestSubmit();
+            else form.submit();
+        },
         runConfirm() {
-            this.$refs[this.pendingFormRef].submit();
+            this.submitForm(this.pendingFormRef);
             this.confirmOpen = false;
         },
         restoreOpen: false,
@@ -27,41 +37,54 @@
             this.restoreOpen     = true;
         },
         submitRestore() {
-            this.$refs.restoreForm.submit();
+            this.submitForm('restoreForm');
             this.restoreOpen = false;
         },
         schedFreq:     @js($schedule['frequency']),
         schedTime:     @js($schedule['time']),
         schedWeekday:  @js($schedule['weekday']),
         schedMonthday: @js($schedule['monthday']),
+        origFreq:      @js($schedule['frequency']),
+        origTime:      @js($schedule['time']),
+        origWeekday:   @js($schedule['weekday']),
+        origMonthday:  @js($schedule['monthday']),
+        get hasSchedChanges() {
+            return this.schedFreq !== this.origFreq
+                || this.schedTime !== this.origTime
+                || this.schedWeekday !== this.origWeekday
+                || this.schedMonthday !== this.origMonthday;
+        },
     }">
         <div class="page-container space-y-6">
 
             <x-page-header
-                title="Backup &amp; Restore"
+                title="Backup & Restore"
                 subtitle="Protect your data with automated backups and easy restoration."
                 eyebrow="Administration"
             />
 
-            {{-- Flash messages --}}
+            {{-- Flash messages handled by toast notifications --}}
             @if (session('status') === 'backup-success')
-                <div class="rounded-lg bg-success-soft px-4 py-3 text-sm font-semibold text-success">âœ“ Backup created successfully.</div>
             @elseif (session('status') === 'backup-failed')
-                <div class="rounded-lg bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">âœ— Backup failed: {{ session('backup_error') }}</div>
             @elseif (session('status') === 'backup-deleted')
-                <div class="rounded-lg bg-success-soft px-4 py-3 text-sm font-semibold text-success">âœ“ Backup deleted.</div>
             @elseif (session('status') === 'backup-restore-failed')
-                <div class="rounded-lg bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">âœ— Restore failed: {{ session('backup_error') }}</div>
             @elseif (session('status') === 'schedule-saved')
-                <div class="rounded-lg bg-success-soft px-4 py-3 text-sm font-semibold text-success">âœ“ Backup schedule saved.</div>
             @endif
 
             {{-- â”€â”€ Section 1: Database Information â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
-            <div class="surface rounded-xl shadow-sm">
-                <div class="flex flex-wrap items-center justify-between gap-4 px-5 py-5">
+            <div class="surface overflow-hidden rounded-xl shadow-sm">
+                <div class="flex items-center gap-3 border-b border-grayTheme-border bg-grayTheme-light px-5 py-4">
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft">
+                        <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+                    </div>
                     <div>
                         <h2 class="text-sm font-semibold text-grayTheme-dark">Database Information</h2>
-                        <p class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-grayTheme-medium">
+                        <p class="mt-0.5 text-xs text-grayTheme-medium">Current database status and backup controls</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-4 px-5 py-5">
+                    <div>
+                        <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-grayTheme-medium">
                             <span>
                                 Database:
                                 <strong class="text-grayTheme-dark">{{ $dbName }}</strong>
@@ -95,11 +118,17 @@
             </div>
 
             {{-- â”€â”€ Section 2: Automatic Backup Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
-            <div class="surface rounded-xl shadow-sm">
-                <div class="border-b border-grayTheme-border px-5 py-4">
-                    <h2 class="text-sm font-semibold text-grayTheme-dark">Automatic Backup Settings</h2>
+            <div class="surface overflow-hidden rounded-xl shadow-sm">
+                <div class="flex items-center gap-3 border-b border-grayTheme-border bg-grayTheme-light px-5 py-4">
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft">
+                        <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-semibold text-grayTheme-dark">Automatic Backup Settings</h2>
+                        <p class="mt-0.5 text-xs text-grayTheme-medium">Configure how often backups are created automatically</p>
+                    </div>
                 </div>
-                <form method="post" action="{{ route('admin.backups.schedule') }}" class="p-5">
+                <form method="post" action="{{ route('admin.backups.schedule') }}" class="p-5" @submit="saveScroll()">
                     @csrf
                     <div class="space-y-4">
                         <div>
@@ -151,7 +180,7 @@
                     </div>
 
                     {{-- Schedule summary + save --}}
-                    <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-grayTheme-border pt-4">
+                    <div class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-grayTheme-border pt-5">
                         <p class="flex items-center gap-1.5 text-xs text-grayTheme-medium">
                             <svg class="h-4 w-4 shrink-0 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             <span x-show="schedFreq === 'disabled'">Automatic backups are <strong>disabled</strong>.</span>
@@ -169,7 +198,9 @@
                             </span>
                             <span x-show="schedFreq === 'yearly'" x-cloak>Backup runs on <strong>January 1st</strong> at <strong x-text="schedTime"></strong>.</span>
                         </p>
-                        <button type="submit" class="btn-primary inline-flex items-center gap-2">
+                        <button type="submit" class="btn-primary inline-flex items-center gap-2"
+                            :disabled="!hasSchedChanges"
+                            :class="{'opacity-40 cursor-not-allowed': !hasSchedChanges}">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                             Save Settings
                         </button>
@@ -178,59 +209,83 @@
             </div>
 
             {{-- â”€â”€ Section 3: Restore from Backup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
-            <div class="surface rounded-xl shadow-sm">
-                <div class="border-b border-grayTheme-border px-5 py-4">
-                    <h2 class="text-sm font-semibold text-grayTheme-dark">Restore from Backup</h2>
+            <div class="surface overflow-hidden rounded-xl shadow-sm">
+                <div class="flex items-center gap-3 border-b border-grayTheme-border bg-warning-soft px-5 py-4">
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/20">
+                        <svg class="h-4 w-4 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-semibold text-grayTheme-dark">Restore from Backup</h2>
+                        <p class="mt-0.5 text-xs text-warning/80">Upload a backup file to restore the database</p>
+                    </div>
                 </div>
-                <div class="p-5 space-y-4">
-                    <div class="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning-soft px-4 py-3">
-                        <svg class="mt-0.5 h-4 w-4 shrink-0 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
-                        <p class="text-xs leading-5 text-warning/90">
-                            <strong>Warning:</strong> Restoring will permanently replace all current data.
+                <div class="space-y-5 p-5">
+                    <div class="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning-soft px-4 py-3.5">
+                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+                        <p class="text-xs leading-5 text-grayTheme-dark">
+                            <strong class="text-warning">Warning:</strong> Restoring will permanently replace all current data.
                             Make sure you have a recent backup before proceeding.
                             You will need to log in again after restore completes.
                         </p>
                     </div>
                     <form method="post" action="{{ route('admin.backups.restore-upload') }}"
                           enctype="multipart/form-data"
-                          class="flex flex-wrap items-end gap-3">
+                          data-turbo="false"
+                          class="space-y-4" x-data="{ fileName: null }" @submit="saveScroll()">
                         @csrf
-                        <div class="flex-1 min-w-0">
-                            <label for="backup_file" class="mb-1.5 block text-xs font-semibold text-grayTheme-dark">
-                                Upload Backup File (.zip)
+                        <div>
+                            <label class="mb-2 block text-xs font-semibold text-grayTheme-dark">
+                                Upload Backup File <span class="font-normal text-grayTheme-medium">(.zip)</span>
                             </label>
-                            <input id="backup_file" type="file" name="backup_file" accept=".zip"
-                                class="w-full rounded-lg border border-grayTheme-border bg-white px-3 py-2 text-sm text-grayTheme-dark shadow-sm file:mr-3 file:rounded file:border-0 file:bg-grayTheme-light file:px-2.5 file:py-1 file:text-xs file:font-semibold focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
+                            <label for="backup_file"
+                                class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-grayTheme-border bg-grayTheme-light/50 px-6 py-8 text-center transition hover:border-primary/40 hover:bg-primary-soft/30">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+                                    <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                </div>
+                                <span class="text-sm font-semibold text-grayTheme-dark" x-text="fileName ?? 'Click to choose a backup file'"></span>
+                                <span class="text-xs text-grayTheme-medium">Accepts .zip files only</span>
+                                <input id="backup_file" type="file" name="backup_file" accept=".zip" class="sr-only"
+                                    @change="fileName = $event.target.files[0]?.name ?? null">
+                            </label>
+                            @error('backup_file')
+                                <p class="mt-1.5 text-xs text-danger">{{ $message }}</p>
+                            @enderror
                         </div>
-                        <button type="submit"
-                            class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-warning px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-warning/40">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                            Restore
-                        </button>
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                :disabled="!fileName"
+                                :class="{'opacity-40 cursor-not-allowed': !fileName}"
+                                class="inline-flex items-center gap-2 rounded-xl bg-warning px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-warning/40">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                Restore from File
+                            </button>
+                        </div>
                     </form>
-                    @error('backup_file')
-                        <p class="text-xs text-danger">{{ $message }}</p>
-                    @enderror
                 </div>
             </div>
 
             {{-- â”€â”€ Section 4: Existing Backups â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
             <div class="surface overflow-hidden rounded-xl shadow-sm">
-                <div class="border-b border-grayTheme-border px-5 py-4">
-                    <h2 class="text-sm font-semibold text-grayTheme-dark">
-                        Existing Backups
-                        @if ($stats['count'] > 0)
-                            <span class="ml-1.5 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">{{ $stats['count'] }}</span>
-                        @endif
-                    </h2>
-                    <p class="mt-0.5 text-xs text-grayTheme-medium">
-                        Stored on disk <strong class="text-grayTheme-dark">{{ $disk }}</strong>
-                        @if ($stats['totalSize'] > 0)
-                            &middot;
-                            @php $totalMb = $stats['totalSize'] / 1048576; @endphp
-                            {{ $totalMb >= 1 ? number_format($totalMb, 1).' MB' : number_format($stats['totalSize']/1024, 1).' KB' }} total
-                        @endif
-                    </p>
+                <div class="flex items-center gap-3 border-b border-grayTheme-border bg-grayTheme-light px-5 py-4">
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft">
+                        <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm font-semibold text-grayTheme-dark">Existing Backups</h2>
+                            @if ($stats['count'] > 0)
+                                <span class="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">{{ $stats['count'] }}</span>
+                            @endif
+                        </div>
+                        <p class="mt-0.5 text-xs text-grayTheme-medium">
+                            Stored on disk <strong class="text-grayTheme-dark">{{ $disk }}</strong>
+                            @if ($stats['totalSize'] > 0)
+                                &middot;
+                                @php $totalMb = $stats['totalSize'] / 1048576; @endphp
+                                {{ $totalMb >= 1 ? number_format($totalMb, 1).' MB' : number_format($stats['totalSize']/1024, 1).' KB' }} total
+                            @endif
+                        </p>
+                    </div>
                 </div>
 
                 @forelse ($backups as $backup)
@@ -269,12 +324,14 @@
                         </div>
                     </div>
                 @empty
-                    <div class="flex flex-col items-center gap-3 px-4 py-14 text-center">
-                        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-grayTheme-light">
-                            <svg class="h-7 w-7 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                    <div class="flex flex-col items-center gap-4 px-4 py-20 text-center">
+                        <div class="flex h-16 w-16 items-center justify-center rounded-full bg-grayTheme-light">
+                            <svg class="h-8 w-8 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
                         </div>
-                        <p class="text-sm font-semibold text-grayTheme-dark">No backups yet</p>
-                        <p class="text-xs text-grayTheme-medium">Click &ldquo;Create Backup Now&rdquo; above to create the first backup.</p>
+                        <div class="space-y-1.5">
+                            <p class="text-sm font-semibold text-grayTheme-dark">No backups yet</p>
+                            <p class="text-xs text-grayTheme-medium">Click &ldquo;Create Backup Now&rdquo; above to create the first backup.</p>
+                        </div>
                     </div>
                 @endforelse
             </div>
@@ -288,7 +345,7 @@
         </form>
 
         {{-- Restore (from existing list) form --}}
-        <form method="post" action="{{ route('admin.backups.restore') }}" x-ref="restoreForm" class="hidden">
+        <form method="post" action="{{ route('admin.backups.restore') }}" x-ref="restoreForm" data-turbo="false" class="hidden">
             @csrf
             <input type="hidden" name="disk" :value="restoreDisk">
             <input type="hidden" name="path" :value="restorePath">
@@ -359,4 +416,48 @@
         </div>
 
     </div>
+
+    {{-- Bridge session flash messages to toast notifications --}}
+    @if (session('status') === 'backup-success')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Backup Created',message:'Database backup completed successfully.'}}));</script>
+    @elseif (session('status') === 'backup-failed')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'error',title:'Backup Failed',message:{{ Js::from(session('backup_error') ?? 'An error occurred while creating the backup.') }}}}));</script>
+    @elseif (session('status') === 'backup-deleted')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Backup Deleted',message:'The backup file has been permanently removed.'}}));</script>
+    @elseif (session('status') === 'backup-restore-failed')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'error',title:'Restore Failed',message:{{ Js::from(session('backup_error') ?? 'An error occurred during the restore process.') }}}}));</script>
+    @elseif (session('status') === 'schedule-saved')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Schedule Updated',message:'Backup schedule settings have been saved.'}}));</script>
+    @endif
+
+    {{-- Preserve scroll position across backup form submissions --}}
+    <script data-turbo-eval="true">
+        (function () {
+            if (window.__backupScrollBridgeInstalled) return;
+            window.__backupScrollBridgeInstalled = true;
+            const KEY = 'backups:scrollY';
+            document.addEventListener('submit', function (event) {
+                if (!event.target.closest('[data-backup-page]')) return;
+                try { sessionStorage.setItem(KEY, String(window.scrollY)); } catch (e) {}
+            }, true);
+            const restore = function () {
+                try {
+                    const y = sessionStorage.getItem(KEY);
+                    if (y !== null) {
+                        sessionStorage.removeItem(KEY);
+                        requestAnimationFrame(function () {
+                            window.scrollTo(0, parseInt(y, 10) || 0);
+                        });
+                    }
+                } catch (e) {}
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', restore);
+            } else {
+                restore();
+            }
+            document.addEventListener('turbo:load', restore);
+            document.addEventListener('turbo:render', restore);
+        })();
+    </script>
 </x-app-layout>

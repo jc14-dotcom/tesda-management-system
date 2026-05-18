@@ -169,6 +169,10 @@ function initNotificationEvents() {
     window.addEventListener('show-toast',       (e) => addToast(e.detail ?? {}));
     window.addEventListener('show-error-modal', (e) => openErrorModal(e.detail ?? {}));
 
+    window.__toastReady = true;
+    const pendingToasts = Array.isArray(window.__pendingToasts) ? window.__pendingToasts.splice(0) : [];
+    pendingToasts.forEach((toast) => addToast(toast));
+
     // Delegated: toast dismiss + error modal close
     document.addEventListener('click', (e) => {
         const dismissBtn = e.target.closest('[data-dismiss-toast]');
@@ -190,45 +194,109 @@ function addToast({ type = 'success', title = '', message = '' }) {
     const container = document.getElementById('toast-container');
     if (!container) return;
 
-    const iconPaths = {
-        success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>',
-        error:   '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>',
-        info:    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z"/>',
-        warning: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>',
+    const configs = {
+        success: {
+            gradient: 'linear-gradient(135deg, #065f46, #047857)',
+            shadow:   '0 8px 30px rgba(6,95,70,.30)',
+            viewBox:  '0 0 512 512',
+            svgPath:  '<path fill="currentColor" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/>',
+        },
+        error: {
+            gradient: 'linear-gradient(135deg, #800000, #991b1b)',
+            shadow:   '0 8px 30px rgba(128,0,0,.30)',
+            viewBox:  '0 0 512 512',
+            svgPath:  '<path fill="currentColor" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c13.3 0 24 10.7 24 24V264c0 13.3-10.7 24-24 24s-24-10.7-24-24V152c0-13.3 10.7-24 24-24zM224 352a32 32 0 1 1 64 0 32 32 0 1 1-64 0z"/>',
+        },
+        warning: {
+            gradient: 'linear-gradient(135deg, #92400e, #b45309)',
+            shadow:   '0 8px 30px rgba(146,64,14,.30)',
+            viewBox:  '0 0 512 512',
+            svgPath:  '<path fill="currentColor" d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7.2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8.2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0-64 0 32 32 0 1 0 64 0z"/>',
+        },
+        info: {
+            gradient: 'linear-gradient(135deg, #1e3a5f, #1e40af)',
+            shadow:   '0 8px 30px rgba(30,64,175,.30)',
+            viewBox:  '0 0 512 512',
+            svgPath:  '<path fill="currentColor" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/>',
+        },
     };
 
-    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const cfg = configs[type] ?? configs.info;
+    const id  = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+    // ── Toast wrapper ───────────────────────────────────────────────────────
     const el = document.createElement('div');
     el.setAttribute('data-toast-id', id);
-    el.className = `toast-item toast-${type} pointer-events-auto relative flex min-w-[20rem] max-w-xs items-start gap-3 overflow-hidden rounded-card border bg-white pl-4 pr-3 py-3.5 shadow-modal transition-all duration-300 opacity-0 translate-x-8`;
+
+    // Pure inline styles — no Tailwind class dependency so animation is reliable
+    el.style.cssText = [
+        'pointer-events:auto',
+        'display:flex',
+        'align-items:center',
+        'gap:14px',
+        'padding:16px 18px 19px 18px',
+        'border-radius:12px',
+        `background:${cfg.gradient}`,
+        `box-shadow:${cfg.shadow}`,
+        'color:#fff',
+        'position:relative',
+        'overflow:hidden',
+        'min-width:320px',
+        'max-width:400px',
+        // Start state for slide-in animation
+        'opacity:0',
+        'transform:translateX(40px)',
+        'transition:opacity 0.4s cubic-bezier(.22,1,.36,1), transform 0.4s cubic-bezier(.22,1,.36,1)',
+    ].join(';');
+
     el.innerHTML =
-        `<div class="toast-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-full">` +
-            `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">${iconPaths[type] ?? iconPaths.info}</svg>` +
+        // ── Icon badge (rounded square with semi-transparent white bg — matches images 2 & 3) ──
+        `<div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.20);` +
+             `display:flex;align-items:center;justify-content:center;flex-shrink:0;">` +
+            `<svg style="width:20px;height:20px;display:block;" viewBox="${cfg.viewBox}" ` +
+                 `xmlns="http://www.w3.org/2000/svg">${cfg.svgPath}</svg>` +
         `</div>` +
-        `<div class="min-w-0 flex-1 pt-0.5">` +
-            `<p class="text-sm font-bold leading-snug text-grayTheme-dark">${escHtml(title)}</p>` +
-            (message ? `<p class="mt-0.5 text-xs leading-relaxed text-grayTheme-medium">${escHtml(message)}</p>` : '') +
+        // ── Body ─────────────────────────────────────────────────────────────
+        `<div style="flex:1;min-width:0;">` +
+            `<div style="font-weight:700;font-size:14px;color:#fff;line-height:1.3;">${escHtml(title)}</div>` +
+            (message
+                ? `<div style="font-size:12px;color:rgba(255,255,255,0.82);margin-top:3px;line-height:1.4;">${escHtml(message)}</div>`
+                : '') +
         `</div>` +
-        `<button type="button" class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-grayTheme-medium transition hover:bg-grayTheme-light hover:text-grayTheme-dark" data-dismiss-toast="${id}" aria-label="Dismiss">` +
-            `<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">` +
-                `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>` +
+        // ── Close button ─────────────────────────────────────────────────────
+        `<button type="button" data-dismiss-toast="${id}" aria-label="Dismiss" ` +
+                `style="background:none;border:none;padding:4px;cursor:pointer;color:rgba(255,255,255,0.6);` +
+                       `display:flex;align-items:center;flex-shrink:0;">` +
+            `<svg style="width:14px;height:14px;display:block;" fill="none" viewBox="0 0 24 24" ` +
+                 `stroke="currentColor" stroke-width="2.5">` +
+                `<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>` +
             `</svg>` +
         `</button>` +
-        `<div class="toast-bar absolute bottom-0 left-0 h-[3px] w-full"></div>`;
+        // ── Progress bar ─────────────────────────────────────────────────────
+        `<div data-toast-bar style="position:absolute;bottom:0;left:0;height:3px;width:100%;` +
+             `background:rgba(255,255,255,0.35);border-radius:0 0 12px 12px;"></div>`;
 
     container.appendChild(el);
 
-    // Animate in
+    // ── Slide-in animation (two rAFs: first commits initial state, second transitions) ──
     requestAnimationFrame(() => requestAnimationFrame(() => {
-        el.classList.remove('opacity-0', 'translate-x-8');
-        const bar = el.querySelector('.toast-bar');
-        if (bar) {
-            bar.style.transition = 'width linear 6s';
-            bar.style.width = '0%';
-        }
+        el.style.opacity   = '1';
+        el.style.transform = 'translateX(0)';
     }));
 
-    setTimeout(() => dismissToast(el), 6000);
+    // ── Progress bar shrink ─────────────────────────────────────────────────
+    // getBoundingClientRect() forces a reflow so the browser records width:100%
+    // as the start value BEFORE the transition begins — without this the
+    // browser may batch start+end in one frame and skip the animation entirely.
+    requestAnimationFrame(() => {
+        const bar = el.querySelector('[data-toast-bar]');
+        if (!bar) return;
+        bar.getBoundingClientRect();              // force reflow
+        bar.style.transition = 'width 4.5s linear';
+        bar.style.width      = '0%';
+    });
+
+    setTimeout(() => dismissToast(el), 4500);
 }
 
 // ── Notification Panel ────────────────────────────────────────────────────────
@@ -357,8 +425,9 @@ function notifShowEmpty() {
 
 function dismissToast(el) {
     if (!el?.isConnected) return;
-    el.classList.add('opacity-0', 'translate-x-4');
-    setTimeout(() => el.remove(), 300);
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(30px)';
+    setTimeout(() => el.remove(), 350);
 }
 
 function openErrorModal({ title = 'Error', message = '', fieldErrors = {} }) {

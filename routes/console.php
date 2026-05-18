@@ -29,7 +29,8 @@ try {
     $backupMonthday = (int) (\App\Models\Setting::get('backup_schedule_monthday', '1') ?: 1);
 
     if ($backupFreq !== 'disabled') {
-        $backupCmd = Schedule::command('backup:run')->withoutOverlapping();
+        $backupCmd = Schedule::command('backups:run-database')
+            ->withoutOverlapping();
         if ($backupFreq === 'daily')          $backupCmd->dailyAt($backupTime);
         elseif ($backupFreq === 'weekly')     $backupCmd->weeklyOn($backupWeekday, $backupTime);
         elseif ($backupFreq === 'monthly')    $backupCmd->monthlyOn($backupMonthday, $backupTime);

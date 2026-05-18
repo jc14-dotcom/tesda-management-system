@@ -44,17 +44,7 @@
             <div class="surface p-6">
                 <h3 class="text-lg font-semibold text-grayTheme-dark">Manage Account</h3>
 
-                @if (session('status') === 'user-updated')
-                    <div class="mt-3 rounded-lg bg-success-soft px-4 py-2 text-sm font-semibold text-success">Account updated successfully.</div>
-                @endif
-
-                @if (session('status') === 'user-created')
-                    <div class="mt-3 rounded-lg bg-success-soft px-4 py-2 text-sm font-semibold text-success">Account created successfully.</div>
-                @endif
-
-                @if (session('status') === 'password-reset')
-                    <div class="mt-3 rounded-lg bg-success-soft px-4 py-2 text-sm font-semibold text-success">Password has been reset successfully.</div>
-                @endif
+                {{-- Flash messages handled by toast notifications --}}
 
                 @if ($errors->any())
                     <div class="mt-3 rounded-lg bg-danger-soft px-4 py-2 text-sm text-danger">
@@ -98,7 +88,7 @@
                         </select>
                     </div>
 
-                    <div class="flex items-center justify-end md:col-span-2">
+                    <div class="mt-6 flex items-center justify-end border-t border-grayTheme-border pt-5 md:col-span-2">
                         <button type="submit" class="btn-primary gap-2">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                             Save Changes
@@ -426,4 +416,13 @@
         </div>
 
     </div>
+
+    {{-- Bridge session flash messages to toast notifications --}}
+    @if (session('status') === 'user-updated')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Account Updated',message:'User account details have been saved successfully.'}}));</script>
+    @elseif (session('status') === 'user-created')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Account Created',message:'New user account has been created successfully.'}}));</script>
+    @elseif (session('status') === 'password-reset')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Password Reset',message:'The password has been reset successfully.'}}));</script>
+    @endif
 </x-app-layout>

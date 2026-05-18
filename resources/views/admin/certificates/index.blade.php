@@ -38,9 +38,7 @@
                 </div>
             </div>
 
-            @if (session('status') === 'cert-updated')
-                <div class="rounded-lg bg-success-soft px-4 py-3 text-sm font-semibold text-success">Certificate verification updated.</div>
-            @endif
+            {{-- Flash messages handled by toast notifications --}}
 
             {{-- Filters --}}
             <div class="surface p-6">
@@ -245,4 +243,9 @@
             </div>
         </div>
     </div>
+
+    {{-- Bridge session flash messages to toast notifications --}}
+    @if (session('status') === 'cert-updated')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Certificate Updated',message:'Verification status has been updated.'}}));</script>
+    @endif
 </x-app-layout>

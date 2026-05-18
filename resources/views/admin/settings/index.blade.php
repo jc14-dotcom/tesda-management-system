@@ -9,9 +9,7 @@
 
             <div class="max-w-2xl space-y-6">
 
-                @if(session('status') === 'settings-saved')
-                    <div class="mb-4 rounded-lg bg-success-soft px-4 py-3 text-sm font-semibold text-success">Settings saved.</div>
-                @endif
+                {{-- Flash messages handled by toast notifications --}}
 
                 <form method="post" action="{{ route('admin.settings.update') }}" class="space-y-6">
                     @csrf
@@ -65,4 +63,9 @@
             </div>
         </div>
     </div>
+
+    {{-- Bridge session flash messages to toast notifications --}}
+    @if(session('status') === 'settings-saved')
+    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Settings Saved',message:'System settings have been updated successfully.'}}));</script>
+    @endif
 </x-app-layout>
