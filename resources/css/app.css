@@ -55,15 +55,27 @@
 	}
 
 	.btn-primary {
-		@apply inline-flex items-center justify-center px-4 py-2 rounded-button bg-primary text-white font-semibold text-sm tracking-wide shadow-card transition-all duration-250 hover:bg-primary-hover active:bg-primary-active focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2;
+		@apply inline-flex items-center justify-center px-4 py-2 rounded-button bg-primary text-white font-semibold text-sm tracking-wide whitespace-nowrap shadow-card transition-all duration-250 hover:bg-primary-hover active:bg-primary-active focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2;
+	}
+
+	.btn-primary:disabled {
+		@apply opacity-60 cursor-not-allowed;
 	}
 
 	.btn-secondary {
-		@apply inline-flex items-center justify-center px-4 py-2 rounded-button bg-accent text-white font-semibold text-sm tracking-wide shadow-card transition-all duration-250 hover:bg-accent-hover active:bg-accent-active focus:outline-none focus:ring-2 focus:ring-accent/30 focus:ring-offset-2;
+		@apply inline-flex items-center justify-center px-4 py-2 rounded-button bg-accent text-white font-semibold text-sm tracking-wide whitespace-nowrap shadow-card transition-all duration-250 hover:bg-accent-hover active:bg-accent-active focus:outline-none focus:ring-2 focus:ring-accent/30 focus:ring-offset-2;
+	}
+
+	.btn-secondary:disabled {
+		@apply opacity-60 cursor-not-allowed;
 	}
 
 	.btn-danger {
-		@apply inline-flex items-center justify-center px-4 py-2 rounded-button bg-danger text-white font-semibold text-sm tracking-wide shadow-card transition-all duration-250 hover:bg-danger-hover focus:outline-none focus:ring-2 focus:ring-danger/30 focus:ring-offset-2;
+		@apply inline-flex items-center justify-center px-4 py-2 rounded-button bg-danger text-white font-semibold text-sm tracking-wide whitespace-nowrap shadow-card transition-all duration-250 hover:bg-danger-hover focus:outline-none focus:ring-2 focus:ring-danger/30 focus:ring-offset-2;
+	}
+
+	.btn-danger:disabled {
+		@apply opacity-60 cursor-not-allowed;
 	}
 
 	.nav-link {

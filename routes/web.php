@@ -26,6 +26,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dpa/accept', [\App\Http\Controllers\DpaController::class, 'show'])->name('dpa.accept');
     Route::post('/dpa/accept', [\App\Http\Controllers\DpaController::class, 'accept'])->name('dpa.accept.store');
 
+    // Profile completion (required for new users before accessing the system)
+    Route::get('/profile/complete', [\App\Http\Controllers\ProfileCompletionController::class, 'show'])->name('profile.complete');
+    Route::post('/profile/complete', [\App\Http\Controllers\ProfileCompletionController::class, 'store'])->middleware('throttle:10,1')->name('profile.complete.store');
+
     Route::get('/account/profile', [ProfileController::class, 'edit'])->name('account.profile');
     Route::get('/account/profile/photo', [ProfileController::class, 'photo'])->name('account.profile.photo');
     Route::get('/users/{user}/photo', [ProfileController::class, 'photoForUser'])->name('profile.photo');
@@ -53,6 +57,10 @@ Route::middleware('auth')->group(function () {
         ->name('documents.download');
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])
         ->name('documents.destroy');
+
+    // Notification polling (used by the nav panel to detect new notifications without a page reload)
+    Route::get('/notifications/poll',  [\App\Http\Controllers\NotificationPollController::class, 'poll'])->name('notifications.poll')->middleware('throttle:30,1');
+    Route::get('/notifications/panel', [\App\Http\Controllers\NotificationPollController::class, 'panel'])->name('notifications.panel')->middleware('throttle:30,1');
 });
 
 Route::middleware(['auth', 'role:admin'])

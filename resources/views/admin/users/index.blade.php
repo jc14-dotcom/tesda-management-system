@@ -61,22 +61,22 @@
             <div class="surface p-6">
                 <form method="get" x-data="liveSearch()">
                     <div class="flex flex-wrap items-end gap-4">
-                        <div class="flex-1 min-w-48">
-                            <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="search">Search</label>
+                        <div class="w-full sm:flex-1 sm:min-w-48">
+                            <label class="text-xs font-semibold uppercase tracking-widets text-grayTheme-medium" for="search">Search</label>
                             <input id="search" type="text" name="search" value="{{ $search }}"
                                 class="mt-1 form-input w-full" placeholder="Name or email…"
                                 @input.debounce.400ms="search($el.closest('form'))" />
                         </div>
-                        <div>
-                            <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="role">Role</label>
+                        <div class="w-full sm:w-auto">
+                            <label class="text-xs font-semibold uppercase tracking-widets text-grayTheme-medium" for="role">Role</label>
                             <select id="role" name="role" class="mt-1 form-input">
                                 <option value="all" @selected($role === 'all')>All Roles</option>
                                 <option value="admin" @selected($role === 'admin')>Admin</option>
                                 <option value="user" @selected($role === 'user')>User</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="status">Status</label>
+                        <div class="w-full sm:w-auto">
+                            <label class="text-xs font-semibold uppercase tracking-widets text-grayTheme-medium" for="status">Status</label>
                             <select id="status" name="status" class="mt-1 form-input">
                                 <option value="all" @selected($status === 'all')>All Statuses</option>
                                 <option value="active" @selected($status === 'active')>Active</option>
@@ -86,7 +86,7 @@
                         </div>
                     </div>
                     @php $hasFilters = $search || $role !== 'all' || $status !== 'all'; @endphp
-                    <div class="mt-4 flex items-center justify-end gap-2">
+                    <div class="mt-4 flex flex-wrap items-center justify-end gap-2">
                         <a href="{{ route('admin.users.index') }}" class="btn-secondary inline-flex items-center gap-1.5 {{ !$hasFilters ? 'pointer-events-none opacity-40' : '' }}">
                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             Reset

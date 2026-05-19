@@ -229,6 +229,7 @@ export function registerProfileComponents(Alpine) {
             initialPositionRoles = [],
             initialQualificationTitle = '',
             initialRemarks = '',
+            isAdmin = false,
         } = {}) => ({
             initialFirstName,
             initialMiddleName,
@@ -243,6 +244,7 @@ export function registerProfileComponents(Alpine) {
             initialDateOfBirth,
             initialQualificationTitle,
             initialRemarks,
+            isAdmin,
 
             firstName: initialFirstName,
             middleName: initialMiddleName,
@@ -398,7 +400,7 @@ export function registerProfileComponents(Alpine) {
                 this.errors.gender = this.validateRequiredValue(this.gender, 'Sex');
                 this.errors.contactNumber = this.validateContactNumber();
                 this.errors.address = this.validateRequiredValue(this.address, 'Address', 500);
-                this.errors.positionRoles = this.validatePositionRoles();
+                this.errors.positionRoles = this.isAdmin ? '' : this.validatePositionRoles();
                 this.errors.qualificationTitle = this.validateMaxLength(
                     this.qualificationTitle,
                     255,

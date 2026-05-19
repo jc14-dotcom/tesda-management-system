@@ -124,6 +124,7 @@
                                     required
                                     maxlength="255"
                                     placeholder="user@example.com"
+                                    oninput="this.value = this.value.toLowerCase()"
                                 />
                             </div>
                         </div>

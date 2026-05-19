@@ -45,7 +45,8 @@
             initialAddress: @json(old('address', $profile?->address)),
             initialPositionRoles: @json($initialPositionRoles),
             initialQualificationTitle: @json(old('qualification_title', $profile?->qualification_title)),
-            initialRemarks: @json(old('remarks', $profile?->remarks))
+            initialRemarks: @json(old('remarks', $profile?->remarks)),
+            isAdmin: @json(auth()->user()->hasRole('admin'))
         })'
         @submit.prevent="submitForm($event)"
     >
@@ -470,7 +471,7 @@
         @endunless
 
         <div class="flex items-center gap-4">
-            <x-primary-button class="gap-2" x-bind:disabled="loading || !isDirty() || hasErrors()" x-bind:class="(loading || !isDirty() || hasErrors()) ? 'opacity-60 cursor-not-allowed' : ''">
+            <x-primary-button class="gap-2" disabled x-bind:disabled="loading || !isDirty() || hasErrors()" x-bind:class="(loading || !isDirty() || hasErrors()) ? 'opacity-60 cursor-not-allowed' : ''">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>

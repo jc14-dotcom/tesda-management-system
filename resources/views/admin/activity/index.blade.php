@@ -77,7 +77,7 @@
                         <input type="hidden" name="causer_id" value="{{ $causerId }}">
                     @endif
                     <div class="flex flex-wrap items-end gap-3">
-                        <div>
+                        <div class="w-full sm:w-auto">
                             <label class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium" for="subject_type_filter">Log Type</label>
                             <select id="subject_type_filter" name="subject_type" class="mt-1 form-input">
                                 <option value="all"         @selected(($subjectType ?? 'all') === 'all')>All Types</option>
@@ -87,7 +87,7 @@
                                 <option value="profile"     @selected(($subjectType ?? '') === 'profile')>Profile</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="w-full sm:w-auto">
                             <label class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium" for="event_filter">Event</label>
                             <select id="event_filter" name="event" class="mt-1 form-input">
                                 <option value="all"       @selected(($event ?? 'all') === 'all')>All Events</option>
@@ -98,22 +98,22 @@
                                 <option value="logout"    @selected(($event ?? '') === 'logout')>Logout</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="w-full sm:w-auto">
                             <label class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium" for="from_date">From Date</label>
                             <input id="from_date" type="date" name="from_date" value="{{ $fromDate ?? '' }}" class="mt-1 form-input" />
                         </div>
-                        <div>
+                        <div class="w-full sm:w-auto">
                             <label class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium" for="to_date">To Date</label>
                             <input id="to_date" type="date" name="to_date" value="{{ $toDate ?? '' }}" class="mt-1 form-input" />
                         </div>
-                        <div class="flex-1 min-w-52">
+                        <div class="w-full sm:flex-1 sm:min-w-52">
                             <label class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium" for="search_activity">Search</label>
                             <input id="search_activity" type="text" name="search" value="{{ $search ?? '' }}" placeholder="Search descriptions or user..." class="mt-1 form-input w-full"
                                 @input.debounce.400ms="search($el.closest('form'))" />
                         </div>
                     </div>
                     @php $hasActivityFilters = ($search ?? '') || ($event ?? 'all') !== 'all' || ($subjectType ?? 'all') !== 'all' || ($fromDate ?? '') || ($toDate ?? ''); @endphp
-                    <div class="mt-4 flex items-center justify-end gap-2">
+                    <div class="mt-4 flex flex-wrap items-center justify-end gap-2">
                         <a href="{{ route('admin.activity.index', $causerId > 0 ? ['causer_id' => $causerId] : []) }}" class="btn-secondary inline-flex items-center gap-1.5 {{ !$hasActivityFilters ? 'pointer-events-none opacity-40' : '' }}">
                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             Reset
@@ -129,6 +129,7 @@
             <div id="live-search-results">
             {{-- Table --}}
             <div class="surface overflow-hidden rounded-xl shadow-sm">
+                <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead>
                         <tr class="bg-primary">
@@ -150,10 +151,32 @@
                                 $keys    = array_diff(array_unique(array_merge(array_keys($old), array_keys($new))), $skip);
                                 $changes = [];
                                 foreach ($keys as $key) {
+                                    $oldVal = array_key_exists($key, $old) ? $old[$key] : null;
+                                    $newVal = array_key_exists($key, $new) ? $new[$key] : null;
+                                    
+                                    // Format date fields (all common date fields across models)
+                                    $dateFields = ['date_of_birth', 'date_hired', 'issue_date', 'expiration_date', 'issued_on', 'valid_until'];
+                                    if (in_array($key, $dateFields)) {
+                                        if ($oldVal) {
+                                            try {
+                                                $oldVal = \Carbon\Carbon::parse($oldVal)->format('M d, Y');
+                                            } catch (\Exception $e) {
+                                                // Keep original if parsing fails
+                                            }
+                                        }
+                                        if ($newVal) {
+                                            try {
+                                                $newVal = \Carbon\Carbon::parse($newVal)->format('M d, Y');
+                                            } catch (\Exception $e) {
+                                                // Keep original if parsing fails
+                                            }
+                                        }
+                                    }
+                                    
                                     $changes[] = [
                                         'field' => ucwords(str_replace('_', ' ', $key)),
-                                        'old'   => array_key_exists($key, $old) ? (string) $old[$key] : null,
-                                        'new'   => array_key_exists($key, $new) ? (string) $new[$key] : null,
+                                        'old'   => $oldVal !== null ? (string) $oldVal : null,
+                                        'new'   => $newVal !== null ? (string) $newVal : null,
                                     ];
                                 }
                                 $subjectClass = class_basename($log->subject_type ?? '');
@@ -163,15 +186,38 @@
                                         $log->subject instanceof \App\Models\Certificate => ($log->subject->certificate_name ?? $subjectClass),
                                         $log->subject instanceof \App\Models\User        => ($log->subject->name ?? $subjectClass),
                                         $log->subject instanceof \App\Models\Document    => ($log->subject->document_name ?? $log->subject->original_name ?? $subjectClass),
+                                        $log->subject instanceof \App\Models\Profile     => (
+                                            'Profile for ' . trim(
+                                                ($log->subject->first_name ?? '') . ' ' . 
+                                                ($log->subject->last_name ?? '')
+                                            ) ?: $subjectClass
+                                        ),
                                         default => $subjectClass,
                                     };
                                 }
+                                
+                                // Build causer full name with role
+                                $causerDisplay = 'System';
+                                if ($log->causer) {
+                                    $causerProfile = $log->causer->profile;
+                                    if ($causerProfile) {
+                                        $causerFullName = trim(
+                                            ($causerProfile->first_name ?? '') . ' ' . 
+                                            ($causerProfile->last_name ?? '')
+                                        ) ?: $log->causer->name;
+                                    } else {
+                                        $causerFullName = $log->causer->name;
+                                    }
+                                    $causerRole = $log->causer->hasRole('admin') ? 'Admin' : 'User';
+                                    $causerDisplay = $causerFullName . ' (' . $causerRole . ')';
+                                }
+                                
                                 $logData = [
                                     'event'        => $log->event ?? 'log',
                                     'logType'      => $subjectClass,
                                     'dateTime'     => $log->created_at->format('M d, Y g:i:s A'),
-                                    'modifiedBy'   => $log->causer->name ?? 'System',
-                                    'subjectLabel' => $subjectName . ($log->subject_id ? ' #' . $log->subject_id : ''),
+                                    'modifiedBy'   => $causerDisplay,
+                                    'subjectLabel' => $subjectName,
                                     'description'  => $log->description ?? '',
                                     'changes'      => $changes,
                                 ];
@@ -209,9 +255,22 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     @if($log->causer)
+                                        @php
+                                            $causerProfile = $log->causer->profile;
+                                            $causerFullName = $causerProfile ? trim(
+                                                ($causerProfile->first_name ?? '') . ' ' . 
+                                                ($causerProfile->last_name ?? '')
+                                            ) : null;
+                                            $displayName = $causerFullName ?: $log->causer->name;
+                                            $roleLabel = $log->causer->hasRole('admin') ? 'Admin' : 'User';
+                                            $initials = strtoupper(substr($displayName ?? '?', 0, 1));
+                                        @endphp
                                         <a href="{{ route('admin.users.show', $log->causer_id) }}" class="inline-flex items-center gap-1.5 font-medium text-primary hover:underline">
-                                            <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">{{ strtoupper(substr($log->causer->name ?? '?', 0, 1)) }}</div>
-                                            {{ $log->causer->name ?? 'Unknown' }}
+                                            <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">{{ $initials }}</div>
+                                            <div class="flex flex-col">
+                                                <span class="text-sm">{{ $displayName }}</span>
+                                                <span class="text-xs text-grayTheme-medium">({{ $roleLabel }})</span>
+                                            </div>
                                         </a>
                                     @else
                                         <span class="inline-flex items-center gap-1 text-xs text-grayTheme-medium">
@@ -246,6 +305,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>{{-- /overflow-x-auto --}}
             </div>
 
             @isset($logs)
@@ -334,25 +394,51 @@
                     <div class="rounded-xl bg-grayTheme-light p-4">
                         <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">Changes</p>
                         <template x-if="log.changes && log.changes.length > 0">
-                            <div class="overflow-hidden rounded-xl border border-grayTheme-border">
-                                <table class="min-w-full text-sm">
-                                    <thead>
-                                        <tr class="bg-primary text-left text-xs font-semibold uppercase tracking-wide text-white">
-                                            <th class="px-4 py-2.5">Field</th>
-                                            <th class="px-4 py-2.5">Old Value</th>
-                                            <th class="px-4 py-2.5">New Value</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-grayTheme-border">
-                                        <template x-for="change in log.changes" :key="change.field">
-                                            <tr class="bg-white">
-                                                <td class="px-4 py-2.5 font-semibold text-grayTheme-dark" x-text="change.field"></td>
-                                                <td class="px-4 py-2.5 font-medium text-danger" x-text="change.old != null ? change.old : '-'"></td>
-                                                <td class="px-4 py-2.5 font-medium text-success" x-text="change.new != null ? change.new : '-'"></td>
-                                            </tr>
-                                        </template>
-                                    </tbody>
-                                </table>
+                            <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                                {{-- Created event: only Field + Value columns --}}
+                                <template x-if="log.event === 'created'">
+                                    <div class="overflow-hidden rounded-xl border border-grayTheme-border min-w-[300px]">
+                                        <table class="min-w-full text-sm">
+                                            <thead>
+                                                <tr class="bg-primary text-left text-xs font-semibold uppercase tracking-wide text-white">
+                                                    <th class="px-4 py-2.5">Field</th>
+                                                    <th class="px-4 py-2.5">Value</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-grayTheme-border">
+                                                <template x-for="change in log.changes" :key="change.field">
+                                                    <tr class="bg-white">
+                                                        <td class="px-4 py-2.5 font-semibold text-grayTheme-dark" x-text="change.field"></td>
+                                                        <td class="px-4 py-2.5 font-medium text-success" x-text="change.new != null ? change.new : '-'"></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                {{-- Updated / deleted: show Old Value + New Value --}}
+                                <template x-if="log.event !== 'created'">
+                                    <div class="overflow-hidden rounded-xl border border-grayTheme-border min-w-[600px]">
+                                        <table class="min-w-full text-sm">
+                                            <thead>
+                                                <tr class="bg-primary text-left text-xs font-semibold uppercase tracking-wide text-white">
+                                                    <th class="px-4 py-2.5">Field</th>
+                                                    <th class="px-4 py-2.5">Old Value</th>
+                                                    <th class="px-4 py-2.5">New Value</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-grayTheme-border">
+                                                <template x-for="change in log.changes" :key="change.field">
+                                                    <tr class="bg-white">
+                                                        <td class="px-4 py-2.5 font-semibold text-grayTheme-dark" x-text="change.field"></td>
+                                                        <td class="px-4 py-2.5 font-medium text-danger" x-text="change.old != null ? change.old : '-'"></td>
+                                                        <td class="px-4 py-2.5 font-medium text-success" x-text="change.new != null ? change.new : '-'"></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
                             </div>
                         </template>
                         <template x-if="!log.changes || log.changes.length === 0">

@@ -159,7 +159,7 @@
                                 <p class="text-xs text-white/70">Plan renewals before deadlines.</p>
                             </div>
                         </div>
-                        <a href="{{ route('account.certificates') }}" class="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/20">View all</a>
+                        <a href="{{ route('account.certificates') }}" class="shrink-0 whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/20">View all</a>
                     </div>
 
                     <div class="divide-y divide-grayTheme-border">
@@ -204,7 +204,7 @@
                                 <p class="text-xs text-white/70">Your latest document activity.</p>
                             </div>
                         </div>
-                        <a href="{{ route('account.documents') }}" class="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/20">View all</a>
+                        <a href="{{ route('account.documents') }}" class="shrink-0 whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/20">View all</a>
                     </div>
 
                     <div class="divide-y divide-grayTheme-border">

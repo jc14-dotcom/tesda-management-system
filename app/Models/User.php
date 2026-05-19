@@ -26,7 +26,13 @@ class User extends Authenticatable // implements MustVerifyEmail
         return LogOptions::defaults()
             ->logOnly(['name', 'email'])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'User account created',
+                'updated' => 'User account updated',
+                'deleted' => 'User account deleted',
+                default => $eventName,
+            });
     }
 
     /**

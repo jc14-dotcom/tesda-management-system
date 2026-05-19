@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', \Illuminate\Session\Middleware\AuthenticateSession::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\EnforceSingleSession::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\EnsureDpaAgreed::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureProfileComplete::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Redirect authenticated users away from restricted pages instead of showing a raw 403

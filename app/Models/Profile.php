@@ -21,7 +21,13 @@ class Profile extends Model
                 'tesda_registry_number', 'qualification_title', 'status',
             ])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'Profile created',
+                'updated' => 'Profile updated',
+                'deleted' => 'Profile deleted',
+                default => $eventName,
+            });
     }
 
     protected $fillable = [

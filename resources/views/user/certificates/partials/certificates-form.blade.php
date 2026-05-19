@@ -183,6 +183,7 @@
             }))"
         >
             <div class="overflow-hidden rounded-xl border border-grayTheme-border">
+                <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead>
                         <tr class="border-b border-grayTheme-border bg-grayTheme-light">
@@ -265,6 +266,7 @@
                         </template>
                     </tbody>
                 </table>
+                </div>{{-- /overflow-x-auto --}}
             </div>
 
             <div class="mt-4 flex flex-wrap items-center justify-between gap-3">

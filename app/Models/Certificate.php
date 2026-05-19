@@ -17,7 +17,13 @@ class Certificate extends Model
         return LogOptions::defaults()
             ->logOnly(['certificate_name', 'certificate_type', 'status', 'verification_status'])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'Certificate added',
+                'updated' => 'Certificate updated',
+                'deleted' => 'Certificate deleted',
+                default => $eventName,
+            });
     }
 
     public const TYPE_LABELS = [

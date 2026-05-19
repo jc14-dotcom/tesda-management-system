@@ -44,13 +44,13 @@
             <div class="surface p-6">
                 <form method="get" x-data="liveSearch()">
                     <div class="flex flex-wrap items-end gap-4">
-                        <div class="flex-1 min-w-48">
+                        <div class="w-full sm:flex-1 sm:min-w-48">
                             <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="search">Search</label>
                             <input id="search" type="text" name="search" value="{{ $search }}"
                                 class="mt-1 form-input w-full" placeholder="Certificate name, number…"
                                 @input.debounce.400ms="search($el.closest('form'))" />
                         </div>
-                        <div>
+                        <div class="w-full sm:w-auto">
                             <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="status">Status</label>
                             <select id="status" name="status" class="mt-1 form-input">
                                 <option value="all" @selected($status === 'all')>All Statuses</option>
@@ -59,7 +59,7 @@
                                 <option value="expired" @selected($status === 'expired')>Expired</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="w-full sm:w-auto">
                             <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="type">Type</label>
                             <select id="type" name="type" class="mt-1 form-input">
                                 <option value="all" @selected($type === 'all')>All Types</option>
@@ -68,7 +68,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div>
+                        <div class="w-full sm:w-auto">
                             <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="verify_status">Verification</label>
                             <select id="verify_status" name="verify_status" class="mt-1 form-input">
                                 <option value="all" @selected($verifyStatus === 'all')>All</option>
@@ -77,7 +77,7 @@
                                 <option value="rejected" @selected($verifyStatus === 'rejected')>Rejected</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="w-full sm:w-auto">
                             <label class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" for="window">Expiry Window</label>
                             <select id="window" name="window" class="mt-1 form-input">
                                 <option value="0" @selected($window === 0)>All Dates</option>
@@ -88,7 +88,7 @@
                         </div>
                     </div>
                     @php $hasFilters = $search || $status !== 'all' || $type !== 'all' || $verifyStatus !== 'all' || $window > 0; @endphp
-                    <div class="mt-4 flex items-center justify-end gap-2">
+                    <div class="mt-4 flex flex-wrap items-center justify-end gap-2">
                         <a href="{{ route('admin.certificates.index') }}" class="btn-secondary inline-flex items-center gap-1.5 {{ !$hasFilters ? 'pointer-events-none opacity-40' : '' }}">
                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             Reset

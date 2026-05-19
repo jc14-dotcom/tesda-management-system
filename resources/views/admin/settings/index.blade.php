@@ -11,7 +11,27 @@
 
                 {{-- Flash messages handled by toast notifications --}}
 
-                <form method="post" action="{{ route('admin.settings.update') }}" class="space-y-6">
+                <form method="post" action="{{ route('admin.settings.update') }}" class="space-y-6"
+                    x-data="{
+                        submitting: false,
+                        dirty: false,
+                        origEnabled: {{ ($notificationsEnabled ?? false) ? 'true' : 'false' }},
+                        origDays: {{ json_encode($expiryNoticeDays ?? [30, 14, 7, 3, 1]) }},
+                        get isDirty() {
+                            const enabledEl = document.getElementById('notifications_enabled');
+                            if (!enabledEl) return false;
+                            const enabledNow = enabledEl.checked;
+                            if (enabledNow !== this.origEnabled) return true;
+                            const dayInputs = [...document.querySelectorAll('input[name=\'expiry_notice_days[]\']')];
+                            const daysNow = dayInputs.map(el => Number(el.value));
+                            if (daysNow.length !== this.origDays.length) return true;
+                            return daysNow.some((v, i) => v !== this.origDays[i]);
+                        }
+                    }"
+                    @submit="submitting = true"
+                    @input="dirty = isDirty"
+                    @change="dirty = isDirty"
+                >
                     @csrf
 
                     {{-- Certificate Notifications Card --}}
@@ -66,7 +86,7 @@
                                     </div>
                                     <button
                                         type="button"
-                                        @click="days.push(7)"
+                                        @click="days.push(7); $nextTick(() => { dirty = isDirty })"
                                         class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/40"
                                     >
                                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
@@ -88,7 +108,7 @@
                                             <span class="shrink-0 text-xs text-grayTheme-medium">days before</span>
                                             <button
                                                 type="button"
-                                                @click="days.splice(i, 1)"
+                                                @click="days.splice(i, 1); $nextTick(() => { dirty = isDirty })"
                                                 class="shrink-0 rounded p-0.5 text-grayTheme-medium transition hover:bg-danger-soft hover:text-danger"
                                                 :aria-label="'Remove ' + day + '-day reminder'"
                                             >
@@ -113,7 +133,7 @@
                     </div>
 
                     <div class="flex items-center gap-4">
-                        <button type="submit" class="btn-primary inline-flex items-center gap-2">
+                        <button type="submit" class="btn-primary inline-flex items-center gap-2" x-bind:disabled="submitting || !dirty">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                             Save Settings
                         </button>

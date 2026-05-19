@@ -1,6 +1,7 @@
 <x-app-layout>
     <div class="py-12" x-data="{
         confirmOpen: false,
+        submitting: false,
         confirmTitle: '',
         confirmMessage: '',
         pendingDeleteUrl: '',
@@ -13,7 +14,8 @@
             this.confirmOpen = true;
         },
         runConfirm() {
-            this.$refs[this.pendingFormRef].submit();
+            this.submitting = true;
+            document.getElementById(this.pendingFormRef).submit();
             this.confirmOpen = false;
         }
     }">
@@ -61,12 +63,12 @@
         <div class="surface p-6">
             <form method="get" x-data="liveSearch()">
                 <div class="flex flex-wrap items-end gap-4">
-                    <div class="flex-1 min-w-48">
+                    <div class="w-full sm:flex-1 sm:min-w-48">
                         <label class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium" for="notif_search">Search</label>
                         <input id="notif_search" type="text" name="search" value="{{ $search ?? '' }}" placeholder="Search user name…" class="mt-1 form-input w-full"
                             @input.debounce.400ms="search($el.closest('form'))" />
                     </div>
-                    <div>
+                    <div class="w-full sm:w-auto">
                         <label class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium" for="notif_status">Status</label>
                         <select id="notif_status" name="status" class="mt-1 form-input">
                             <option value="all"    @selected(($status ?? 'all') === 'all')>All</option>
@@ -74,7 +76,7 @@
                             <option value="read"   @selected(($status ?? '') === 'read')>Read</option>
                         </select>
                     </div>
-                    <div>
+                    <div class="w-full sm:w-auto">
                         <label class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium" for="notif_type">Type</label>
                         <select id="notif_type" name="type" class="mt-1 form-input">
                             <option value="all"                    @selected(($type ?? 'all') === 'all')>All Types</option>
@@ -93,15 +95,14 @@
                     </div>
                 </div>
                 @php $hasFilters = ($search ?? '') || ($status ?? 'all') !== 'all' || ($type ?? 'all') !== 'all'; @endphp
-                <div class="mt-4 flex items-center justify-between gap-2">
-                    <form method="post" action="{{ route('admin.notifications.destroy-all') }}" x-ref="clearAllForm" class="hidden">@csrf <input type="hidden" name="_method" value="DELETE"></form>
+                <div class="mt-4 flex items-center gap-2">
                     <button type="button" class="btn-danger inline-flex items-center gap-1.5 text-sm"
                         @click="askConfirm('Clear All Notifications', 'Permanently delete all notifications? This cannot be undone.', '{{ route('admin.notifications.destroy-all') }}', 'clearAllForm')"
                     >
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         Clear All
                     </button>
-                    <div class="flex items-center gap-2">
+                    <div class="ml-auto flex items-center gap-2">
                         <a href="{{ route('admin.notifications.index') }}" class="btn-secondary inline-flex items-center gap-1.5 {{ !$hasFilters ? 'pointer-events-none opacity-40' : '' }}">
                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             Reset
@@ -114,6 +115,10 @@
                 </div>
             </form>
         </div>
+
+        {{-- Hidden action forms (outside nested form and live-search area so they always exist in DOM) --}}
+        <form id="clearAllForm" method="post" action="{{ route('admin.notifications.destroy-all') }}" class="hidden">@csrf <input type="hidden" name="_method" value="DELETE"></form>
+        <form id="notifDeleteForm" method="post" :action="pendingDeleteUrl" class="hidden">@csrf <input type="hidden" name="_method" value="DELETE"></form>
 
         <div id="live-search-results">
         <div class="surface overflow-hidden rounded-xl shadow-sm">
@@ -184,7 +189,6 @@
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-grayTheme-medium">{{ $notif->created_at->format('M d, Y H:i') }}</td>
                             <td class="px-4 py-3 text-right">
-                                <form method="post" :action="pendingDeleteUrl" x-ref="notifDeleteForm" class="hidden">@csrf <input type="hidden" name="_method" value="DELETE"></form>
                                 <div class="inline-flex items-center gap-1">
                                     @if(!empty($notif->data['url']))
                                         <a href="{{ $notif->data['url'] }}" class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary-soft focus:outline-none">
@@ -204,8 +208,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-12 text-center">
-                                <div class="flex flex-col items-center gap-2">
+                            <td colspan="6" class="py-12 text-center">
+                                <div class="flex w-full flex-col items-center gap-2">
                                     <div class="flex h-12 w-12 items-center justify-center rounded-full bg-grayTheme-light">
                                         <svg class="h-6 w-6 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                                     </div>
@@ -244,7 +248,7 @@
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" class="btn-secondary" @click="confirmOpen = false">Cancel</button>
-                    <button type="button" class="btn-danger gap-2" @click="runConfirm()">
+                    <button type="button" class="btn-danger gap-2" @click="runConfirm()" x-bind:disabled="submitting">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         Confirm
                     </button>

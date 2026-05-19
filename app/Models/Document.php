@@ -16,7 +16,13 @@ class Document extends Model
         return LogOptions::defaults()
             ->logOnly(['document_name', 'original_name', 'type'])
             ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
+                'created' => 'Document uploaded',
+                'updated' => 'Document updated',
+                'deleted' => 'Document deleted',
+                default => $eventName,
+            });
     }
 
     protected $fillable = [

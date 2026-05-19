@@ -12,6 +12,10 @@ export function initLayout() {
     initDropdownEvents();
     initNotificationEvents();
     initNotificationPanel();
+    // Only poll when the notification bell is present (authenticated layouts)
+    if (document.getElementById('notif-bell') || document.getElementById('notif-badge')) {
+        initNotificationPolling();
+    }
     initFileInputEvents();
     initConfirmModal();
 }
@@ -117,6 +121,14 @@ function initSidebarEvents() {
             overlay?.classList.toggle('hidden', !open);
             btn?.querySelector('.mobile-icon-menu')?.classList.toggle('hidden', open);
             btn?.querySelector('.mobile-icon-close')?.classList.toggle('hidden', !open);
+            // Close notification panel when sidebar opens
+            if (open) {
+                const notifPanel = document.getElementById('notif-panel');
+                if (notifPanel && !notifPanel.classList.contains('hidden')) {
+                    notifPanel.classList.add('hidden');
+                    document.getElementById('notif-panel-toggle')?.setAttribute('aria-expanded', 'false');
+                }
+            }
             return;
         }
 
@@ -324,6 +336,8 @@ function initNotificationPanel() {
         if (e.target.closest('#notif-panel-toggle')) {
             const nowHidden = panel.classList.toggle('hidden');
             e.target.closest('#notif-panel-toggle').setAttribute('aria-expanded', nowHidden ? 'false' : 'true');
+            // Close mobile sidebar when notification panel opens
+            if (!nowHidden) closeMobileSidebar();
             return;
         }
 
@@ -387,7 +401,8 @@ function initNotificationPanel() {
 }
 
 function notifUpdateBadge(count) {
-    const badge      = document.getElementById('notif-badge');
+    const toggle     = document.getElementById('notif-panel-toggle');
+    let   badge      = document.getElementById('notif-badge');
     const panelBadge = document.getElementById('notif-unread-badge');
     const markAllBtn = document.getElementById('notif-mark-all-btn');
     if (count <= 0) {
@@ -396,6 +411,13 @@ function notifUpdateBadge(count) {
         markAllBtn?.classList.add('hidden');
     } else {
         const label = count > 9 ? '9+' : String(count);
+        // Re-create badge if it was removed when count previously hit 0
+        if (!badge && toggle) {
+            badge = document.createElement('span');
+            badge.id        = 'notif-badge';
+            badge.className = 'absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[10px] font-bold leading-none text-white';
+            toggle.appendChild(badge);
+        }
         if (badge)      badge.textContent = label;
         if (panelBadge) { panelBadge.textContent = label; panelBadge.classList.remove('hidden'); }
         if (markAllBtn) markAllBtn.classList.remove('hidden');
@@ -493,4 +515,113 @@ function escHtml(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+}
+
+// ── Notification polling ──────────────────────────────────────────────────────
+
+function initNotificationPolling() {
+    const POLL_INTERVAL = 30_000; // 30 seconds
+
+    let lastLatestId  = undefined; // undefined = baseline not yet established
+    let lastUnreadCnt = 0;
+    let pollTimer     = null;
+
+    async function poll() {
+        try {
+            const res = await fetch('/notifications/poll', {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            if (res.status === 401 || res.status === 403) {
+                // User is no longer authenticated — stop polling
+                clearTimeout(pollTimer);
+                return;
+            }
+            if (!res.ok) return;
+
+            const data        = await res.json();
+            const unreadCount = data.unread_count ?? 0;
+            const latestId    = data.latest_id    ?? null;
+
+            // First poll: establish baseline from the server-rendered state
+            if (lastLatestId === undefined) {
+                lastLatestId  = latestId;
+                lastUnreadCnt = unreadCount;
+                return;
+            }
+
+            const isNewNotif = unreadCount > lastUnreadCnt;
+            const listChanged = latestId !== lastLatestId;
+
+            if (listChanged) {
+                lastLatestId  = latestId;
+                lastUnreadCnt = unreadCount;
+                await refreshPanel(isNewNotif ? { title: data.latest_title, message: data.latest_message } : null);
+            } else if (unreadCount !== lastUnreadCnt) {
+                // Count changed (read in another tab) — just sync the badge
+                lastUnreadCnt = unreadCount;
+                notifUpdateBadge(unreadCount);
+            }
+        } catch (_) {
+            // Network error — silently ignore, try again next interval
+        }
+    }
+
+    async function refreshPanel(toastData) {
+        try {
+            const res = await fetch('/notifications/panel', {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            if (!res.ok) return;
+
+            const data = await res.json();
+
+            // Replace the list HTML
+            const list = document.getElementById('notif-list');
+            if (list) list.innerHTML = data.html ?? '';
+
+            // Sync the badge
+            notifUpdateBadge(data.unread_count ?? 0);
+
+            // Show a toast only if the panel is currently closed
+            if (toastData) {
+                const panel = document.getElementById('notif-panel');
+                if (!panel || panel.classList.contains('hidden')) {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: {
+                            type:    'info',
+                            title:   toastData.title   ?? 'New Notification',
+                            message: toastData.message ?? 'You have a new notification.',
+                        },
+                    }));
+                }
+            }
+        } catch (_) {
+            // Silently ignore
+        }
+    }
+
+    function startPolling() {
+        if (pollTimer) return;
+        pollTimer = setInterval(poll, POLL_INTERVAL);
+    }
+
+    function stopPolling() {
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
+
+    // Establish baseline immediately, then poll on interval
+    poll();
+    startPolling();
+
+    // Pause when the tab is hidden, resume + immediate check when visible again
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            stopPolling();
+        } else {
+            poll();
+            startPolling();
+        }
+    });
 }

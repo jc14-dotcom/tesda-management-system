@@ -152,7 +152,22 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('admin.users.update', $user) }}" class="mt-6 grid gap-5 md:grid-cols-2">
+                <form method="POST" action="{{ route('admin.users.update', $user) }}" class="mt-6 grid gap-5 md:grid-cols-2"
+                    x-data="{
+                        submitting: false,
+                        dirty: false,
+                        orig: {
+                            name:   {{ Js::from(old('name',  $user->name)) }},
+                            email:  {{ Js::from(old('email', $user->email)) }},
+                            role:   {{ Js::from($user->hasRole('admin') ? 'admin' : 'user') }},
+                            status: {{ Js::from($user->profile?->status ?? 'active') }},
+                        },
+                        check(field, val) { this.dirty = Object.keys(this.orig).some(k => document.getElementById('mgmt_' + k)?.value !== this.orig[k]); }
+                    }"
+                    @submit="submitting = true"
+                    @input="dirty = ['mgmt_name','mgmt_email','mgmt_role','mgmt_status'].some(id => { const el = document.getElementById(id); return el && el.value !== orig[id === 'mgmt_name' ? 'name' : id === 'mgmt_email' ? 'email' : id === 'mgmt_role' ? 'role' : 'status']; })"
+                    @change="$el.dispatchEvent(new Event('input'))"
+                >
                     @csrf
                     @method('PATCH')
 
@@ -174,7 +189,8 @@
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                             </span>
                             <input id="mgmt_email" type="email" name="email" value="{{ old('email', $user->email) }}"
-                                class="form-input w-full pl-9" required maxlength="255" placeholder="user@example.com" />
+                                class="form-input w-full pl-9" required maxlength="255" placeholder="user@example.com"
+                                oninput="this.value = this.value.toLowerCase()" />
                         </div>
                     </div>
 
@@ -216,7 +232,7 @@
                                 </button>
                             </form>
                         @endif
-                        <button type="submit" class="btn-primary gap-2">
+                        <button type="submit" class="btn-primary gap-2" x-bind:disabled="submitting || !dirty">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                             Save Changes
                         </button>
