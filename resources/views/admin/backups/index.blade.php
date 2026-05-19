@@ -5,6 +5,7 @@
         confirmMessage: '',
         pendingDeleteUrl: '',
         pendingFormRef: 'deleteForm',
+        backupLoading: false,
         askConfirm(title, message, url, formRef) {
             this.confirmTitle    = title;
             this.confirmMessage  = message;
@@ -23,6 +24,9 @@
             else form.submit();
         },
         runConfirm() {
+            if (this.pendingFormRef === 'runBackupForm') {
+                this.backupLoading = true;
+            }
             this.submitForm(this.pendingFormRef);
             this.confirmOpen = false;
         },
@@ -30,15 +34,31 @@
         restoreFileName: '',
         restoreDisk: '',
         restorePath: '',
+        restorePassword: '',
+        restorePasswordVisible: false,
         openRestore(name, disk, path) {
-            this.restoreFileName = name;
-            this.restoreDisk     = disk;
-            this.restorePath     = path;
-            this.restoreOpen     = true;
+            this.restoreFileName        = name;
+            this.restoreDisk            = disk;
+            this.restorePath            = path;
+            this.restorePassword        = '';
+            this.restorePasswordVisible = false;
+            this.restoreOpen            = true;
         },
         submitRestore() {
             this.submitForm('restoreForm');
             this.restoreOpen = false;
+        },
+        uploadFileName: null,
+        uploadRestoreOpen: false,
+        uploadRestorePassword: '',
+        uploadRestorePasswordVisible: false,
+        submitUploadRestore() {
+            this.saveScroll();
+            const form = this.$refs['uploadRestoreForm'];
+            if (!form) return;
+            if (form.requestSubmit) form.requestSubmit();
+            else form.submit();
+            this.uploadRestoreOpen = false;
         },
         schedFreq:     @js($schedule['frequency']),
         schedTime:     @js($schedule['time']),
@@ -231,8 +251,10 @@
                     <form method="post" action="{{ route('admin.backups.restore-upload') }}"
                           enctype="multipart/form-data"
                           data-turbo="false"
-                          class="space-y-4" x-data="{ fileName: null }" @submit="saveScroll()">
+                          x-ref="uploadRestoreForm"
+                          class="space-y-4" @submit="saveScroll()">
                         @csrf
+                        <input type="hidden" name="restore_password" :value="uploadRestorePassword">
                         <div>
                             <label class="mb-2 block text-xs font-semibold text-grayTheme-dark">
                                 Upload Backup File <span class="font-normal text-grayTheme-medium">(.zip)</span>
@@ -242,19 +264,23 @@
                                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
                                     <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                                 </div>
-                                <span class="text-sm font-semibold text-grayTheme-dark" x-text="fileName ?? 'Click to choose a backup file'"></span>
+                                <span class="text-sm font-semibold text-grayTheme-dark" x-text="uploadFileName ?? 'Click to choose a backup file'"></span>
                                 <span class="text-xs text-grayTheme-medium">Accepts .zip files only</span>
                                 <input id="backup_file" type="file" name="backup_file" accept=".zip" class="sr-only"
-                                    @change="fileName = $event.target.files[0]?.name ?? null">
+                                    @change="uploadFileName = $event.target.files[0]?.name ?? null">
                             </label>
                             @error('backup_file')
                                 <p class="mt-1.5 text-xs text-danger">{{ $message }}</p>
                             @enderror
+                            @error('restore_password')
+                                <p class="mt-1.5 text-xs text-danger">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="flex justify-end">
-                            <button type="submit"
-                                :disabled="!fileName"
-                                :class="{'opacity-40 cursor-not-allowed': !fileName}"
+                            <button type="button"
+                                :disabled="!uploadFileName"
+                                :class="{'opacity-40 cursor-not-allowed': !uploadFileName}"
+                                @click="uploadFileName && (uploadRestorePassword = '', uploadRestorePasswordVisible = false, uploadRestoreOpen = true)"
                                 class="inline-flex items-center gap-2 rounded-xl bg-warning px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-warning/40">
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                 Restore from File
@@ -349,6 +375,7 @@
             @csrf
             <input type="hidden" name="disk" :value="restoreDisk">
             <input type="hidden" name="path" :value="restorePath">
+            <input type="hidden" name="restore_password" :value="restorePassword">
         </form>
 
         {{-- Confirm modal --}}
@@ -395,21 +422,131 @@
                         <p class="mt-0.5 font-mono text-xs text-grayTheme-medium" x-text="restoreFileName"></p>
                     </div>
                 </div>
-                <div class="mt-4 rounded-lg border border-danger/20 bg-danger-soft px-4 py-3">
-                    <p class="text-sm font-bold text-danger">âš  Destructive â€” cannot be undone</p>
+                                <div class="mt-4 rounded-lg border border-danger/20 bg-danger-soft px-4 py-3">
+                    <p class="text-sm font-bold text-danger">&#9888; Destructive &mdash; cannot be undone</p>
                     <p class="mt-1 text-xs leading-5 text-danger/80">
                         This will permanently replace your entire database with data from this backup.
                         All changes made after this backup was created will be lost.
-                        You will be signed out automatically after restore completes.
+                        <strong class="text-danger">You will be signed out automatically after restore completes.</strong>
                     </p>
+                </div>
+                <div class="mt-4">
+                    <label class="mb-1.5 block text-xs font-semibold text-grayTheme-dark">
+                        Confirm your account password to proceed
+                    </label>
+                    <div class="relative">
+                        <input
+                            :type="restorePasswordVisible ? 'text' : 'password'"
+                            x-model="restorePassword"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            class="w-full rounded-lg border border-grayTheme-border bg-white px-3 py-2 pr-10 text-sm text-grayTheme-dark shadow-sm focus:border-warning focus:outline-none focus:ring-2 focus:ring-warning/20"
+                        >
+                        <button type="button"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-grayTheme-medium hover:text-grayTheme-dark"
+                            @click="restorePasswordVisible = !restorePasswordVisible"
+                            tabindex="-1">
+                            <svg x-show="!restorePasswordVisible" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg x-show="restorePasswordVisible" x-cloak class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" class="btn-secondary" @click="restoreOpen = false">Cancel</button>
                     <button type="button"
+                        :disabled="!restorePassword"
+                        :class="{'opacity-40 cursor-not-allowed': !restorePassword}"
                         class="inline-flex items-center gap-2 rounded-xl bg-warning px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-warning/40"
-                        @click="submitRestore()">
+                        @click="restorePassword && submitRestore()">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         Restore Database
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Backup in-progress loading modal --}}
+        <div x-cloak x-show="backupLoading"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4">
+            <div class="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl text-center">
+                <div class="flex justify-center mb-5">
+                    <div class="relative flex h-20 w-20 items-center justify-center">
+                        <svg class="animate-spin h-20 w-20 text-primary/20 absolute inset-0" fill="none" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5"></circle>
+                        </svg>
+                        <svg class="animate-spin h-20 w-20 text-primary absolute inset-0" style="animation-direction:reverse;animation-duration:0.85s" fill="none" viewBox="0 0 24 24">
+                            <path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <div class="absolute flex h-10 w-10 items-center justify-center rounded-full bg-primary-soft">
+                            <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <h3 class="text-base font-bold text-grayTheme-dark">Creating Backup&hellip;</h3>
+                <p class="mt-2 text-sm text-grayTheme-medium">Please wait while the database backup is being created.<br>This may take a few moments.</p>
+                <div class="mt-5 flex justify-center gap-2">
+                    <span class="h-2 w-2 rounded-full bg-primary animate-bounce" style="animation-delay:0ms"></span>
+                    <span class="h-2 w-2 rounded-full bg-primary animate-bounce" style="animation-delay:160ms"></span>
+                    <span class="h-2 w-2 rounded-full bg-primary animate-bounce" style="animation-delay:320ms"></span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Upload restore confirm modal --}}
+        <div x-cloak x-show="uploadRestoreOpen" x-transition.opacity
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4"
+            @keydown.escape.window="uploadRestoreOpen = false">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100">
+                <div class="flex items-start gap-4">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning-soft">
+                        <svg class="h-5 w-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-grayTheme-dark">Confirm File Restore</h3>
+                        <p class="mt-0.5 font-mono text-xs text-grayTheme-medium" x-text="uploadFileName"></p>
+                    </div>
+                </div>
+                <div class="mt-4 rounded-lg border border-danger/20 bg-danger-soft px-4 py-3">
+                    <p class="text-sm font-bold text-danger">&#9888; Destructive &mdash; cannot be undone</p>
+                    <p class="mt-1 text-xs leading-5 text-danger/80">
+                        This will permanently replace your entire database with the uploaded backup file.
+                        All current data will be lost.
+                        <strong class="text-danger">You will be signed out automatically after restore completes.</strong>
+                    </p>
+                </div>
+                <div class="mt-4">
+                    <label class="mb-1.5 block text-xs font-semibold text-grayTheme-dark">
+                        Confirm your account password to proceed
+                    </label>
+                    <div class="relative">
+                        <input
+                            :type="uploadRestorePasswordVisible ? 'text' : 'password'"
+                            x-model="uploadRestorePassword"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            class="w-full rounded-lg border border-grayTheme-border bg-white px-3 py-2 pr-10 text-sm text-grayTheme-dark shadow-sm focus:border-warning focus:outline-none focus:ring-2 focus:ring-warning/20"
+                        >
+                        <button type="button"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-grayTheme-medium hover:text-grayTheme-dark"
+                            @click="uploadRestorePasswordVisible = !uploadRestorePasswordVisible"
+                            tabindex="-1">
+                            <svg x-show="!uploadRestorePasswordVisible" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg x-show="uploadRestorePasswordVisible" x-cloak class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" class="btn-secondary" @click="uploadRestoreOpen = false">Cancel</button>
+                    <button type="button"
+                        :disabled="!uploadRestorePassword"
+                        :class="{'opacity-40 cursor-not-allowed': !uploadRestorePassword}"
+                        class="inline-flex items-center gap-2 rounded-xl bg-warning px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-warning/40"
+                        @click="uploadRestorePassword && submitUploadRestore()">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Restore from File
                     </button>
                 </div>
             </div>

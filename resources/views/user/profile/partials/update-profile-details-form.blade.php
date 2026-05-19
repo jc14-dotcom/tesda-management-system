@@ -18,7 +18,11 @@
         </div>
         <div>
             <h2 class="text-base font-bold text-grayTheme-dark">
-                {{ __('Personal and Employment Details') }}
+                @if(auth()->user()->hasRole('admin'))
+                    {{ __('Personal Details') }}
+                @else
+                    {{ __('Personal and Employment Details') }}
+                @endif
             </h2>
             <p class="mt-0.5 text-sm text-grayTheme-medium">
                 {{ __('Update your TESDA-related profile information.') }}
@@ -61,151 +65,200 @@
             <div class="grid gap-6 md:grid-cols-2">
                 <div>
                     <x-input-label for="first_name" :value="__('First Name')" :required="true" />
-                    <x-text-input
-                        id="first_name"
-                        name="first_name"
-                        type="text"
-                        class="mt-1 block w-full"
-                        x-bind:class="showError('firstName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        :value="old('first_name', $profile?->first_name)"
-                        placeholder="Juan"
-                        maxlength="255"
-                        required
-                        x-model.trim="firstName"
-                        @input="touched.firstName = true; handleNameInput('firstName')"
-                        @blur="touched.firstName = true; updateValidation()"
-                        x-bind:aria-invalid="showError('firstName')"
-                        x-bind:aria-describedby="showError('firstName') ? 'first-name-error' : null"
-                    />
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </span>
+                        <x-text-input
+                            id="first_name"
+                            name="first_name"
+                            type="text"
+                            class="block w-full pl-9"
+                            x-bind:class="showError('firstName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                            :value="old('first_name', $profile?->first_name)"
+                            placeholder="Juan"
+                            maxlength="255"
+                            required
+                            x-model.trim="firstName"
+                            @input="touched.firstName = true; handleNameInput('firstName')"
+                            @blur="touched.firstName = true; updateValidation()"
+                            x-bind:aria-invalid="showError('firstName')"
+                            x-bind:aria-describedby="showError('firstName') ? 'first-name-error' : null"
+                        />
+                    </div>
                     <p id="first-name-error" x-show="showError('firstName')" class="mt-2 text-sm text-red-600" x-text="errors.firstName"></p>
                     <x-input-error class="mt-2" :messages="$errors->get('first_name')" />
                 </div>
 
                 <div>
                     <x-input-label for="middle_name" :value="__('Middle Name')" :required="true" />
-                    <x-text-input
-                        id="middle_name"
-                        name="middle_name"
-                        type="text"
-                        class="mt-1 block w-full"
-                        x-bind:class="showError('middleName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        :value="old('middle_name', $profile?->middle_name)"
-                        placeholder="Dela"
-                        maxlength="255"
-                        required
-                        x-model.trim="middleName"
-                        @input="touched.middleName = true; handleNameInput('middleName')"
-                        @blur="touched.middleName = true; updateValidation()"
-                        x-bind:aria-invalid="showError('middleName')"
-                        x-bind:aria-describedby="showError('middleName') ? 'middle-name-error' : null"
-                    />
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </span>
+                        <x-text-input
+                            id="middle_name"
+                            name="middle_name"
+                            type="text"
+                            class="block w-full pl-9"
+                            x-bind:class="showError('middleName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                            :value="old('middle_name', $profile?->middle_name)"
+                            placeholder="Dela"
+                            maxlength="255"
+                            required
+                            x-model.trim="middleName"
+                            @input="touched.middleName = true; handleNameInput('middleName')"
+                            @blur="touched.middleName = true; updateValidation()"
+                            x-bind:aria-invalid="showError('middleName')"
+                            x-bind:aria-describedby="showError('middleName') ? 'middle-name-error' : null"
+                        />
+                    </div>
                     <p id="middle-name-error" x-show="showError('middleName')" class="mt-2 text-sm text-red-600" x-text="errors.middleName"></p>
                     <x-input-error class="mt-2" :messages="$errors->get('middle_name')" />
                 </div>
 
                 <div>
                     <x-input-label for="last_name" :value="__('Last Name')" :required="true" />
-                    <x-text-input
-                        id="last_name"
-                        name="last_name"
-                        type="text"
-                        class="mt-1 block w-full"
-                        x-bind:class="showError('lastName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        :value="old('last_name', $profile?->last_name)"
-                        placeholder="Cruz"
-                        maxlength="255"
-                        required
-                        x-model.trim="lastName"
-                        @input="touched.lastName = true; handleNameInput('lastName')"
-                        @blur="touched.lastName = true; updateValidation()"
-                        x-bind:aria-invalid="showError('lastName')"
-                        x-bind:aria-describedby="showError('lastName') ? 'last-name-error' : null"
-                    />
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </span>
+                        <x-text-input
+                            id="last_name"
+                            name="last_name"
+                            type="text"
+                            class="block w-full pl-9"
+                            x-bind:class="showError('lastName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                            :value="old('last_name', $profile?->last_name)"
+                            placeholder="Cruz"
+                            maxlength="255"
+                            required
+                            x-model.trim="lastName"
+                            @input="touched.lastName = true; handleNameInput('lastName')"
+                            @blur="touched.lastName = true; updateValidation()"
+                            x-bind:aria-invalid="showError('lastName')"
+                            x-bind:aria-describedby="showError('lastName') ? 'last-name-error' : null"
+                        />
+                    </div>
                     <p id="last-name-error" x-show="showError('lastName')" class="mt-2 text-sm text-red-600" x-text="errors.lastName"></p>
                     <x-input-error class="mt-2" :messages="$errors->get('last_name')" />
                 </div>
 
                 <div>
                     <x-input-label for="suffix" :value="__('Suffix')" />
-                    <select
-                        id="suffix"
-                        name="suffix"
-                        class="mt-1 form-input"
-                        x-model="suffix"
-                        @change="updateValidation()"
-                    >
-                        <option value="">None</option>
-                        <option value="jr">Jr.</option>
-                        <option value="sr">Sr.</option>
-                        <option value="ii">II</option>
-                        <option value="iii">III</option>
-                        <option value="iv">IV</option>
-                        <option value="v">V</option>
-                    </select>
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                        </span>
+                        <select
+                            id="suffix"
+                            name="suffix"
+                            class="form-input pl-9"
+                            x-model="suffix"
+                            @change="updateValidation()"
+                        >
+                            <option value="">None</option>
+                            <option value="jr">Jr.</option>
+                            <option value="sr">Sr.</option>
+                            <option value="ii">II</option>
+                            <option value="iii">III</option>
+                            <option value="iv">IV</option>
+                            <option value="v">V</option>
+                        </select>
+                    </div>
                     <x-input-error class="mt-2" :messages="$errors->get('suffix')" />
                 </div>
 
                 <div>
                     <x-input-label for="date_of_birth" :value="__('Date of Birth')" :required="true" />
-                    <x-text-input
-                        id="date_of_birth"
-                        name="date_of_birth"
-                        type="date"
-                        class="mt-1 block w-full"
-                        x-bind:class="showError('dateOfBirth') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        :value="old('date_of_birth', $profile?->date_of_birth?->format('Y-m-d'))"
-                        x-model="dateOfBirth"
-                        required
-                        @change="touched.dateOfBirth = true; updateValidation()"
-                        x-bind:aria-invalid="showError('dateOfBirth')"
-                        x-bind:aria-describedby="showError('dateOfBirth') ? 'date-of-birth-error' : null"
-                    />
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </span>
+                        <x-text-input
+                            id="date_of_birth"
+                            name="date_of_birth"
+                            type="date"
+                            class="block w-full pl-9"
+                            x-bind:class="showError('dateOfBirth') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                            :value="old('date_of_birth', $profile?->date_of_birth?->format('Y-m-d'))"
+                            x-model="dateOfBirth"
+                            required
+                            @change="touched.dateOfBirth = true; updateValidation()"
+                            x-bind:aria-invalid="showError('dateOfBirth')"
+                            x-bind:aria-describedby="showError('dateOfBirth') ? 'date-of-birth-error' : null"
+                        />
+                    </div>
                     <p id="date-of-birth-error" x-show="showError('dateOfBirth')" class="mt-2 text-sm text-red-600" x-text="errors.dateOfBirth"></p>
                     <x-input-error class="mt-2" :messages="$errors->get('date_of_birth')" />
                 </div>
 
                 <div>
                     <x-input-label for="gender" :value="__('Sex')" :required="true" />
-                    <select
-                        id="gender"
-                        name="gender"
-                        class="mt-1 form-input"
-                        x-bind:class="showError('gender') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        x-model="gender"
-                        required
-                        @change="touched.gender = true; updateValidation()"
-                        x-bind:aria-invalid="showError('gender')"
-                        x-bind:aria-describedby="showError('gender') ? 'gender-error' : null"
-                    >
-                        <option value="">Select sex</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </span>
+                        <select
+                            id="gender"
+                            name="gender"
+                            class="form-input pl-9"
+                            x-bind:class="showError('gender') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                            x-model="gender"
+                            required
+                            @change="touched.gender = true; updateValidation()"
+                            x-bind:aria-invalid="showError('gender')"
+                            x-bind:aria-describedby="showError('gender') ? 'gender-error' : null"
+                        >
+                            <option value="">Select sex</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
                     <p id="gender-error" x-show="showError('gender')" class="mt-2 text-sm text-red-600" x-text="errors.gender"></p>
                     <x-input-error class="mt-2" :messages="$errors->get('gender')" />
                 </div>
 
                 <div>
                     <x-input-label for="contact_number" :value="__('Contact Number')" :required="true" />
-                    <x-text-input
-                        id="contact_number"
-                        name="contact_number"
-                        type="text"
-                        class="mt-1 block w-full"
-                        x-bind:class="showError('contactNumber') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        :value="old('contact_number', $profile?->contact_number)"
-                        placeholder="09123456789"
-                        inputmode="numeric"
-                        autocomplete="tel"
-                        maxlength="11"
-                        pattern="^09\d{9}$"
-                        required
-                        x-model="contactNumber"
-                        @input="touched.contactNumber = true; handleContactInput()"
-                        @blur="touched.contactNumber = true; updateValidation()"
-                        x-bind:aria-invalid="showError('contactNumber')"
-                        x-bind:aria-describedby="showError('contactNumber') ? 'contact-number-error' : null"
-                    />
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                        </span>
+                        <x-text-input
+                            id="contact_number"
+                            name="contact_number"
+                            type="text"
+                            class="block w-full pl-9"
+                            x-bind:class="showError('contactNumber') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                            :value="old('contact_number', $profile?->contact_number)"
+                            placeholder="09123456789"
+                            inputmode="numeric"
+                            autocomplete="tel"
+                            maxlength="11"
+                            pattern="^09\d{9}$"
+                            required
+                            x-model="contactNumber"
+                            @input="touched.contactNumber = true; handleContactInput()"
+                            @blur="touched.contactNumber = true; updateValidation()"
+                            x-bind:aria-invalid="showError('contactNumber')"
+                            x-bind:aria-describedby="showError('contactNumber') ? 'contact-number-error' : null"
+                        />
+                    </div>
                     <p id="contact-number-error" x-show="showError('contactNumber')" class="mt-2 text-sm text-red-600" x-text="errors.contactNumber"></p>
                     <x-input-error class="mt-2" :messages="$errors->get('contact_number')" />
                 </div>
@@ -214,25 +267,34 @@
 
         <div>
             <x-input-label class="text-base sm:text-[1.05rem]" for="address" :value="__('Address')" :required="true" />
-            <textarea
-                id="address"
-                name="address"
-                class="mt-2 form-input min-h-[8rem]"
-                x-bind:class="showError('address') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                rows="3"
-                placeholder="Enter complete address"
-                required
-                x-model.trim="address"
-                @input="touched.address = true; updateValidation()"
-                @blur="touched.address = true; updateValidation()"
-                x-bind:aria-invalid="showError('address')"
-                x-bind:aria-describedby="showError('address') ? 'address-error' : null"
-            >{{ old('address', $profile?->address) }}</textarea>
-            <p class="mt-2 text-base leading-relaxed text-grayTheme-medium">Street name, building number, subdivision, barangay, city, and other necessary address details.</p>
+            <div class="relative mt-2">
+                <span class="pointer-events-none absolute left-3 top-2.5 text-grayTheme-medium">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </span>
+                <textarea
+                    id="address"
+                    name="address"
+                    class="form-input min-h-[8rem] pl-9 pt-2"
+                    x-bind:class="showError('address') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                    rows="3"
+                    placeholder="Enter complete address"
+                    required
+                    x-model.trim="address"
+                    @input="touched.address = true; updateValidation()"
+                    @blur="touched.address = true; updateValidation()"
+                    x-bind:aria-invalid="showError('address')"
+                    x-bind:aria-describedby="showError('address') ? 'address-error' : null"
+                >{{ old('address', $profile?->address) }}</textarea>
+            </div>
+            <p class="mt-2 text-sm leading-relaxed text-grayTheme-medium">Street name, building number, subdivision, barangay, city, and other necessary address details.</p>
             <p id="address-error" x-show="showError('address')" class="mt-2 text-sm text-red-600" x-text="errors.address"></p>
             <x-input-error class="mt-2" :messages="$errors->get('address')" />
         </div>
 
+        @unless(auth()->user()->hasRole('admin'))
         <div class="space-y-4">
         <div class="flex items-center gap-2 border-b border-grayTheme-border pb-3">
             <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
@@ -279,27 +341,36 @@
 
                 <div>
                     <x-input-label for="qualification_title" :value="__('Qualification Title')" />
-                    <x-text-input
-                        id="qualification_title"
-                        name="qualification_title"
-                        type="text"
-                        class="mt-1 block w-full"
-                        x-bind:class="showError('qualificationTitle') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        :value="old('qualification_title', $profile?->qualification_title)"
-                        placeholder="Automotive Servicing NC II"
-                        maxlength="255"
-                        x-model.trim="qualificationTitle"
-                        @input="updateValidation()"
-                        @blur="touched.qualificationTitle = true; updateValidation()"
-                        x-bind:aria-invalid="showError('qualificationTitle')"
-                        x-bind:aria-describedby="showError('qualificationTitle') ? 'qualification-title-error' : null"
-                    />
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                            </svg>
+                        </span>
+                        <x-text-input
+                            id="qualification_title"
+                            name="qualification_title"
+                            type="text"
+                            class="block w-full pl-9"
+                            x-bind:class="showError('qualificationTitle') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                            :value="old('qualification_title', $profile?->qualification_title)"
+                            placeholder="Automotive Servicing NC II"
+                            maxlength="255"
+                            x-model.trim="qualificationTitle"
+                            @input="updateValidation()"
+                            @blur="touched.qualificationTitle = true; updateValidation()"
+                            x-bind:aria-invalid="showError('qualificationTitle')"
+                            x-bind:aria-describedby="showError('qualificationTitle') ? 'qualification-title-error' : null"
+                        />
+                    </div>
                     <p id="qualification-title-error" x-show="showError('qualificationTitle')" class="mt-2 text-sm text-red-600" x-text="errors.qualificationTitle"></p>
                     <x-input-error class="mt-2" :messages="$errors->get('qualification_title')" />
                 </div>
             </div>
         </div>
+        @endunless
 
+        @unless(auth()->user()->hasRole('admin'))
         <div class="rounded-card border border-grayTheme-border bg-grayTheme-light px-4 py-4">
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2">
@@ -319,14 +390,23 @@
             </div>
             <p class="mt-2 text-xs text-grayTheme-medium">This is managed by admin or HR and cannot be edited directly.</p>
         </div>
+        @endunless
 
+        @unless(auth()->user()->hasRole('admin'))
         <div>
             <x-input-label for="region" :value="__('Municipality / City')" />
-            <select
-                id="region"
-                name="region"
-                class="mt-1 form-input"
-            >
+            <div class="relative mt-1">
+                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </span>
+                <select
+                    id="region"
+                    name="region"
+                    class="form-input pl-9"
+                >
                 <option value="">Select municipality or city</option>
                 @php($selectedRegion = old('region', $profile?->region))
                 <option value="Alaminos" @selected($selectedRegion === 'Alaminos')>Alaminos</option>
@@ -357,28 +437,37 @@
                 <option value="Santa Rosa" @selected($selectedRegion === 'Santa Rosa')>Santa Rosa (City)</option>
                 <option value="Siniloan" @selected($selectedRegion === 'Siniloan')>Siniloan</option>
                 <option value="Victoria" @selected($selectedRegion === 'Victoria')>Victoria</option>
-            </select>
+                </select>
+            </div>
             <x-input-error class="mt-2" :messages="$errors->get('region')" />
         </div>
 
         <div>
             <x-input-label for="remarks" :value="__('Remarks')" />
-            <textarea
-                id="remarks"
-                name="remarks"
-                class="mt-1 form-input"
-                x-bind:class="showError('remarks') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                rows="3"
-                placeholder="Add any additional notes"
-                x-model.trim="remarks"
-                @input="updateValidation()"
-                @blur="touched.remarks = true; updateValidation()"
-                x-bind:aria-invalid="showError('remarks')"
-                x-bind:aria-describedby="showError('remarks') ? 'remarks-error' : null"
-            >{{ old('remarks', $profile?->remarks) }}</textarea>
+            <div class="relative mt-1">
+                <span class="pointer-events-none absolute left-3 top-2.5 text-grayTheme-medium">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                </span>
+                <textarea
+                    id="remarks"
+                    name="remarks"
+                    class="form-input pl-9 pt-2"
+                    x-bind:class="showError('remarks') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                    rows="3"
+                    placeholder="Add any additional notes"
+                    x-model.trim="remarks"
+                    @input="updateValidation()"
+                    @blur="touched.remarks = true; updateValidation()"
+                    x-bind:aria-invalid="showError('remarks')"
+                    x-bind:aria-describedby="showError('remarks') ? 'remarks-error' : null"
+                >{{ old('remarks', $profile?->remarks) }}</textarea>
+            </div>
             <p id="remarks-error" x-show="showError('remarks')" class="mt-2 text-sm text-red-600" x-text="errors.remarks"></p>
             <x-input-error class="mt-2" :messages="$errors->get('remarks')" />
         </div>
+        @endunless
 
         <div class="flex items-center gap-4">
             <x-primary-button class="gap-2" x-bind:disabled="loading || !isDirty() || hasErrors()" x-bind:class="(loading || !isDirty() || hasErrors()) ? 'opacity-60 cursor-not-allowed' : ''">

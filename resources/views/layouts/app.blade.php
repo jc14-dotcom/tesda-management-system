@@ -93,6 +93,10 @@
         <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'warning',title:'Access Denied',message:{{ Js::from(session('forbidden')) }}}}));</script>
         @endif
 
+        @if(session('rate_limit_error'))
+        <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'warning',title:'Too Many Requests',message:{{ Js::from(session('rate_limit_error')) }}}}));</script>
+        @endif
+
         {{-- Global confirmation modal — trigger via window.showConfirm({...}) or data-confirm-message attribute --}}
         <div id="confirm-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
             <div id="confirm-modal-backdrop" class="fixed inset-0 bg-black/50"></div>

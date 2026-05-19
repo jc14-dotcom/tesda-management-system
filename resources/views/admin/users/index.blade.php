@@ -81,6 +81,7 @@
                                 <option value="all" @selected($status === 'all')>All Statuses</option>
                                 <option value="active" @selected($status === 'active')>Active</option>
                                 <option value="inactive" @selected($status === 'inactive')>Inactive</option>
+                                <option value="pending" @selected($status === 'pending')>Pending Approval</option>
                             </select>
                         </div>
                     </div>
@@ -116,9 +117,17 @@
                                 <tr class="cursor-pointer transition hover:bg-grayTheme-light/60" onclick="window.location='{{ route('admin.users.show', $user) }}'">
                                     <td class="px-4 py-3">
                                         <div class="flex items-center gap-2.5">
-                                            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">
-                                                {{ strtoupper(substr($user->name, 0, 1)) }}
-                                            </div>
+                                            @if ($user->profile?->profile_photo_url)
+                                                <img
+                                                    src="{{ $user->profile->profile_photo_url }}"
+                                                    alt="{{ $user->name }}"
+                                                    class="h-8 w-8 shrink-0 rounded-full object-cover"
+                                                />
+                                            @else
+                                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">
+                                                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                                                </div>
+                                            @endif
                                             <span class="font-medium text-grayTheme-dark">{{ $user->name }}</span>
                                         </div>
                                     </td>
@@ -138,13 +147,16 @@
                                     </td>
                                     <td class="px-4 py-3">
                                         @php $s = $user->profile?->status ?? 'active'; @endphp
-                                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $s === 'active' ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger' }}">
+                                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold
+                                            {{ $s === 'active' ? 'bg-success-soft text-success' : ($s === 'pending' ? 'bg-accent-soft text-amber-700' : 'bg-danger-soft text-danger') }}">
                                             @if ($s === 'active')
                                                 <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                            @elseif ($s === 'pending')
+                                                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                             @else
                                                 <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                             @endif
-                                            {{ ucfirst($s) }}
+                                            {{ $s === 'pending' ? 'Pending' : ucfirst($s) }}
                                         </span>
                                     </td>
                                     <td class="px-4 py-3">
@@ -174,22 +186,34 @@
                                                     class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-warning transition hover:bg-warning-soft">
                                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
                                             </button>
-                                            {{-- Toggle Status (hidden for self) --}}
+                                            {{-- Toggle Status / Approve (hidden for self) --}}
                                             @if(auth()->id() !== $user->id)
                                                 @php $userStatus = $user->profile?->status ?? 'active'; @endphp
-                                                <form method="POST" action="{{ route('admin.users.toggle-status', $user) }}">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <button type="submit"
-                                                            title="{{ $userStatus === 'active' ? 'Deactivate User' : 'Activate User' }}"
-                                                            class="inline-flex h-7 w-7 items-center justify-center rounded-lg transition {{ $userStatus === 'active' ? 'text-danger hover:bg-danger-soft' : 'text-success hover:bg-success-soft' }}">
-                                                        @if($userStatus === 'active')
-                                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                                                        @else
+                                                @if($userStatus === 'pending')
+                                                    <form method="POST" action="{{ route('admin.users.approve', $user) }}">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit"
+                                                                title="Approve Account"
+                                                                class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-success transition hover:bg-success-soft">
                                                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                        @endif
-                                                    </button>
-                                                </form>
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <form method="POST" action="{{ route('admin.users.toggle-status', $user) }}">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit"
+                                                                title="{{ $userStatus === 'active' ? 'Deactivate User' : 'Activate User' }}"
+                                                                class="inline-flex h-7 w-7 items-center justify-center rounded-lg transition {{ $userStatus === 'active' ? 'text-danger hover:bg-danger-soft' : 'text-success hover:bg-success-soft' }}">
+                                                            @if($userStatus === 'active')
+                                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                                            @else
+                                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                            @endif
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             @else
                                                 <span class="inline-flex h-7 w-7 items-center justify-center" title="Cannot change own status">
                                                     <svg class="h-4 w-4 text-grayTheme-border" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
@@ -222,7 +246,6 @@
                 @endif
             </div>
         </div>
-    </div>
 
     {{-- Reset Password Modal --}}
     <div x-cloak
@@ -290,6 +313,7 @@
                 </div>
             </form>
         </div>
+    </div>
     </div>
 
     {{-- Bridge session flash messages to toast notifications --}}

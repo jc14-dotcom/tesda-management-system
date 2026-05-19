@@ -19,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->append(\App\Http\Middleware\RequestPerformanceLogger::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\PreventBackHistory::class);
+        $middleware->appendToGroup('web', \Illuminate\Session\Middleware\AuthenticateSession::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnforceSingleSession::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureDpaAgreed::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Redirect authenticated users away from restricted pages instead of showing a raw 403
@@ -27,5 +30,22 @@ return Application::configure(basePath: dirname(__DIR__))
                 return redirect()->route('dashboard')
                     ->with('forbidden', "You don't have permission to access that page.");
             }
+        });
+
+        // Redirect back with a friendly message when a rate limit is hit on a web route
+        $exceptions->render(function (\Illuminate\Http\Exceptions\ThrottleRequestsException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson()) {
+                return null; // fall through to default JSON 429 handling
+            }
+            $retryAfter = (int) ($e->getHeaders()['Retry-After'] ?? 60);
+            $minutes    = (int) ceil($retryAfter / 60);
+            $waitText   = $retryAfter >= 60
+                ? ($minutes === 1 ? '1 minute' : "{$minutes} minutes")
+                : ($retryAfter === 1 ? '1 second' : "{$retryAfter} seconds");
+
+            return redirect()->back()
+                ->withInput()
+                ->with('rate_limit_error', "Too many requests. Please wait {$waitText} and try again.")
+                ->with('rate_limit_seconds', $retryAfter);
         });
     })->create();

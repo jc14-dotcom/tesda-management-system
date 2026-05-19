@@ -97,15 +97,17 @@
                         </thead>
                         <tbody class="divide-y divide-grayTheme-border">
                             @forelse ($documents as $doc)
-                                <tr class="transition hover:bg-grayTheme-light/60">
+                                <tr class="cursor-pointer transition hover:bg-grayTheme-light/60" onclick="window.location='{{ route('admin.documents.show', $doc) }}'">
                                     <td class="px-4 py-3">
-                                        <a href="{{ route('admin.users.show', $doc->user) }}" class="inline-flex items-center gap-2 font-medium text-primary hover:underline">
+                                        <a href="{{ route('admin.users.show', $doc->user) }}" onclick="event.stopPropagation()" class="inline-flex items-center gap-2 font-medium text-primary hover:underline">
                                             <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">{{ strtoupper(substr($doc->user->name ?? '?', 0, 1)) }}</div>
                                             {{ $doc->user->name ?? '—' }}
                                         </a>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="font-medium text-grayTheme-dark">{{ $doc->document_name ?: $doc->original_name }}</div>
+                                        <span class="font-medium text-grayTheme-dark">
+                                            {{ $doc->document_name ?: $doc->original_name }}
+                                        </span>
                                         @if ($doc->document_name && $doc->original_name !== $doc->document_name)
                                             <div class="text-xs text-grayTheme-medium">{{ $doc->original_name }}</div>
                                         @endif
@@ -128,7 +130,7 @@
                                     </td>
                                     <td class="px-4 py-3 text-sm text-grayTheme-medium">{{ $doc->created_at->format('M d, Y') }}</td>
                                     <td class="px-4 py-3 text-right">
-                                        <a href="{{ route('documents.download', $doc) }}" class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary-soft focus:outline-none">
+                                        <a href="{{ route('documents.download', $doc) }}" onclick="event.stopPropagation()" class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary-soft focus:outline-none">
                                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                             Download
                                         </a>

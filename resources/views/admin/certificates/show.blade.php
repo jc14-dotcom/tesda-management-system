@@ -7,9 +7,15 @@
                 eyebrow="Administration / Certificates"
             >
                 <x-slot:actions>
+                    @php
+                        $backUrl = request()->query('back');
+                        $backUrl = filled($backUrl) && str_starts_with($backUrl, url('/'))
+                            ? $backUrl
+                            : route('admin.certificates.index');
+                    @endphp
                     <a class="rounded-full border border-white/30 px-3 py-1 text-sm font-semibold text-white/90 hover:text-white"
-                       href="{{ route('admin.certificates.index') }}">
-                        ← Back to list
+                       href="{{ $backUrl }}">
+                        ← Back
                     </a>
                 </x-slot:actions>
             </x-page-header>

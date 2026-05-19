@@ -44,6 +44,23 @@
                 <!-- Session status (e.g. reset link sent message) -->
                 <x-auth-session-status class="mb-5" :status="session('status')" />
 
+                {{-- Rate limit banner --}}
+                @if (session('rate_limit_error'))
+                    <div class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                                <svg class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-red-800">Too Many Requests</p>
+                                <p class="mt-0.5 text-sm text-red-700">{{ session('rate_limit_error') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('password.email') }}" class="space-y-5">
                     @csrf
 

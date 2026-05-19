@@ -32,25 +32,29 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'name'          => ['required', 'string', 'max:255'],
+            'email'         => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'password'      => ['required', 'confirmed', Rules\Password::defaults()],
+            'agree_to_dpa'  => ['required', 'accepted'],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
+        // Record DPA acceptance at registration time
+        $user->forceFill(['dpa_agreed_at' => now()])->save();
+
         Role::findOrCreate('user');
         $user->assignRole('user');
-        $user->profile()->create();
+
+        // New registrations start as pending — admin must approve before they can log in
+        $user->profile()->create(['status' => 'pending']);
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
+        return redirect()->route('login')->with('account_pending', true);
     }
 }

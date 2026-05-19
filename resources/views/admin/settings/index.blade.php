@@ -14,50 +14,109 @@
                 <form method="post" action="{{ route('admin.settings.update') }}" class="space-y-6">
                     @csrf
 
-                    <div class="surface rounded-xl p-6 space-y-6">
-                        <h2 class="text-base font-semibold text-grayTheme-dark">Certificate Notifications</h2>
+                    {{-- Certificate Notifications Card --}}
+                    <div class="surface overflow-hidden rounded-xl">
 
-                        <div class="flex items-center gap-3">
-                            <input
-                                type="checkbox"
-                                id="notifications_enabled"
-                                name="notifications_enabled"
-                                value="1"
-                                class="h-4 w-4 rounded border-grayTheme-border text-primary focus:ring-primary"
-                                @checked($notificationsEnabled ?? false)
-                            />
-                            <label for="notifications_enabled" class="text-sm font-medium text-grayTheme-dark">
-                                Enable expiry notifications
-                            </label>
+                        {{-- Colored header --}}
+                        <div class="flex items-center gap-3 bg-primary px-6 py-4">
+                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/15">
+                                <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-bold text-white">Certificate Notifications</h2>
+                                <p class="mt-0.5 text-xs text-white/70">Automatic expiry reminders sent to users via email</p>
+                            </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-grayTheme-dark mb-2">
-                                Notify users this many days before expiry
-                            </label>
-                            <div class="flex flex-wrap gap-2" x-data="{ days: {{ json_encode($expiryNoticeDays ?? [30,14,7,3,1]) }} }">
-                                <template x-for="(day, i) in days" :key="i">
-                                    <div class="flex items-center gap-1">
-                                        <input
-                                            type="number"
-                                            :name="'expiry_notice_days[]'"
-                                            x-model.number="days[i]"
-                                            class="form-input w-20 text-sm"
-                                            min="1" max="365"
-                                        />
-                                        <button type="button" @click="days.splice(i,1)" class="text-danger text-sm hover:underline">✕</button>
+                        <div class="space-y-6 p-6">
+
+                            {{-- Enable / Disable toggle --}}
+                            <div class="flex items-center justify-between gap-4 rounded-xl border border-grayTheme-border bg-grayTheme-light/50 px-4 py-3">
+                                <div>
+                                    <p class="text-sm font-semibold text-grayTheme-dark">Enable expiry notifications</p>
+                                    <p class="mt-0.5 text-xs text-grayTheme-medium">Users will receive email reminders before their certificates expire based on the schedule below.</p>
+                                </div>
+                                <label class="inline-flex cursor-pointer items-center" for="notifications_enabled"
+                                       x-data="{ on: {{ ($notificationsEnabled ?? false) ? 'true' : 'false' }} }">
+                                    <input
+                                        type="checkbox"
+                                        id="notifications_enabled"
+                                        name="notifications_enabled"
+                                        value="1"
+                                        class="sr-only"
+                                        x-model="on"
+                                    />
+                                    <div class="relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200"
+                                         :class="on ? 'bg-primary' : 'bg-grayTheme-border'">
+                                        <div class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200"
+                                             :class="on ? 'translate-x-5' : 'translate-x-0'"></div>
                                     </div>
-                                </template>
-                                <button type="button" @click="days.push(1)" class="btn-secondary text-xs">+ Add Day</button>
+                                </label>
                             </div>
-                            @error('expiry_notice_days')
-                                <p class="mt-1 text-sm text-danger">{{ $message }}</p>
-                            @enderror
+
+                            {{-- Reminder schedule --}}
+                            <div x-data="{ days: {{ json_encode($expiryNoticeDays ?? [30, 14, 7, 3, 1]) }} }">
+
+                                <div class="mb-3 flex items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-sm font-semibold text-grayTheme-dark">Reminder schedule</p>
+                                        <p class="mt-0.5 text-xs text-grayTheme-medium">Send a reminder on each of these days before a certificate's expiry date. Edit the number or remove entries you don't need.</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        @click="days.push(7)"
+                                        class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/40"
+                                    >
+                                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                        Add reminder
+                                    </button>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                    <template x-for="(day, i) in days" :key="i">
+                                        <div class="flex items-center gap-2 rounded-lg border border-grayTheme-border bg-white px-3 py-2.5 shadow-sm">
+                                            <input
+                                                type="number"
+                                                name="expiry_notice_days[]"
+                                                x-model.number="days[i]"
+                                                class="w-full border-0 bg-transparent p-0 text-sm font-bold text-grayTheme-dark focus:ring-0"
+                                                min="1"
+                                                max="365"
+                                            />
+                                            <span class="shrink-0 text-xs text-grayTheme-medium">days before</span>
+                                            <button
+                                                type="button"
+                                                @click="days.splice(i, 1)"
+                                                class="shrink-0 rounded p-0.5 text-grayTheme-medium transition hover:bg-danger-soft hover:text-danger"
+                                                :aria-label="'Remove ' + day + '-day reminder'"
+                                            >
+                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="days.length === 0">
+                                        <div class="col-span-full rounded-lg border border-dashed border-grayTheme-border py-6 text-center">
+                                            <p class="text-xs font-semibold text-grayTheme-medium">No reminders configured.</p>
+                                            <p class="mt-0.5 text-xs text-grayTheme-medium">Click "Add reminder" to set one up.</p>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                @error('expiry_notice_days')
+                                    <p class="mt-2 text-sm text-danger">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-4">
-                        <button type="submit" class="btn-primary">Save Settings</button>
+                        <button type="submit" class="btn-primary inline-flex items-center gap-2">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            Save Settings
+                        </button>
                     </div>
                 </form>
             </div>

@@ -21,7 +21,7 @@ class ProfileDetailsController extends Controller
             'contact_number' => ['required', 'digits:11', 'regex:/^09\d{9}$/'],
             'address' => ['required', 'string', 'max:500'],
             'company_id' => ['nullable', 'string', 'max:255'],
-            'position_roles' => ['required', 'array', 'min:1', 'max:2'],
+            'position_roles' => ['nullable', 'array'],
             'position_roles.*' => ['string', Rule::in(['trainer', 'assessor'])],
             'employment_status' => ['nullable', 'string', Rule::in(['regular', 'probationary', 'contractual', 'part-time', 'internship', 'self-employed', 'unemployed'])],
             'date_hired' => ['nullable', 'date'],
@@ -62,8 +62,14 @@ class ProfileDetailsController extends Controller
             $data['contact_number'] = preg_replace('/\D+/', '', $data['contact_number']);
         }
 
-        $data['position_title'] = implode(', ', array_map(static fn (string $role) => ucfirst($role), $data['position_roles']));
-        // Keep position_roles as a JSON array for queryability alongside the display string
+        // Only set position_title when roles were submitted — otherwise leave existing value intact
+        if (!empty($data['position_roles']) && is_array($data['position_roles'])) {
+            $data['position_title'] = implode(', ', array_map(static fn (string $role) => ucfirst($role), $data['position_roles']));
+            // Keep position_roles as a JSON array for queryability alongside the display string
+        } else {
+            // Ensure we don't overwrite existing stored roles/title when the form didn't submit them
+            unset($data['position_roles']);
+        }
 
         $request->user()->profile()->updateOrCreate(
             ['user_id' => $request->user()->id],

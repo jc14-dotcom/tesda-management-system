@@ -86,45 +86,61 @@
             <div class="space-y-6">
                 <div>
                     <x-input-label for="name" :value="__('Nickname')" :required="true" />
-                    <x-text-input
-                        id="name"
-                        name="name"
-                        type="text"
-                        class="mt-1 block w-full"
-                        x-bind:class="showError('name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        :value="old('name', $user->name)"
-                        required
-                        autocomplete="name"
-                        maxlength="255"
-                        x-model.trim="name"
-                        @input="updateValidation()"
-                        @blur="touched.name = true; updateValidation()"
-                        x-bind:aria-invalid="showError('name')"
-                        x-bind:aria-describedby="showError('name') ? 'name-error' : null"
-                    />
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </span>
+                        <x-text-input
+                            id="name"
+                            name="name"
+                            type="text"
+                            class="block w-full pl-9"
+                            x-bind:class="showError('name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                            :value="old('name', $user->name)"
+                            required
+                            autocomplete="name"
+                            maxlength="255"
+                            placeholder="Your display name"
+                            x-model.trim="name"
+                            @input="updateValidation()"
+                            @blur="touched.name = true; updateValidation()"
+                            x-bind:aria-invalid="showError('name')"
+                            x-bind:aria-describedby="showError('name') ? 'name-error' : null"
+                        />
+                    </div>
                     <p id="name-error" x-show="showError('name')" class="mt-2 text-sm text-red-600" x-text="errors.name"></p>
                     <x-input-error class="mt-2" :messages="$errors->get('name')" />
                 </div>
 
                 <div>
                     <x-input-label for="email" :value="__('Email')" :required="true" />
-                    <x-text-input
-                        id="email"
-                        name="email"
-                        type="email"
-                        class="mt-1 block w-full"
-                        x-bind:class="showError('email') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                        :value="old('email', $user->email)"
-                        required
-                        autocomplete="username"
-                        maxlength="255"
-                        inputmode="email"
-                        x-model.trim="email"
-                        @input="updateValidation()"
-                        @blur="touched.email = true; updateValidation()"
-                        x-bind:aria-invalid="showError('email')"
-                        x-bind:aria-describedby="showError('email') ? 'email-error' : null"
-                    />
+                    <div class="relative mt-1">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </span>
+                        <x-text-input
+                            id="email"
+                            name="email"
+                            type="email"
+                            class="block w-full pl-9"
+                            x-bind:class="showError('email') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                            :value="old('email', $user->email)"
+                            required
+                            autocomplete="username"
+                            maxlength="255"
+                            inputmode="email"
+                            placeholder="your@email.com"
+                            x-model.trim="email"
+                            @input="updateValidation()"
+                            @blur="touched.email = true; updateValidation()"
+                            x-bind:aria-invalid="showError('email')"
+                            x-bind:aria-describedby="showError('email') ? 'email-error' : null"
+                        />
+                    </div>
                     <p id="email-error" x-show="showError('email')" class="mt-2 text-sm text-red-600" x-text="errors.email"></p>
                     <x-input-error class="mt-2" :messages="$errors->get('email')" />
 

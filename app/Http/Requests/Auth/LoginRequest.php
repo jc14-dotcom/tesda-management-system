@@ -42,15 +42,50 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        if (! Auth::attempt($this->only('email', 'password'), false)) {
             RateLimiter::hit($this->throttleKey());
 
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
+            $remaining = RateLimiter::remaining($this->throttleKey(), 5);
+
+            // All attempts exhausted — lock out immediately and show countdown
+            if ($remaining === 0) {
+                $seconds = RateLimiter::availableIn($this->throttleKey());
+                $minutes = (int) ceil($seconds / 60);
+                session()->flash('lockout_seconds', $seconds);
+                throw ValidationException::withMessages([
+                    'login_lockout' => "Too many failed login attempts. Please wait {$minutes} " . ($minutes === 1 ? 'minute' : 'minutes') . ' and try again.',
+                ]);
+            }
+
+            // Build messages: always show invalid-credentials; add warning when ≤ 3 remain
+            $messages = ['email' => trans('auth.failed')];
+            if ($remaining <= 3) {
+                $messages['login_warning'] = $remaining === 1
+                    ? 'Warning: This is your last attempt before your account is temporarily locked.'
+                    : "Warning: {$remaining} attempts remaining before your account is temporarily locked.";
+            }
+
+            throw ValidationException::withMessages($messages);
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        // Block pending and inactive accounts after credentials are verified
+        $profileStatus = Auth::user()->profile?->status ?? 'active';
+
+        if ($profileStatus === 'pending') {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Your account is pending approval by an administrator. You will receive an email once your account is approved.',
+            ]);
+        }
+
+        if ($profileStatus === 'inactive') {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Your account has been deactivated. Please contact the system administrator.',
+            ]);
+        }
     }
 
     /**
@@ -67,12 +102,11 @@ class LoginRequest extends FormRequest
         event(new Lockout($this));
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
+        $minutes = (int) ceil($seconds / 60);
+        session()->flash('lockout_seconds', $seconds);
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'login_lockout' => "Too many failed login attempts. Please wait {$minutes} " . ($minutes === 1 ? 'minute' : 'minutes') . ' and try again.',
         ]);
     }
 

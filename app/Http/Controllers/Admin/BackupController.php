@@ -8,6 +8,7 @@ use App\Support\DatabaseBackupRunner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use ZipArchive;
@@ -149,6 +150,12 @@ class BackupController extends Controller
             abort(404);
         }
 
+        if (! Hash::check((string) $request->input('restore_password', ''), Auth::user()->password)) {
+            return redirect()->route('admin.backups.index')
+                ->with('status', 'backup-restore-failed')
+                ->with('backup_error', 'Incorrect password. Restore cancelled.');
+        }
+
         $tempDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'bk_restore_' . uniqid();
 
         try {
@@ -175,6 +182,10 @@ class BackupController extends Controller
         $request->validate([
             'backup_file' => ['required', 'file', 'mimes:zip', 'max:204800'], // 200 MB max
         ]);
+
+        if (! Hash::check((string) $request->input('restore_password', ''), Auth::user()->password)) {
+            return back()->withErrors(['restore_password' => 'Incorrect password. Restore cancelled.']);
+        }
 
         $tempDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'bk_restore_' . uniqid();
 

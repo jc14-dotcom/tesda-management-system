@@ -38,4 +38,11 @@ class DocumentController extends Controller
             'stats'     => $stats,
         ]);
     }
+
+    public function show(Document $document): View
+    {
+        $document->load(['user', 'certificate']);
+
+        return view('admin.documents.show', compact('document'));
+    }
 }

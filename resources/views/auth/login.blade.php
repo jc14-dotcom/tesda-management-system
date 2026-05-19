@@ -127,7 +127,24 @@
                 </div>
 
                 <div class="w-full max-w-md">
-                    <div class="rounded-[20px] border border-grayTheme-border bg-white p-7 shadow-modal sm:p-8">
+                    <div class="rounded-[20px] border border-grayTheme-border bg-white p-7 shadow-modal sm:p-8"
+                         x-data="{
+                             locked: {{ $errors->has('login_lockout') ? 'true' : 'false' }},
+                             seconds: {{ session('lockout_seconds', 0) }},
+                             dpaOpen: false,
+                             get timerLabel() {
+                                 const m = Math.floor(this.seconds / 60);
+                                 const s = this.seconds % 60;
+                                 return m > 0 ? m + ':' + String(s).padStart(2, '0') : this.seconds + 's';
+                             },
+                             init() {
+                                 if (!this.locked || this.seconds <= 0) return;
+                                 const t = setInterval(() => {
+                                     if (this.seconds > 0) { this.seconds--; }
+                                     else { this.locked = false; clearInterval(t); }
+                                 }, 1000);
+                             }
+                         }">
                         <!-- Heading -->
                         <div class="mb-6">
                             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft">
@@ -140,6 +157,55 @@
                         </div>
 
                         <x-auth-session-status class="mb-4" :status="session('status')" />
+
+                        {{-- Pending approval banner --}}
+                        @if(session('account_pending'))
+                            <div class="mb-5 rounded-xl border border-accent/30 bg-accent-soft px-4 py-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/20">
+                                        <svg class="h-4 w-4 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-amber-800">Account Pending Approval</p>
+                                        <p class="mt-0.5 text-sm text-amber-700">Your account has been created and is awaiting administrator approval. You will receive an email at your registered address once your account is approved.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Lockout banner with live countdown --}}
+                        @if ($errors->has('login_lockout'))
+                            <div x-show="locked" class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                                        <svg class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-semibold text-red-800">Account Temporarily Locked</p>
+                                        <p class="mt-0.5 text-sm text-red-700">{{ $errors->first('login_lockout') }}</p>
+                                        <p class="mt-2 text-xs font-medium text-red-600">Try again in <span class="font-mono font-bold" x-text="timerLabel"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Warning: approaching lockout --}}
+                        @if ($errors->has('login_warning'))
+                            <div class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                                        <svg class="h-4 w-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm font-semibold text-amber-800">{{ $errors->first('login_warning') }}</p>
+                                </div>
+                            </div>
+                        @endif
 
                         <form method="POST" action="{{ route('login') }}" class="space-y-4">
                             @csrf
@@ -185,13 +251,8 @@
                                 <x-input-error :messages="$errors->get('password')" class="mt-1.5" />
                             </div>
 
-                            <!-- Remember + Forgot -->
-                            <div class="flex items-center justify-between gap-4">
-                                <label for="remember_me" class="inline-flex cursor-pointer items-center gap-2">
-                                    <input id="remember_me" type="checkbox" class="h-4 w-4 rounded border-grayTheme-border bg-white text-primary focus:ring-primary/30" name="remember" {{ old('remember') ? 'checked' : '' }}>
-                                    <span class="text-sm text-grayTheme-medium">{{ __('Remember me') }}</span>
-                                </label>
-
+                            <!-- Forgot password -->
+                            <div class="flex items-center justify-end">
                                 @if (Route::has('password.request'))
                                     <a class="text-sm font-semibold text-primary transition hover:text-primary-hover" href="{{ route('password.request') }}">
                                         {{ __('Forgot password?') }}
@@ -200,7 +261,9 @@
                             </div>
 
                             <!-- Submit -->
-                            <x-primary-button class="w-full justify-center gap-2 py-3 text-sm font-bold tracking-wide">
+                            <x-primary-button class="w-full justify-center gap-2 py-3 text-sm font-bold tracking-wide"
+                                x-bind:disabled="locked"
+                                x-bind:class="locked ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''">
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                 </svg>
@@ -213,7 +276,70 @@
                                     <a class="font-semibold text-primary transition hover:text-primary-hover" href="{{ route('register') }}">{{ __('Create one here') }}</a>
                                 </p>
                             @endif
+
+                            {{-- DPA link --}}
+                            <div class="border-t border-grayTheme-border pt-3 text-center">
+                                <button
+                                    type="button"
+                                    @click="dpaOpen = true"
+                                    class="inline-flex items-center gap-1.5 text-xs text-grayTheme-medium transition hover:text-primary"
+                                >
+                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                    </svg>
+                                    Data Privacy Act &amp; Terms of Use
+                                </button>
+                            </div>
                         </form>
+
+                        {{-- DPA Modal --}}
+                        <div
+                            x-show="dpaOpen"
+                            x-cloak
+                            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                            @keydown.escape.window="dpaOpen = false"
+                        >
+                            {{-- Backdrop --}}
+                            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="dpaOpen = false"></div>
+
+                            {{-- Panel --}}
+                            <div class="relative z-10 flex w-full max-w-2xl flex-col rounded-2xl border border-grayTheme-border bg-white shadow-modal">
+                                {{-- Modal header --}}
+                                <div class="flex shrink-0 items-center justify-between border-b border-grayTheme-border px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft">
+                                            <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h2 class="text-base font-bold text-grayTheme-dark">Data Privacy Act &amp; Terms of Use</h2>
+                                            <p class="text-xs text-grayTheme-medium">Republic Act No. 10173 &bull; Alcatt Portal</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="dpaOpen = false" class="rounded-lg p-1.5 text-grayTheme-medium transition hover:bg-grayTheme-light hover:text-grayTheme-dark">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                {{-- Scrollable content --}}
+                                <div class="flex-1 overflow-y-auto px-6 py-5" style="max-height: 65vh">
+                                    @include('partials.dpa-content')
+                                </div>
+
+                                {{-- Modal footer --}}
+                                <div class="shrink-0 border-t border-grayTheme-border px-6 py-4">
+                                    <button type="button" @click="dpaOpen = false" class="btn-primary w-full justify-center gap-2">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

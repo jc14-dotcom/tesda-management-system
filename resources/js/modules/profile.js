@@ -41,12 +41,15 @@ export function registerProfileComponents(Alpine) {
 
             if (!this.originalUrl) return;
 
-            if (!window.confirm('Remove your profile picture?')) return;
-
-            const form = window.document.getElementById('profile-photo-remove-form');
-            if (form) {
-                form.requestSubmit();
-            }
+            window.showConfirm({
+                title: 'Remove Profile Picture?',
+                message: 'Your profile photo will be permanently removed.',
+                confirmText: 'Remove',
+                onConfirm: () => {
+                    const form = window.document.getElementById('profile-photo-remove-form');
+                    if (form) form.requestSubmit();
+                },
+            });
         },
 
         selectFile(event) {

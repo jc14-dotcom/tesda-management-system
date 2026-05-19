@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\AccountApprovedNotification;
 use App\Notifications\Admin\UserStatusChangedNotification;
 use App\Support\CacheBuster;
 use Illuminate\Http\Request;
@@ -44,6 +45,27 @@ class UserController extends Controller
         return redirect()->route('admin.users.show', $user)->with('status', 'user-created');
     }
 
+    public function approve(Request $request, User $user)
+    {
+        if ($user->profile?->status !== 'pending') {
+            return back()->with('status', 'user-already-active');
+        }
+
+        $user->profile->update(['status' => 'active']);
+
+        $user->notify(new AccountApprovedNotification());
+
+        activity()
+            ->causedBy($request->user())
+            ->performedOn($user)
+            ->event('account_approved')
+            ->log('User account approved by admin');
+
+        CacheBuster::bumpAdminUsers();
+
+        return back()->with('status', 'user-approved');
+    }
+
     public function toggleStatus(Request $request, User $user)
     {
         if ($request->user()->id === $user->id) {
@@ -51,6 +73,7 @@ class UserController extends Controller
         }
 
         $currentStatus = $user->profile?->status ?? 'active';
+        // Pending → treat as active on toggle (same as approve without email)
         $newStatus     = $currentStatus === 'active' ? 'inactive' : 'active';
 
         $user->profile()->updateOrCreate(
@@ -107,7 +130,7 @@ class UserController extends Controller
 
         $users = User::query()
             ->select(['id', 'name', 'email'])
-            ->with(['profile:id,user_id,status', 'roles:id,name'])
+            ->with(['profile:id,user_id,status,profile_photo_path', 'roles:id,name'])
             ->withCount('certificates')
             ->when($search, fn ($q) => $q->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -125,6 +148,7 @@ class UserController extends Controller
             'total'    => User::count(),
             'active'   => User::whereHas('profile', fn ($q) => $q->where('status', 'active'))->count(),
             'inactive' => User::whereHas('profile', fn ($q) => $q->where('status', 'inactive'))->count(),
+            'pending'  => User::whereHas('profile', fn ($q) => $q->where('status', 'pending'))->count(),
         ];
 
         return view('admin.users.index', [
@@ -286,15 +310,27 @@ class UserController extends Controller
 
         $user->load(['documents:id,user_id,path', 'profile:id,user_id,profile_photo_path']);
 
+        // Delete individual document files
         foreach ($user->documents as $document) {
             if ($document->path && Storage::disk('local')->exists($document->path)) {
                 Storage::disk('local')->delete($document->path);
             }
         }
 
-        if ($user->profile?->profile_photo_path && Storage::disk('local')->exists($user->profile->profile_photo_path)) {
-            Storage::disk('local')->delete($user->profile->profile_photo_path);
+        // Delete profile photo from both local and public disks
+        if ($user->profile?->profile_photo_path) {
+            foreach (['local', 'public'] as $disk) {
+                $storage = Storage::disk($disk);
+                if ($storage->exists($user->profile->profile_photo_path)) {
+                    $storage->delete($user->profile->profile_photo_path);
+                }
+            }
         }
+
+        // Clean up remaining directories
+        Storage::disk('local')->deleteDirectory("documents/{$user->id}");
+        Storage::disk('local')->deleteDirectory("profiles/{$user->id}");
+        Storage::disk('public')->deleteDirectory("profiles/{$user->id}");
 
         CacheBuster::bumpAdminUsers();
 

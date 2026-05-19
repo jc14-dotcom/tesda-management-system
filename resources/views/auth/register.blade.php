@@ -89,7 +89,7 @@
                 </div>
 
                 <div class="w-full max-w-md">
-                    <div class="rounded-[20px] border border-grayTheme-border bg-white p-8 shadow-modal sm:p-10">
+                    <div class="rounded-[20px] border border-grayTheme-border bg-white p-8 shadow-modal sm:p-10" x-data="{ dpaOpen: false }">
                         <!-- Heading -->
                         <div class="mb-7">
                             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft">
@@ -103,6 +103,23 @@
 
                         <form method="POST" action="{{ route('register') }}" class="space-y-4">
                             @csrf
+
+                            {{-- Rate limit banner --}}
+                            @if (session('rate_limit_error'))
+                                <div class="rounded-xl border border-red-200 bg-red-50 p-4">
+                                    <div class="flex items-start gap-3">
+                                        <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                                            <svg class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-semibold text-red-800">Too Many Requests</p>
+                                            <p class="mt-0.5 text-sm text-red-700">{{ session('rate_limit_error') }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
 
                             <!-- Name -->
                             <div>
@@ -186,6 +203,28 @@
                                 <x-input-error :messages="$errors->get('password_confirmation')" class="mt-1.5" />
                             </div>
 
+                            <!-- DPA Agreement Checkbox -->
+                            <div>
+                                <label class="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition hover:bg-grayTheme-light/60"
+                                    :class="@json($errors->has('agree_to_dpa')) ? 'border-danger/40 bg-danger-soft/30' : 'border-grayTheme-border'">
+                                    <input
+                                        type="checkbox"
+                                        name="agree_to_dpa"
+                                        value="1"
+                                        class="mt-0.5 h-4 w-4 shrink-0 rounded border-grayTheme-border text-primary focus:ring-primary"
+                                        {{ old('agree_to_dpa') ? 'checked' : '' }}
+                                    />
+                                    <span class="text-sm leading-relaxed text-grayTheme-dark">
+                                        I have read and agree to the
+                                        <button type="button" @click.prevent="dpaOpen = true"
+                                            class="font-semibold text-primary underline-offset-2 transition hover:underline">
+                                            Data Privacy Act &amp; Terms of Use
+                                        </button>
+                                    </span>
+                                </label>
+                                <x-input-error :messages="$errors->get('agree_to_dpa')" class="mt-1.5" />
+                            </div>
+
                             <!-- Submit -->
                             <div class="pt-1">
                                 <x-primary-button class="w-full justify-center gap-2 py-3 text-sm font-bold tracking-wide">
@@ -201,6 +240,50 @@
                                 <a class="font-semibold text-primary transition hover:text-primary-hover" href="{{ route('login') }}">{{ __('Sign in here') }}</a>
                             </p>
                         </form>
+
+                        {{-- DPA Modal --}}
+                        <div
+                            x-show="dpaOpen"
+                            x-cloak
+                            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                            @keydown.escape.window="dpaOpen = false"
+                        >
+                            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="dpaOpen = false"></div>
+
+                            <div class="relative z-10 flex w-full max-w-2xl flex-col rounded-2xl border border-grayTheme-border bg-white shadow-modal">
+                                <div class="flex shrink-0 items-center justify-between border-b border-grayTheme-border px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft">
+                                            <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h2 class="text-base font-bold text-grayTheme-dark">Data Privacy Act &amp; Terms of Use</h2>
+                                            <p class="text-xs text-grayTheme-medium">Republic Act No. 10173 &bull; Alcatt Portal</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="dpaOpen = false" class="rounded-lg p-1.5 text-grayTheme-medium transition hover:bg-grayTheme-light hover:text-grayTheme-dark">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div class="flex-1 overflow-y-auto px-6 py-5" style="max-height: 65vh">
+                                    @include('partials.dpa-content')
+                                </div>
+
+                                <div class="shrink-0 border-t border-grayTheme-border px-6 py-4">
+                                    <button type="button" @click="dpaOpen = false" class="btn-primary w-full justify-center gap-2">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
