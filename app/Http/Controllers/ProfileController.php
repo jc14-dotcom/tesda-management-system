@@ -357,7 +357,7 @@ class ProfileController extends Controller
      */
     public function notificationsMarkAllRead(Request $request): \Illuminate\Http\JsonResponse
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $request->user()->unreadNotifications()->update(['read_at' => now()]);
         return response()->json(['success' => true]);
     }
 

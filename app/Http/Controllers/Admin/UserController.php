@@ -40,6 +40,7 @@ class UserController extends Controller
 
         $user->assignRole($data['role']);
         $user->profile()->create(['status' => 'active']);
+        $user->forceFill(['dpa_agreed_at' => now()])->save();
 
         CacheBuster::bumpAdminUsers();
 
@@ -113,6 +114,7 @@ class UserController extends Controller
         ]);
 
         $user->update(['password' => Hash::make($data['password'])]);
+        $user->forceFill(['current_session_id' => null])->save();
 
         activity()
             ->causedBy(auth()->user())
@@ -268,7 +270,7 @@ class UserController extends Controller
             'name'   => ['required', 'string', 'max:255'],
             'email'  => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
             'role'   => ['required', 'string', 'in:admin,user'],
-            'status' => ['required', 'string', 'in:active,inactive'],
+            'status' => ['required', 'string', 'in:active,inactive,pending'],
         ]);
 
         $oldRole = $user->roles->first()?->name;

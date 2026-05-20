@@ -50,6 +50,7 @@ class Certificate extends Model
         'notified_days',
         'notification_count',
         'remarks',
+        'verification_status',
     ];
 
     protected $casts = [

@@ -132,13 +132,7 @@
 
                     {{-- Form body --}}
                     @php
-                        $initialPositionRoles = old('position_roles', []);
-                        if (empty($initialPositionRoles) && filled($profile?->position_title)) {
-                            $initialPositionRoles = collect(preg_split('/\s*,\s*/', $profile->position_title, -1, PREG_SPLIT_NO_EMPTY))
-                                ->map(fn ($r) => strtolower(trim($r)))
-                                ->values()
-                                ->all();
-                        }
+                        $initialPositionRoles = old('position_roles', $profile?->position_roles ?? []);
                     @endphp
 
                     <form
