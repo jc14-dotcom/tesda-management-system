@@ -57,18 +57,18 @@
                 {{-- Expiry Timeline --}}
                 <div class="surface overflow-hidden">
                     <div class="flex items-center justify-between gap-4 border-b border-grayTheme-border bg-warning-soft px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-warning/15">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-warning/15">
                                 <svg class="h-5 w-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m7-3A10 10 0 1 1 2 12a10 10 0 0 1 20 0Z"/>
                                 </svg>
                             </div>
-                            <div>
+                            <div class="min-w-0">
                                 <h3 class="text-sm font-bold text-grayTheme-dark">Expiry Timeline</h3>
                                 <p class="text-xs text-grayTheme-medium">Certificates expiring over the next 90 days.</p>
                             </div>
                         </div>
-                        <span class="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white shadow-sm">Next 90 days</span>
+                        <span class="shrink-0 whitespace-nowrap rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white shadow-sm">Next 90 days</span>
                     </div>
 
                     <div class="p-6">
