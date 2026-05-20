@@ -156,6 +156,44 @@ class ProfileController extends Controller
     }
 
     /**
+     * Live JSON endpoint for the user dashboard 60-second poller.
+     */
+    public function dashboardLive(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        $now  = now()->toDateString();
+
+        $row = $user->certificates()
+            ->selectRaw(
+                'SUM(expiration_date <= ?) AS e30,' .
+                'SUM(expiration_date <= ?) AS e60,' .
+                'SUM(expiration_date <= ?) AS e90',
+                [
+                    now()->addDays(30)->toDateString(),
+                    now()->addDays(60)->toDateString(),
+                    now()->addDays(90)->toDateString(),
+                ]
+            )
+            ->whereNotNull('expiration_date')
+            ->where('expiration_date', '>=', $now)
+            ->first();
+
+        $e30    = (int) ($row->e30 ?? 0);
+        $e60    = (int) ($row->e60 ?? 0);
+        $e90    = (int) ($row->e90 ?? 0);
+        $unread = $user->unreadNotifications()->count();
+
+        return response()->json([
+            'expiring-soon'      => $e30,
+            'notifications'      => $unread,
+            'notifications-note' => $unread > 0 ? "{$unread} unread" : 'No new alerts',
+            'b1'                 => $e30,
+            'b2'                 => max(0, $e60 - $e30),
+            'b3'                 => max(0, $e90 - $e60),
+        ]);
+    }
+
+    /**
      * Display the user's profile information form.
      */
     public function edit(Request $request)

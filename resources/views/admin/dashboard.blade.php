@@ -17,7 +17,7 @@
                             <div class="flex items-start justify-between gap-4">
                                 <div>
                                     <p class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium">{{ $card['label'] }}</p>
-                                    <p class="mt-2 text-4xl font-bold tracking-tight text-grayTheme-dark">{{ $card['value'] ?? '—' }}</p>
+                                    <p class="mt-2 text-4xl font-bold tracking-tight text-grayTheme-dark" data-live-key="{{ strtolower(str_replace(' ', '-', $card['label'])) }}">{{ $card['value'] ?? '—' }}</p>
                                 </div>
                                 <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl {{ $card['tone'] }}">
                                     <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
@@ -26,7 +26,7 @@
                                 </div>
                             </div>
                             <div class="border-t border-grayTheme-border pt-3">
-                                <p class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium">{{ $card['note'] }}</p>
+                                <p class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" data-live-note="{{ strtolower(str_replace(' ', '-', $card['label'])) }}">{{ $card['note'] }}</p>
                             </div>
                         </div>
                     </div>
@@ -109,7 +109,7 @@
                         </div>
                     </div>
 
-                    <div class="flex flex-1 flex-col divide-y divide-grayTheme-border">
+                    <div id="live-activity-list" class="divide-y divide-grayTheme-border overflow-y-auto" style="max-height:380px;">
                         @forelse ($recentActivity as $activity)
                             <div class="flex items-start justify-between gap-3 px-6 py-4 transition-colors hover:bg-grayTheme-light/60">
                                 <div class="flex items-start gap-3">
@@ -179,7 +179,15 @@
                                         </td>
                                         <td class="px-6 py-3.5 text-grayTheme-medium">{{ $user['joined'] }}</td>
                                         <td class="px-6 py-3.5">
-                                            <span class="rounded-full bg-success-soft px-3 py-1 text-xs font-semibold text-success">{{ $user['status'] }}</span>
+                                            @php
+                                                $statusTone = match(strtolower($user['status'])) {
+                                                    'active'   => 'bg-success-soft text-success',
+                                                    'pending'  => 'bg-warning-soft text-warning',
+                                                    'inactive', 'suspended' => 'bg-danger-soft text-danger',
+                                                    default    => 'bg-grayTheme-light text-grayTheme-dark',
+                                                };
+                                            @endphp
+                                            <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $statusTone }}">{{ $user['status'] }}</span>
                                         </td>
                                     </tr>
                                 @empty
@@ -243,3 +251,69 @@
         </div>
     </div>
 </x-app-layout>
+
+@push('scripts')
+<script>
+(function () {
+    if (window.__alcattAdminDashPoll) return;
+    window.__alcattAdminDashPoll = true;
+
+    var timer = null;
+
+    function esc(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function poll() {
+        fetch('/admin/dashboard/live', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function (d) {
+            // Update stat card values
+            document.querySelectorAll('[data-live-key]').forEach(function (el) {
+                var k = el.dataset.liveKey;
+                if (d[k] !== undefined) el.textContent = d[k];
+            });
+            // Update activity list
+            var list = document.getElementById('live-activity-list');
+            if (list && Array.isArray(d.recentActivity)) {
+                if (d.recentActivity.length) {
+                    list.innerHTML = d.recentActivity.map(function (a) {
+                        return '<div class="flex items-start justify-between gap-3 px-6 py-4 transition-colors hover:bg-grayTheme-light/60">'
+                            + '<div class="flex items-start gap-3">'
+                            + '<div class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary"></div>'
+                            + '<div><p class="text-sm font-semibold text-grayTheme-dark">' + esc(a.title) + '</p>'
+                            + '<p class="text-xs text-grayTheme-medium">' + esc(a.meta) + '</p></div>'
+                            + '</div>'
+                            + '<span class="shrink-0 text-xs font-medium text-grayTheme-medium">' + esc(a.time) + '</span>'
+                            + '</div>';
+                    }).join('');
+                } else {
+                    list.innerHTML = '<div class="flex flex-col items-center justify-center gap-2 p-8 text-center">'
+                        + '<p class="text-sm font-semibold text-grayTheme-dark">No activity yet</p>'
+                        + '<p class="text-xs text-grayTheme-medium">Actions taken by users will appear here.</p></div>';
+                }
+            }
+        })
+        .catch(function () {});
+    }
+
+    function start() {
+        if (document.getElementById('live-activity-list')) {
+            clearInterval(timer);
+            timer = setInterval(poll, 60000);
+        }
+    }
+
+    function stop() {
+        clearInterval(timer);
+        timer = null;
+    }
+
+    document.addEventListener('turbo:load', start);
+    document.addEventListener('turbo:before-render', stop);
+    start();
+}());
+</script>
+@endpush

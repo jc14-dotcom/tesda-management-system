@@ -35,7 +35,7 @@
                             <div class="flex items-start justify-between gap-4">
                                 <div>
                                     <p class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium">{{ $card['label'] }}</p>
-                                    <p class="mt-2 text-4xl font-bold tracking-tight text-grayTheme-dark">{{ $card['value'] }}</p>
+                                    <p class="mt-2 text-4xl font-bold tracking-tight text-grayTheme-dark" data-live-key="{{ strtolower(str_replace(' ', '-', $card['label'])) }}">{{ $card['value'] }}</p>
                                 </div>
                                 <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl {{ $card['tone'] }}">
                                     <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
@@ -44,7 +44,7 @@
                                 </div>
                             </div>
                             <div class="border-t border-grayTheme-border pt-3">
-                                <p class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium">{{ $card['note'] }}</p>
+                                <p class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium" data-live-note="{{ strtolower(str_replace(' ', '-', $card['label'])) }}">{{ $card['note'] }}</p>
                             </div>
                         </div>
                     </div>
@@ -72,32 +72,62 @@
                     </div>
 
                     <div class="p-6">
+                        @php
+                            $b1 = $expiringSoon30;
+                            $b2 = max(0, $expiring60 - $expiringSoon30);
+                            $b3 = max(0, $expiring90 - $expiring60);
+                            $chartMax = max($b1, $b2, $b3, 1);
+                            $h1 = (int) round($b1 / $chartMax * 110);
+                            $h2 = (int) round($b2 / $chartMax * 110);
+                            $h3 = (int) round($b3 / $chartMax * 110);
+                        @endphp
                         <div class="rounded-2xl border border-grayTheme-border bg-grayTheme-light p-4">
                             <svg viewBox="0 0 520 160" class="h-40 w-full">
-                                <defs>
-                                    <linearGradient id="expiryLine" x1="0" x2="1" y1="0" y2="1">
-                                        <stop offset="0%" stop-color="#F4B400" />
-                                        <stop offset="100%" stop-color="#2B2D7E" />
-                                    </linearGradient>
-                                </defs>
-                                <path d="M10 120 C70 60, 130 140, 190 90 C250 40, 310 110, 370 70 C430 30, 470 80, 510 50" fill="none" stroke="url(#expiryLine)" stroke-width="4" />
-                                <circle cx="70" cy="84" r="4" fill="#F4B400" />
-                                <circle cx="190" cy="90" r="4" fill="#2B2D7E" />
-                                <circle cx="310" cy="110" r="4" fill="#F4B400" />
-                                <circle cx="430" cy="60" r="4" fill="#2B2D7E" />
+                                {{-- horizontal grid lines --}}
+                                <line x1="20" y1="140" x2="500" y2="140" stroke="#E5E7EB" stroke-width="1.5"/>
+                                <line x1="20" y1="90"  x2="500" y2="90"  stroke="#F3F4F6" stroke-width="1" stroke-dasharray="4,4"/>
+                                <line x1="20" y1="40"  x2="500" y2="40"  stroke="#F3F4F6" stroke-width="1" stroke-dasharray="4,4"/>
+                                {{-- bar 1: 0–30 days (amber/warning) --}}
+                                @if($b1 > 0)
+                                    <rect x="50" y="{{ 140 - $h1 }}" width="120" height="{{ $h1 }}" fill="#F59E0B" rx="5"/>
+                                    <text x="110" y="{{ 140 - $h1 - 6 }}" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#78350F">{{ $b1 }}</text>
+                                @else
+                                    <rect x="50" y="137" width="120" height="3" fill="#E5E7EB" rx="2"/>
+                                    <text x="110" y="130" text-anchor="middle" style="font-size:12px;font-weight:600;fill:#9CA3AF">0</text>
+                                @endif
+                                {{-- bar 2: 31–60 days (primary navy) --}}
+                                @if($b2 > 0)
+                                    <rect x="200" y="{{ 140 - $h2 }}" width="120" height="{{ $h2 }}" fill="#2B2D7E" rx="5"/>
+                                    <text x="260" y="{{ 140 - $h2 - 6 }}" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#1E3A8A">{{ $b2 }}</text>
+                                @else
+                                    <rect x="200" y="137" width="120" height="3" fill="#E5E7EB" rx="2"/>
+                                    <text x="260" y="130" text-anchor="middle" style="font-size:12px;font-weight:600;fill:#9CA3AF">0</text>
+                                @endif
+                                {{-- bar 3: 61–90 days (indigo) --}}
+                                @if($b3 > 0)
+                                    <rect x="350" y="{{ 140 - $h3 }}" width="120" height="{{ $h3 }}" fill="#4F46E5" rx="5"/>
+                                    <text x="410" y="{{ 140 - $h3 - 6 }}" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#3730A3">{{ $b3 }}</text>
+                                @else
+                                    <rect x="350" y="137" width="120" height="3" fill="#E5E7EB" rx="2"/>
+                                    <text x="410" y="130" text-anchor="middle" style="font-size:12px;font-weight:600;fill:#9CA3AF">0</text>
+                                @endif
+                                {{-- x-axis bucket labels --}}
+                                <text x="110" y="158" text-anchor="middle" style="font-size:11px;fill:#6B7280">0–30 days</text>
+                                <text x="260" y="158" text-anchor="middle" style="font-size:11px;fill:#6B7280">31–60 days</text>
+                                <text x="410" y="158" text-anchor="middle" style="font-size:11px;fill:#6B7280">61–90 days</text>
                             </svg>
                             <div class="mt-4 grid grid-cols-3 gap-4 border-t border-grayTheme-border pt-4">
                                 <div class="text-center">
-                                    <p class="text-lg font-bold text-grayTheme-dark">{{ $expiringSoon30 }}</p>
-                                    <p class="text-xs text-grayTheme-medium">In 30 days</p>
+                                    <p class="text-lg font-bold" style="color:#F59E0B" data-live-key="b1">{{ $b1 }}</p>
+                                    <p class="text-xs text-grayTheme-medium">0–30 days</p>
                                 </div>
                                 <div class="border-x border-grayTheme-border text-center">
-                                    <p class="text-lg font-bold text-grayTheme-dark">{{ $expiring60 }}</p>
-                                    <p class="text-xs text-grayTheme-medium">In 60 days</p>
+                                    <p class="text-lg font-bold text-primary" data-live-key="b2">{{ $b2 }}</p>
+                                    <p class="text-xs text-grayTheme-medium">31–60 days</p>
                                 </div>
                                 <div class="text-center">
-                                    <p class="text-lg font-bold text-grayTheme-dark">{{ $expiring90 }}</p>
-                                    <p class="text-xs text-grayTheme-medium">In 90 days</p>
+                                    <p class="text-lg font-bold" style="color:#4F46E5" data-live-key="b3">{{ $b3 }}</p>
+                                    <p class="text-xs text-grayTheme-medium">61–90 days</p>
                                 </div>
                             </div>
                         </div>
@@ -236,3 +266,50 @@
         </div>
     </div>
 </x-app-layout>
+
+@push('scripts')
+<script>
+(function () {
+    if (window.__alcattUserDashPoll) return;
+    window.__alcattUserDashPoll = true;
+
+    var timer = null;
+
+    function poll() {
+        fetch('/dashboard/live', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function (d) {
+            // Update stat card values
+            document.querySelectorAll('[data-live-key]').forEach(function (el) {
+                var k = el.dataset.liveKey;
+                if (d[k] !== undefined) el.textContent = d[k];
+            });
+            // Update stat card notes where dynamic (e.g. notifications)
+            document.querySelectorAll('[data-live-note]').forEach(function (el) {
+                var k = el.dataset.liveNote + '-note';
+                if (d[k] !== undefined) el.textContent = d[k];
+            });
+        })
+        .catch(function () {});
+    }
+
+    function start() {
+        if (document.querySelector('[data-live-key="notifications"]')) {
+            clearInterval(timer);
+            timer = setInterval(poll, 60000);
+        }
+    }
+
+    function stop() {
+        clearInterval(timer);
+        timer = null;
+    }
+
+    document.addEventListener('turbo:load', start);
+    document.addEventListener('turbo:before-render', stop);
+    start();
+}());
+</script>
+@endpush

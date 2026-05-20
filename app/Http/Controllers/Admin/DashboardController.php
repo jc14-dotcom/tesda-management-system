@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Document;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
+use Spatie\Activitylog\Models\Activity;
 
 class DashboardController extends Controller
 {
@@ -42,7 +44,7 @@ class DashboardController extends Controller
                     'tone' => $c->status === 'expired' ? 'bg-danger-soft text-danger' : 'bg-warning-soft text-warning',
                 ])->all();
 
-            $recentUsers = User::with('roles:id,name')
+            $recentUsers = User::with(['roles:id,name', 'profile:user_id,status'])
                 ->select(['id', 'name', 'email', 'created_at'])
                 ->orderByDesc('created_at')
                 ->limit(5)
@@ -52,7 +54,7 @@ class DashboardController extends Controller
                     'email' => $u->email,
                     'role' => ucfirst($u->roles->first()?->name ?? 'user'),
                     'joined' => $u->created_at->format('M d, Y'),
-                    'status' => 'Active',
+                    'status' => ucfirst($u->profile?->status ?? 'pending'),
                 ])->all();
 
             $recentUploads = Document::with('user:id,name')
@@ -80,6 +82,16 @@ class DashboardController extends Controller
             ];
         });
 
+        $recentActivity = Activity::with('causer:id,name')
+            ->latest()
+            ->limit(8)
+            ->get()
+            ->map(fn($a) => [
+                'title' => $a->description,
+                'meta'  => $a->causer?->name ?? 'System',
+                'time'  => $a->created_at->diffForHumans(),
+            ])->all();
+
         return view('admin.dashboard', [
             'usersCount'           => $metrics['usersCount'],
             'certificatesCount'    => $metrics['certificatesCount'],
@@ -87,7 +99,7 @@ class DashboardController extends Controller
             'expiringSoonCount'    => $metrics['expiringSoonCount'],
             'expiredCount'         => $metrics['expiredCount'],
             'expiringCertificates' => $metrics['expiringCertificates'],
-            'recentActivity'       => [],
+            'recentActivity'       => $recentActivity,
             'recentUsers'          => $metrics['recentUsers'],
             'recentUploads'        => $metrics['recentUploads'],
             'statCards'            => [
@@ -134,6 +146,28 @@ class DashboardController extends Controller
                     'icon'  => 'M12 9v4m0 4h.01m8.938-2A10 10 0 1 1 3.062 8a10 10 0 0 1 17.876 7Z',
                 ],
             ],
+        ]);
+    }
+
+    public function live(): JsonResponse
+    {
+        return response()->json([
+            'expiring-soon' => Certificate::whereNotNull('expiration_date')
+                ->where('expiration_date', '>=', now()->toDateString())
+                ->where('expiration_date', '<=', now()->addDays(30)->toDateString())
+                ->count(),
+            'expired' => Certificate::whereNotNull('expiration_date')
+                ->where('expiration_date', '<', now()->toDateString())
+                ->count(),
+            'recentActivity' => Activity::with('causer:id,name')
+                ->latest()
+                ->limit(8)
+                ->get()
+                ->map(fn($a) => [
+                    'title' => $a->description,
+                    'meta'  => $a->causer?->name ?? 'System',
+                    'time'  => $a->created_at->diffForHumans(),
+                ])->all(),
         ]);
     }
 }

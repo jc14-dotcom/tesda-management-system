@@ -63,6 +63,9 @@ Route::middleware('auth')->group(function () {
     // Notification polling (used by the nav panel to detect new notifications without a page reload)
     Route::get('/notifications/poll',  [\App\Http\Controllers\NotificationPollController::class, 'poll'])->name('notifications.poll')->middleware('throttle:30,1');
     Route::get('/notifications/panel', [\App\Http\Controllers\NotificationPollController::class, 'panel'])->name('notifications.panel')->middleware('throttle:30,1');
+
+    // Dashboard live-data polling (60-second interval refresh of stat cards and activity)
+    Route::get('/dashboard/live', [ProfileController::class, 'dashboardLive'])->name('dashboard.live')->middleware('throttle:60,1');
 });
 
 Route::middleware(['auth', 'role:admin'])
@@ -70,7 +73,8 @@ Route::middleware(['auth', 'role:admin'])
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-        
+        Route::get('/dashboard/live', [AdminDashboardController::class, 'live'])->name('dashboard.live')->middleware('throttle:60,1');
+
         // Toast notification test page
         Route::view('/toast-test', 'admin.toast-test')->name('toast-test');
         
