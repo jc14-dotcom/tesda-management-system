@@ -401,7 +401,7 @@
                 @endif
             </div>
 
-            <div class="surface p-6">
+            <div id="certificates-section" class="surface p-6">
                 <h3 class="text-lg font-semibold text-grayTheme-dark">Certificates</h3>
                 <form method="get" class="mt-4 flex flex-wrap items-end gap-3 text-sm">
                     @if ($docType !== 'all')
@@ -543,7 +543,7 @@
                 </div>
             </div>
 
-            <div class="surface p-6">
+            <div id="documents-section" class="surface p-6">
                 <h3 class="text-lg font-semibold text-grayTheme-dark">Other Documents</h3>
                 <form method="get" class="mt-4 flex flex-wrap items-end gap-3 text-sm">
                     @if ($certStatus !== 'all')
@@ -677,4 +677,25 @@
     @elseif (session('status') === 'password-reset')
     <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Password Reset',message:'The password has been reset successfully.'}}));</script>
     @endif
+    <script data-turbo-eval="true">
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var sectionId = null;
+            if (params.has('cert_status') || params.has('cert_window')) {
+                sectionId = 'certificates-section';
+            } else if (params.has('doc_type')) {
+                sectionId = 'documents-section';
+            }
+            if (sectionId) {
+                // Two rAFs: first runs after Turbo's synchronous scroll-to-top,
+                // second ensures the browser has painted the new layout.
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () {
+                        var el = document.getElementById(sectionId);
+                        if (el) el.scrollIntoView({ block: 'start' });
+                    });
+                });
+            }
+        })();
+    </script>
 </x-app-layout>

@@ -3,6 +3,7 @@
 namespace App\Notifications\Admin;
 
 use App\Models\Certificate;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class CertificateExpiryAdminNotification extends Notification
@@ -15,6 +16,37 @@ class CertificateExpiryAdminNotification extends Notification
     public function via(object $notifiable): array
     {
         return ['database'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $typeLabel = Certificate::TYPE_LABELS[$this->certificate->certificate_type] ?? ucfirst($this->certificate->certificate_type);
+        $userName  = $this->certificate->user?->name ?? 'Unknown User';
+        $expiryDate = optional($this->certificate->expiration_date)->format('F j, Y');
+
+        if ($this->daysUntilExpiry < 0) {
+            $subject = 'Certificate Expired — Action Required';
+            $headline = "{$userName}'s certificate has expired.";
+            $detail = 'This certificate has already passed its expiration date.';
+        } else {
+            $days = $this->daysUntilExpiry;
+            $daysLabel = $days === 1 ? 'day' : 'days';
+            $subject = "Certificate Expiring in {$days} {$daysLabel} — Alcatt Portal";
+            $headline = "{$userName}'s certificate expires in {$days} {$daysLabel}.";
+            $detail = "Expiration date: **{$expiryDate}**";
+        }
+
+        return (new MailMessage)
+            ->subject($subject)
+            ->greeting('Hello, ' . $notifiable->name . '!')
+            ->line($headline)
+            ->line('**Certificate:** ' . ($this->certificate->certificate_name ?: '—'))
+            ->line('**Type:** ' . $typeLabel)
+            ->line('**Owner:** ' . $userName)
+            ->line($detail)
+            ->action('View Certificate', route('admin.certificates.show', $this->certificate->id))
+            ->line('Please follow up with the certificate owner as appropriate.')
+            ->salutation('Alcatt Portal Admin');
     }
 
     public function toArray(object $notifiable): array

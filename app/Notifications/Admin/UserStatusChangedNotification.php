@@ -3,6 +3,7 @@
 namespace App\Notifications\Admin;
 
 use App\Models\User;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class UserStatusChangedNotification extends Notification
@@ -16,6 +17,22 @@ class UserStatusChangedNotification extends Notification
     public function via(object $notifiable): array
     {
         return ['database'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $action = $this->newStatus === 'active' ? 'activated' : 'deactivated';
+        $statusEmoji = $this->newStatus === 'active' ? '✅' : '🚫';
+
+        return (new MailMessage)
+            ->subject("User Account {$statusEmoji} " . ucfirst($action) . " — Alcatt Portal")
+            ->greeting('Hello, ' . $notifiable->name . '!')
+            ->line("A user account has been **{$action}**.")
+            ->line('**User:** ' . $this->user->name)
+            ->line('**Email:** ' . $this->user->email)
+            ->line('**Changed by:** ' . $this->changedBy)
+            ->action('View User Account', route('admin.users.show', $this->user->id))
+            ->salutation('Alcatt Portal Admin');
     }
 
     public function toArray(object $notifiable): array

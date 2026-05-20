@@ -127,7 +127,11 @@
                                 <tr class="cursor-pointer transition hover:bg-primary-soft/60" onclick="window.location='{{ route('admin.certificates.show', $cert) }}'">
                                     <td class="px-4 py-3">
                                         <a href="{{ route('admin.users.show', $cert->user) }}" class="inline-flex items-center gap-2 font-medium text-primary hover:underline">
-                                            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">{{ strtoupper(substr($cert->user->name ?? '?', 0, 1)) }}</div>
+                                            @if ($cert->user->profile?->profile_photo_url)
+                                                <img src="{{ $cert->user->profile->profile_photo_url }}" alt="{{ $cert->user->name }}" class="h-7 w-7 shrink-0 rounded-full object-cover" />
+                                            @else
+                                                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">{{ strtoupper(substr($cert->user->name ?? '?', 0, 1)) }}</div>
+                                            @endif
                                             {{ $cert->user->name ?? '—' }}
                                         </a>
                                     </td>

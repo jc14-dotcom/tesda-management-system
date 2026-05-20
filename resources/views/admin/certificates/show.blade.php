@@ -96,57 +96,78 @@
                         @else
                             <ul class="divide-y divide-grayTheme-border">
                                 @foreach ($certificate->documents as $doc)
-                                    <li class="flex items-center justify-between gap-4 py-3">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                                                @php
-                                                    $isPdf = str_contains(strtolower($doc->mime_type ?? ''), 'pdf');
-                                                    $isImage = str_contains(strtolower($doc->mime_type ?? ''), 'image');
-                                                @endphp
-                                                @if ($isPdf)
-                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                                                    </svg>
-                                                @elseif ($isImage)
-                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                                    </svg>
-                                                @else
-                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                    </svg>
-                                                @endif
-                                            </div>
-                                            <div>
-                                                <div class="text-sm font-medium text-grayTheme-dark">
-                                                    {{ $doc->document_name ?: $doc->original_name }}
-                                                </div>
-                                                <div class="text-xs text-grayTheme-medium">
-                                                    {{ $doc->type ? ucfirst($doc->type) : 'Document' }}
-                                                    @if ($doc->size)
-                                                        · {{ number_format($doc->size / 1024, 1) }} KB
+                                    @php
+                                        $isPdf   = str_contains(strtolower($doc->mime_type ?? ''), 'pdf');
+                                        $isImage = str_contains(strtolower($doc->mime_type ?? ''), 'image');
+                                    @endphp
+                                    <li x-data="{ open: false }">
+                                        {{-- Document row --}}
+                                        <div class="flex items-center justify-between gap-4 py-3">
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                                                    @if ($isPdf)
+                                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                                        </svg>
+                                                    @elseif ($isImage)
+                                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                        </svg>
+                                                    @else
+                                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                        </svg>
                                                     @endif
                                                 </div>
+                                                <div>
+                                                    <div class="text-sm font-medium text-grayTheme-dark">
+                                                        {{ $doc->document_name ?: $doc->original_name }}
+                                                    </div>
+                                                    <div class="text-xs text-grayTheme-medium">
+                                                        {{ $doc->type ? ucfirst($doc->type) : 'Document' }}
+                                                        @if ($doc->size)
+                                                            · {{ number_format($doc->size / 1024, 1) }} KB
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2 shrink-0">
+                                                @if ($isPdf || $isImage)
+                                                    <button type="button" @click="open = !open"
+                                                        class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition"
+                                                        :class="open ? 'bg-primary text-white' : 'bg-primary-soft text-primary hover:bg-primary hover:text-white'">
+                                                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                        </svg>
+                                                        <span x-text="open ? 'Hide' : 'Preview'"></span>
+                                                    </button>
+                                                @endif
+                                                <a href="{{ route('documents.download', $doc) }}"
+                                                   class="inline-flex items-center gap-1 rounded-lg bg-grayTheme-hover px-2.5 py-1.5 text-xs font-semibold text-grayTheme-dark transition hover:bg-grayTheme-border">
+                                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                    </svg>
+                                                    Download
+                                                </a>
                                             </div>
                                         </div>
-                                        <div class="flex items-center gap-2 shrink-0">
-                                            @if ($isPdf || $isImage)
-                                                <a href="{{ route('documents.preview', $doc) }}" target="_blank"
-                                                   class="inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary hover:text-white">
-                                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                                    </svg>
-                                                    Preview
-                                                </a>
-                                            @endif
-                                            <a href="{{ route('documents.download', $doc) }}"
-                                               class="inline-flex items-center gap-1 rounded-lg bg-grayTheme-hover px-2.5 py-1.5 text-xs font-semibold text-grayTheme-dark transition hover:bg-grayTheme-border">
-                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                                </svg>
-                                                Download
-                                            </a>
+
+                                        {{-- Inline preview panel --}}
+                                        <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="pb-4">
+                                            <div class="overflow-hidden rounded-xl border border-grayTheme-border bg-grayTheme-light">
+                                                @if ($isPdf)
+                                                    <iframe src="{{ route('documents.preview', $doc) }}"
+                                                        class="w-full"
+                                                        style="height: 520px; border: none;"
+                                                        loading="lazy">
+                                                    </iframe>
+                                                @elseif ($isImage)
+                                                    <img src="{{ route('documents.preview', $doc) }}"
+                                                        alt="{{ $doc->document_name ?: $doc->original_name }}"
+                                                        class="mx-auto max-h-[520px] w-auto object-contain p-4">
+                                                @endif
+                                            </div>
                                         </div>
                                     </li>
                                 @endforeach

@@ -4,6 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        @if(request()->is('admin/*'))
+        <meta name="turbo-cache-control" content="no-cache">
+        @endif
 
         <title>{{ config('app.name', 'Laravel') }}</title>
         
@@ -95,6 +98,10 @@
 
         @if(session('rate_limit_error'))
         <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'warning',title:'Too Many Requests',message:{{ Js::from(session('rate_limit_error')) }}}}));</script>
+        @endif
+
+        @if(session('stale_record'))
+        <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'warning',title:'Record Not Found',message:{{ Js::from(session('stale_record')) }}}}));</script>
         @endif
 
         {{-- Global confirmation modal — trigger via window.showConfirm({...}) or data-confirm-message attribute --}}

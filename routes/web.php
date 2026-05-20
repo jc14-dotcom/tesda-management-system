@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/account/profile/photo', [ProfileController::class, 'photo'])->name('account.profile.photo');
     Route::get('/users/{user}/photo', [ProfileController::class, 'photoForUser'])->name('profile.photo');
     Route::get('/account/certificates', [ProfileController::class, 'certificates'])->name('account.certificates');
+    Route::get('/account/certificates/{certificate}', [CertificateController::class, 'show'])->name('account.certificates.show');
     Route::get('/account/documents', [ProfileController::class, 'documents'])->name('account.documents');
     Route::get('/account/notifications', [ProfileController::class, 'notifications'])->name('account.notifications');
     Route::patch('/account/notifications/read-all', [ProfileController::class, 'notificationsMarkAllRead'])->name('account.notifications.mark-all-read');
@@ -46,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/account/profile', [ProfileController::class, 'destroy'])->middleware('throttle:profile-mutations')->name('account.profile.destroy');
 
     Route::post('/certificates', [CertificateController::class, 'store'])->middleware('throttle:10,1')->name('certificates.store');
+    Route::patch('/certificates/{certificate}', [CertificateController::class, 'update'])->name('certificates.update');
     Route::delete('/certificates/{certificate}', [CertificateController::class, 'destroy'])->name('certificates.destroy');
 
     Route::post('/documents', [DocumentController::class, 'store'])->middleware('throttle:10,1')->name('documents.store');
@@ -88,6 +90,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/documents/{document}', [AdminDocumentController::class, 'show'])->name('documents.show');
         // Notifications
         Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
+        Route::patch('/notifications/{id}/read', [AdminNotificationController::class, 'markRead'])->name('notifications.mark-read');
         Route::delete('/notifications/{id}', [AdminNotificationController::class, 'destroy'])->name('notifications.destroy');
         Route::delete('/notifications', [AdminNotificationController::class, 'destroyAll'])->name('notifications.destroy-all');
         // Activity log

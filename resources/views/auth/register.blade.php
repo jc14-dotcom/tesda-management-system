@@ -9,8 +9,8 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen bg-grayTheme-light text-grayTheme-dark antialiased">
-        <main class="flex min-h-screen">
+    <body class="h-screen overflow-hidden bg-grayTheme-light text-grayTheme-dark antialiased">
+        <main class="flex h-full">
             <!-- Left: Brand Panel -->
             <div class="relative hidden overflow-hidden lg:flex lg:w-[42%] lg:flex-col bg-primary">
                 <!-- Radial glow accents -->
@@ -81,15 +81,38 @@
             </div>
 
             <!-- Right: Form Panel -->
-            <div class="flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-12 bg-[radial-gradient(circle_at_top_right,_rgba(43,45,126,0.06),_transparent_40%),linear-gradient(135deg,_#f8f9ff_0%,_#f3f4f6_100%)]">
+            <div class="flex flex-1 flex-col items-center overflow-y-auto px-6 py-12 lg:px-12 bg-[radial-gradient(circle_at_top_right,_rgba(43,45,126,0.06),_transparent_40%),linear-gradient(135deg,_#f8f9ff_0%,_#f3f4f6_100%)]">
                 <!-- Mobile logo -->
                 <div class="mb-8 flex items-center gap-3 lg:hidden">
                     <img src="{{ asset('assets/alcatt-logo.png') }}" class="h-10 w-10 object-contain" alt="Alcatt Portal" />
                     <span class="text-xl font-extrabold text-grayTheme-dark">Alcatt Portal</span>
                 </div>
 
-                <div class="w-full max-w-md">
-                    <div class="rounded-[20px] border border-grayTheme-border bg-white p-8 shadow-modal sm:p-10" x-data="{ dpaOpen: false }">
+                <div class="w-full max-w-md my-auto">
+                    <div class="rounded-[20px] border border-grayTheme-border bg-white p-8 shadow-modal sm:p-10" x-data="{
+                        dpaOpen: false,
+                        show_password: false,
+                        show_confirm: false,
+                        password: '',
+                        confirmPwd: '',
+                        submitting: false,
+                        get mismatch() { return this.confirmPwd.length > 0 && this.password !== this.confirmPwd; },
+                        get strength() {
+                            const p = this.password;
+                            if (!p) return 0;
+                            let s = 0;
+                            if (p.length >= 8)  s++;
+                            if (p.length >= 12) s++;
+                            if (/[A-Z]/.test(p)) s++;
+                            if (/[0-9]/.test(p)) s++;
+                            if (/[^A-Za-z0-9]/.test(p)) s++;
+                            return s;
+                        },
+                        get strengthLabel() { return ['','Weak','Fair','Good','Strong','Very Strong'][Math.min(this.strength, 5)]; },
+                        get strengthColor() { return ['','text-danger','text-warning','text-accent','text-success','text-success'][Math.min(this.strength, 5)]; },
+                        get strengthBars()  { return [0,1,2,3,4,5].map(i => i < Math.min(this.strength, 5) ? (['','bg-danger','bg-warning','bg-accent','bg-success','bg-success'][Math.min(this.strength,5)]) : 'bg-grayTheme-border'); },
+                        get canSubmit() { return this.password.length > 0 && this.confirmPwd.length > 0 && this.strength >= 4 && !this.mismatch && !this.submitting; }
+                    }">
                         <!-- Heading -->
                         <div class="mb-7">
                             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft">
@@ -101,7 +124,7 @@
                             <p class="mt-1 text-sm text-grayTheme-medium">Join Alcatt Portal to get started</p>
                         </div>
 
-                        <form method="POST" action="{{ route('register') }}" class="space-y-4">
+                        <form method="POST" action="{{ route('register') }}" class="space-y-4" @submit="submitting = true">
                             @csrf
 
                             {{-- Rate limit banner --}}
@@ -158,22 +181,34 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                         </svg>
                                     </div>
-                                    <x-text-input id="password" class="block w-full pl-10 pr-10" type="password" name="password" required autocomplete="new-password" placeholder="••••••••" />
+                                    <x-text-input id="password" class="block w-full pl-10 pr-10" name="password" required autocomplete="new-password" placeholder="••••••••" x-bind:type="show_password ? 'text' : 'password'" @input="password = $event.target.value" />
                                     <button type="button"
-                                        onclick="(function(b){var i=document.getElementById('password');i.type=i.type==='password'?'text':'password';b.querySelector('.eye-off').classList.toggle('hidden');b.querySelector('.eye-on').classList.toggle('hidden');})(this)"
+                                        @click="show_password = !show_password"
                                         class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-grayTheme-medium hover:text-primary transition"
                                         tabindex="-1"
-                                        aria-label="Toggle password visibility">
-                                        <svg class="eye-off h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        :aria-label="show_password ? 'Hide password' : 'Show password'">
+                                        <svg x-show="!show_password" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                         </svg>
-                                        <svg class="eye-on hidden h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <svg x-show="show_password" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                     </button>
                                 </div>
                                 <x-input-error :messages="$errors->get('password')" class="mt-1.5" />
+                                {{-- Password strength indicator --}}
+                                <div x-show="password.length > 0" class="mt-2 space-y-1">
+                                    <div class="flex gap-1">
+                                        <template x-for="(color, i) in strengthBars" :key="i">
+                                            <div class="h-1.5 flex-1 rounded-full transition-colors duration-200" :class="color"></div>
+                                        </template>
+                                    </div>
+                                    <p class="text-xs font-semibold" :class="strengthColor" x-text="strengthLabel"></p>
+                                    <p x-show="strength > 0 && strength < 4" class="text-xs text-grayTheme-medium">
+                                        Add uppercase letters, numbers, and special characters (e.g. !@#$) to make it stronger.
+                                    </p>
+                                </div>
                             </div>
 
                             <!-- Confirm Password -->
@@ -185,21 +220,29 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                         </svg>
                                     </div>
-                                    <x-text-input id="password_confirmation" class="block w-full pl-10 pr-10" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="••••••••" />
+                                    <x-text-input id="password_confirmation" class="block w-full pl-10 pr-10" name="password_confirmation" required autocomplete="new-password" placeholder="••••••••" x-bind:type="show_confirm ? 'text' : 'password'" @input="confirmPwd = $event.target.value" />
                                     <button type="button"
-                                        onclick="(function(b){var i=document.getElementById('password_confirmation');i.type=i.type==='password'?'text':'password';b.querySelector('.eye-off').classList.toggle('hidden');b.querySelector('.eye-on').classList.toggle('hidden');})(this)"
+                                        @click="show_confirm = !show_confirm"
                                         class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-grayTheme-medium hover:text-primary transition"
                                         tabindex="-1"
-                                        aria-label="Toggle confirm password visibility">
-                                        <svg class="eye-off h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        :aria-label="show_confirm ? 'Hide password' : 'Show password'">
+                                        <svg x-show="!show_confirm" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                         </svg>
-                                        <svg class="eye-on hidden h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <svg x-show="show_confirm" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                     </button>
                                 </div>
+                                <p x-show="mismatch" class="mt-1.5 flex items-center gap-1 text-xs font-medium text-danger">
+                                    <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    Passwords do not match.
+                                </p>
+                                <p x-show="confirmPwd.length > 0 && !mismatch" class="mt-1.5 flex items-center gap-1 text-xs font-medium text-success">
+                                    <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    Passwords match.
+                                </p>
                                 <x-input-error :messages="$errors->get('password_confirmation')" class="mt-1.5" />
                             </div>
 
@@ -227,7 +270,7 @@
 
                             <!-- Submit -->
                             <div class="pt-1">
-                                <x-primary-button class="w-full justify-center gap-2 py-3 text-sm font-bold tracking-wide">
+                                <x-primary-button class="w-full justify-center gap-2 py-3 text-sm font-bold tracking-wide" x-bind:disabled="!canSubmit" x-bind:class="!canSubmit ? 'opacity-60 cursor-not-allowed' : ''">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                                     </svg>

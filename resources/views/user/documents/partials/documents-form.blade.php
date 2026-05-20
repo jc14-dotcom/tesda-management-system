@@ -57,8 +57,8 @@
 
         <div class="grid gap-4 md:grid-cols-2">
             <div class="md:col-span-2">
-                <x-input-label for="document_name" :value="__('Document Name')" :required="true" />
-                <x-text-input id="document_name" name="document_name" type="text" class="mt-1 block w-full" :value="old('document_name')" required placeholder="e.g. Driver's License, Diploma, NBI Clearance" />
+                <x-input-label for="document_name" :value="__('Document Label')" />
+                <x-text-input id="document_name" name="document_name" type="text" class="mt-1 block w-full" :value="old('document_name')" placeholder="e.g. Driver's License, Diploma, NBI Clearance (leave blank to use filename)" />
                 <x-input-error class="mt-2" :messages="$errors->get('document_name')" />
             </div>
 
@@ -73,15 +73,116 @@
             </div>
 
             <div class="md:col-span-2">
-                <x-file-input
-                    name="file"
-                    id="file"
-                    :required="false"
-                    :help="__('Upload a CV, certificate file, or other supporting document.')"
+                <x-input-label :value="__('Files')" :required="true" />
+                <div
+                    class="mt-1"
+                    x-data="{
+                        files: [],
+                        dragging: false,
+                        onFileChange(e) {
+                            const picked = Array.from(e.target.files);
+                            e.target.value = '';
+                            for (const f of picked) {
+                                if (!this.files.find(x => x.name === f.name && x.size === f.size)) {
+                                    this.files.push({ name: f.name, size: f.size, raw: f });
+                                }
+                            }
+                            this.syncInput();
+                        },
+                        removeFile(idx) {
+                            this.files.splice(idx, 1);
+                            this.syncInput();
+                        },
+                        syncInput() {
+                            const dt = new DataTransfer();
+                            this.files.forEach(f => dt.items.add(f.raw));
+                            this.$refs.filesInput.files = dt.files;
+                        },
+                        fmt(size) {
+                            return size < 1048576
+                                ? (size / 1024).toFixed(1) + ' KB'
+                                : (size / 1048576).toFixed(1) + ' MB';
+                        },
+                        onDrop(e) {
+                            this.dragging = false;
+                            const dropped = Array.from(e.dataTransfer.files);
+                            for (const f of dropped) {
+                                if (!this.files.find(x => x.name === f.name && x.size === f.size)) {
+                                    this.files.push({ name: f.name, size: f.size, raw: f });
+                                }
+                            }
+                            this.syncInput();
+                        },
+                    }"
                 >
-                    {{ __('File') }}
-                </x-file-input>
-                <x-input-error class="mt-2" :messages="$errors->get('file')" />
+                    <input
+                        id="files"
+                        name="files[]"
+                        type="file"
+                        multiple
+                        accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.tif,.tiff,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                        class="sr-only"
+                        x-ref="filesInput"
+                        @change="onFileChange($event)"
+                    />
+
+                    {{-- Drop zone --}}
+                    <label
+                        for="files"
+                        class="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed px-6 py-8 text-center transition duration-200"
+                        :class="{
+                            'border-primary/30 bg-primary-soft/30 hover:border-primary hover:bg-primary-soft/60': files.length === 0 && !dragging,
+                            'border-primary bg-primary-soft/70 scale-[1.01] shadow-sm': dragging,
+                            'border-success/40 bg-success-soft/20 hover:border-success/70': files.length > 0 && !dragging,
+                        }"
+                        @dragover.prevent="dragging = true"
+                        @dragleave.prevent="dragging = false"
+                        @drop.prevent="onDrop($event)"
+                    >
+                        <span
+                            class="flex h-12 w-12 items-center justify-center rounded-2xl transition"
+                            :class="files.length > 0 ? 'bg-success/10 text-success' : 'bg-white text-primary shadow-sm'"
+                        >
+                            <svg x-show="files.length === 0" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                            <svg x-show="files.length > 0" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                        </span>
+
+                        <span x-show="files.length === 0">
+                            <span class="block text-sm font-semibold text-grayTheme-dark">Choose files or drag &amp; drop</span>
+                            <span class="mt-1 block text-xs text-grayTheme-medium">PDF, images, Word, Excel and more &middot; up to 10 MB each</span>
+                        </span>
+                        <span x-show="files.length > 0">
+                            <span class="block text-sm font-semibold text-success" x-text="files.length + (files.length === 1 ? ' file selected' : ' files selected')"></span>
+                            <span class="mt-1 block text-xs text-grayTheme-medium">Click or drag to add more</span>
+                        </span>
+                    </label>
+
+                    {{-- Selected file list --}}
+                    <template x-if="files.length > 0">
+                        <div class="mt-3 space-y-2">
+                            <template x-for="(file, idx) in files" :key="idx">
+                                <div class="flex items-center gap-3 rounded-xl border border-grayTheme-border bg-white p-3 shadow-sm">
+                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="truncate text-sm font-medium text-grayTheme-dark" x-text="file.name"></p>
+                                        <p class="text-xs text-grayTheme-medium" x-text="fmt(file.size)"></p>
+                                    </div>
+                                    <button type="button" class="shrink-0 rounded-lg p-1 text-grayTheme-medium transition hover:bg-danger-soft hover:text-danger" @click="removeFile(idx)">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                <x-input-error class="mt-2" :messages="$errors->get('files')" />
+                <x-input-error class="mt-1" :messages="$errors->get('files.*')" />
             </div>
         </div>
 
@@ -94,16 +195,7 @@
             </x-primary-button>
 
             @if (session('status') === 'document-uploaded')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2500)"
-                    class="inline-flex items-center gap-1.5 text-sm font-medium text-success"
-                >
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    {{ __('Document uploaded.') }}
-                </p>
+            <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Document Uploaded',message:'Your document has been saved successfully.'}}));</script>
             @endif
         </div>
     </form>

@@ -33,6 +33,16 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        // Redirect back gracefully when a record no longer exists (e.g. user updated/deleted
+        // a document while an admin was viewing a stale page with old record links)
+        $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson()) {
+                return null; // fall through to default JSON 404 handling
+            }
+            return redirect(url()->previous('/'))
+                ->with('stale_record', 'This record no longer exists — it may have been updated or removed. Please refresh the page.');
+        });
+
         // Redirect back with a friendly message when a rate limit is hit on a web route
         $exceptions->render(function (\Illuminate\Http\Exceptions\ThrottleRequestsException $e, \Illuminate\Http\Request $request) {
             if ($request->expectsJson()) {

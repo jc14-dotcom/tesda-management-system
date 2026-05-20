@@ -1,4 +1,4 @@
-<section x-data="{
+﻿<section x-data="{
     confirmOpen: false,
     confirmTitle: '',
     confirmMessage: '',
@@ -8,7 +8,7 @@
         this.confirmTitle = 'Delete Certificate';
         this.confirmMessage = '\u201c' + name + '\u201d and all its attached files will be permanently removed. This cannot be undone.';
         this.confirmOpen = true;
-    }
+    },
 }" @cert-confirm-delete.window="askDelete($event.detail.url, $event.detail.name)">
 
     {{-- Section header --}}
@@ -54,7 +54,7 @@
 
             <div>
                 <x-input-label for="certificate_number" :value="__('Certificate Number')" :required="true" />
-                <x-text-input id="certificate_number" name="certificate_number" type="text" class="mt-1 block w-full" :value="old('certificate_number')" required />
+                <x-text-input id="certificate_number" name="certificate_number" type="text" inputmode="numeric" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="mt-1 block w-full" :value="old('certificate_number')" required />
                 <x-input-error class="mt-2" :messages="$errors->get('certificate_number')" />
             </div>
 
@@ -116,6 +116,18 @@
                     {{ __('Certificate added.') }}
                 </p>
             @endif
+            @if (session('status') === 'certificate-updated')
+                <p
+                    x-data="{ show: true }"
+                    x-show="show"
+                    x-transition
+                    x-init="setTimeout(() => show = false, 2500)"
+                    class="inline-flex items-center gap-1.5 text-sm font-medium text-success"
+                >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    {{ __('Certificate updated.') }}
+                </p>
+            @endif
         </div>
     </form>
 
@@ -168,17 +180,26 @@
             x-init="items = @js($certificates->map(function($cert) {
                 $firstDoc = $cert->documents->first();
                 return [
-                    'id' => $cert->id,
-                    'name' => $cert->certificate_name,
-                    'type' => $cert->certificate_type_label,
-                    'qualification' => $cert->qualification_title ?? $cert->certificate_name ?? '—',
+                    'id'                => $cert->id,
+                    'name'              => $cert->certificate_name,
+                    'type'              => $cert->certificate_type_label,
+                    'qualification'     => $cert->qualification_title ?? $cert->certificate_name ?? 'â€”',
                     'certificateNumber' => $cert->certificate_number ?? '',
-                    'expirationDate' => $cert->expiration_date ? $cert->expiration_date->format('M d, Y') : '—',
-                    'status' => $cert->status,
-                    'statusLabel' => ucfirst($cert->status),
-                    'hasFile' => (bool) $firstDoc,
-                    'fileUrl' => $firstDoc ? route('documents.view', $firstDoc) : null,
-                    'deleteUrl' => route('certificates.destroy', $cert),
+                    'issuedBy'          => $cert->issued_by ?? 'â€”',
+                    'issueDate'         => $cert->issue_date ? $cert->issue_date->format('M d, Y') : 'â€”',
+                    'expirationDate'    => $cert->expiration_date ? $cert->expiration_date->format('M d, Y') : 'â€”',
+                    'status'            => $cert->status,
+                    'statusLabel'       => ucfirst($cert->status),
+                    'remarks'            => $cert->remarks ?? '',
+                    'hasFile'            => (bool) $firstDoc,
+                    'previewUrl'         => $firstDoc ? route('documents.preview', $firstDoc) : null,
+                    'downloadUrl'        => $firstDoc ? route('documents.download', $firstDoc) : null,
+                    'deleteUrl'          => route('certificates.destroy', $cert),
+                    'updateUrl'          => route('certificates.update', $cert),
+                    'showUrl'            => route('account.certificates.show', $cert),
+                    'certificateTypeRaw' => $cert->certificate_type,
+                    'issueDateRaw'       => $cert->issue_date ? $cert->issue_date->format('Y-m-d') : '',
+                    'expirationDateRaw'  => $cert->expiration_date ? $cert->expiration_date->format('Y-m-d') : '',
                 ];
             }))"
         >
@@ -214,7 +235,7 @@
                         </template>
 
                         <template x-for="cert in items" :key="cert.id">
-                            <tr class="transition hover:bg-grayTheme-light/60">
+                            <tr class="cursor-pointer transition hover:bg-grayTheme-light/60" @click="window.location.href = cert.showUrl">
                                 <td class="px-4 py-3 font-medium text-grayTheme-dark" x-text="cert.qualification"></td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex items-center rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary" x-text="cert.type"></span>
@@ -223,8 +244,8 @@
                                 <td class="px-4 py-3">
                                     <a
                                         x-show="cert.hasFile"
-                                        :href="cert.fileUrl"
-                                        target="_blank"
+                                        :href="cert.showUrl"
+                                        @click.stop
                                         class="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary transition hover:bg-primary hover:text-white"
                                     >
                                         <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -256,7 +277,7 @@
                                     <button
                                         type="button"
                                         class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-danger transition hover:bg-danger-soft focus:outline-none"
-                                        @click="askDelete(cert.deleteUrl, cert.qualification)"
+                                        @click.stop="askDelete(cert.deleteUrl, cert.qualification)"
                                     >
                                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         Delete
@@ -329,4 +350,3 @@
         </div>
     </div>
 
-</section>

@@ -56,7 +56,8 @@
                             <select id="type" name="type" class="mt-1 form-input">
                                 <option value="all" @selected($type === 'all')>All Types</option>
                                 <option value="cv" @selected($type === 'cv')>CV</option>
-                                <option value="certificate" @selected($type === 'certificate')>Training/Workshop/Seminars Certificate</option>
+                                <option value="training" @selected($type === 'training')>Training/Workshop/Seminars Certificate</option>
+                                <option value="certificate" @selected($type === 'certificate')>Certificate (System Attached)</option>
                                 <option value="other" @selected($type === 'other')>Other</option>
                             </select>
                         </div>
@@ -100,7 +101,11 @@
                                 <tr class="cursor-pointer transition hover:bg-grayTheme-light/60" onclick="window.location='{{ route('admin.documents.show', $doc) }}'">
                                     <td class="px-4 py-3">
                                         <a href="{{ route('admin.users.show', $doc->user) }}" onclick="event.stopPropagation()" class="inline-flex items-center gap-2 font-medium text-primary hover:underline">
-                                            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">{{ strtoupper(substr($doc->user->name ?? '?', 0, 1)) }}</div>
+                                            @if ($doc->user->profile?->profile_photo_url)
+                                                <img src="{{ $doc->user->profile->profile_photo_url }}" alt="{{ $doc->user->name }}" class="h-7 w-7 shrink-0 rounded-full object-cover" />
+                                            @else
+                                                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">{{ strtoupper(substr($doc->user->name ?? '?', 0, 1)) }}</div>
+                                            @endif
                                             {{ $doc->user->name ?? '—' }}
                                         </a>
                                     </td>

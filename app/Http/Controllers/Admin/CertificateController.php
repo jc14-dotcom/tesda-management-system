@@ -19,7 +19,7 @@ class CertificateController extends Controller
         $window      = (int) $request->query('window', 0);
         $userId      = (int) $request->query('user_id', 0);
 
-        $certificates = Certificate::with('user:id,name')
+        $certificates = Certificate::with(['user:id,name', 'user.profile:user_id,profile_photo_path'])
             ->select([
                 'id', 'user_id', 'certificate_name', 'certificate_type',
                 'qualification_title', 'certificate_number', 'expiration_date',

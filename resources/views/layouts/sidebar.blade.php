@@ -128,7 +128,7 @@
         @endif
         </div>
 
-        {{-- Pinned bottom: Profile & Logout (admin only) --}}
+        {{-- Pinned bottom: Profile & Logout --}}
         @if ($isAdminUser)
         @php $onProfile = request()->routeIs('account.profile'); @endphp
         <div class="shrink-0 border-t border-white/10 px-4 py-3 space-y-1">
@@ -151,6 +151,21 @@
                 <button type="button"
                     class="flex w-full items-center px-2 py-1.5 rounded-lg transition duration-250 group text-white/80 hover:bg-primary-hover hover:text-white"
                     onclick="event.preventDefault(); window.showConfirm({ title: 'Log Out?', message: 'You will be signed out of your account.', confirmText: 'Log Out', onConfirm: () => document.getElementById('admin-sidebar-logout-form').submit() })"
+                >
+                    <svg class="w-5 h-5 text-white/70 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span class="sidebar-label ms-3 whitespace-nowrap">Log Out</span>
+                </button>
+            </form>
+        </div>
+        @else
+        <div class="shrink-0 border-t border-white/10 px-4 py-3">
+            <form method="POST" action="{{ route('logout') }}" id="user-sidebar-logout-form">
+                @csrf
+                <button type="button"
+                    class="flex w-full items-center px-2 py-1.5 rounded-lg transition duration-250 group text-white/80 hover:bg-primary-hover hover:text-white"
+                    onclick="event.preventDefault(); window.showConfirm({ title: 'Log Out?', message: 'You will be signed out of your account.', confirmText: 'Log Out', onConfirm: () => document.getElementById('user-sidebar-logout-form').submit() })"
                 >
                     <svg class="w-5 h-5 text-white/70 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

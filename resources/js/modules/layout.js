@@ -304,11 +304,12 @@ function addToast({ type = 'success', title = '', message = '' }) {
         const bar = el.querySelector('[data-toast-bar]');
         if (!bar) return;
         bar.getBoundingClientRect();              // force reflow
-        bar.style.transition = 'width 4.5s linear';
+        const autoDismissMs = (type === 'success') ? 2500 : 4500;
+        bar.style.transition = `width ${autoDismissMs / 1000}s linear`;
         bar.style.width      = '0%';
     });
 
-    setTimeout(() => dismissToast(el), 4500);
+    setTimeout(() => dismissToast(el), (type === 'success') ? 2500 : 4500);
 }
 
 // ── Notification Panel ────────────────────────────────────────────────────────

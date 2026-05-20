@@ -16,20 +16,24 @@ class DocumentController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'document_name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:cv,training,other'],
+        $request->validate([
+            'document_name'  => ['nullable', 'string', 'max:255'],
+            'type'           => ['required', 'string', 'in:cv,training,other'],
             'certificate_no' => ['nullable', 'string', 'max:255'],
-            'issued_on' => ['nullable', 'date'],
-            'valid_until' => ['nullable', 'date', 'after_or_equal:issued_on'],
+            'issued_on'      => ['nullable', 'date'],
+            'valid_until'    => ['nullable', 'date', 'after_or_equal:issued_on'],
             'certificate_id' => ['nullable', 'integer', 'exists:certificates,id'],
-            'file' => ['nullable', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp,gif,bmp,tif,tiff,doc,docx,xls,xlsx,ppt,pptx,txt,csv'],
+            'files'          => ['required', 'array', 'min:1'],
+            'files.*'        => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,webp,gif,bmp,tif,tiff,doc,docx,xls,xlsx,ppt,pptx,txt,csv'],
         ]);
 
-        $user = $request->user();
+        $user          = $request->user();
+        $type          = $request->input('type');
+        $customName    = $request->filled('document_name') ? $request->input('document_name') : null;
+        $certificateId = $request->input('certificate_id');
 
-        if (! empty($data['certificate_id'])) {
-            $certificate = Certificate::where('id', $data['certificate_id'])
+        if ($certificateId) {
+            $certificate = Certificate::where('id', $certificateId)
                 ->where('user_id', $user->id)
                 ->first();
 
@@ -38,29 +42,40 @@ class DocumentController extends Controller
             }
         }
 
-        if ($data['type'] === 'cv') {
+        // Demote all existing CVs before inserting new ones
+        if ($type === 'cv') {
             $user->documents()->where('type', 'cv')->update(['is_primary' => false]);
         }
 
-        $docData = [
-            'certificate_id' => $data['certificate_id'] ?? null,
-            'document_name' => $data['document_name'],
-            'certificate_no' => $data['certificate_no'] ?? null,
-            'issued_on' => $data['issued_on'] ?? null,
-            'valid_until' => $data['valid_until'] ?? null,
-            'type' => $data['type'],
-            'is_primary' => $data['type'] === 'cv',
-        ];
+        $uploadedFiles = $request->file('files');
+        $firstCv = true;
 
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $docData['path'] = $file->store("documents/{$user->id}", 'local');
-            $docData['original_name'] = $file->getClientOriginalName();
-            $docData['mime_type'] = $file->getClientMimeType();
-            $docData['size'] = $file->getSize();
+        foreach ($uploadedFiles as $file) {
+            $isPrimary = false;
+            if ($type === 'cv' && $firstCv) {
+                $isPrimary = true;
+                $firstCv   = false;
+            }
+
+            // Use the custom label only when a single file is uploaded; otherwise use filename
+            $docName = ($customName && count($uploadedFiles) === 1)
+                ? $customName
+                : ($customName ? $customName . ' — ' . $file->getClientOriginalName() : $file->getClientOriginalName());
+
+            $user->documents()->create([
+                'certificate_id' => $certificateId,
+                'document_name'  => $docName,
+                'certificate_no' => $request->input('certificate_no'),
+                'issued_on'      => $request->input('issued_on'),
+                'valid_until'    => $request->input('valid_until'),
+                'type'           => $type,
+                'is_primary'     => $isPrimary,
+                'path'           => $file->store("documents/{$user->id}", 'local'),
+                'original_name'  => $file->getClientOriginalName(),
+                'mime_type'      => $file->getClientMimeType(),
+                'size'           => $file->getSize(),
+            ]);
         }
-
-        $user->documents()->create($docData);
 
         CacheBuster::bumpUser($user->id);
         CacheBuster::bumpAdminUsers();
@@ -78,9 +93,18 @@ class DocumentController extends Controller
             abort(404);
         }
 
+        $name = $document->document_name ?: $document->original_name;
+        $ext  = pathinfo($document->original_name ?? '', PATHINFO_EXTENSION);
+        if ($ext && ! str_ends_with(strtolower($name), '.' . strtolower($ext))) {
+            $name .= '.' . $ext;
+        }
+
+        $headers = $document->mime_type ? ['Content-Type' => $document->mime_type] : [];
+
         return response()->download(
             Storage::disk('local')->path($document->path),
-            $document->document_name ?: $document->original_name
+            $name,
+            $headers
         );
     }
 

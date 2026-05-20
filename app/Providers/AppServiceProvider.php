@@ -12,6 +12,8 @@ use App\Policies\CertificatePolicy;
 use App\Policies\DocumentPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
@@ -50,6 +52,17 @@ class AppServiceProvider extends ServiceProvider
         // Register model policies
         Gate::policy(Document::class, DocumentPolicy::class);
         Gate::policy(Certificate::class, CertificatePolicy::class);
+
+        // Auto-embed the Alcatt logo as a CID inline attachment for every
+        // outgoing email. Gmail blocks data: URIs inside <img src>, and the
+        // app runs on http://localhost so external URLs can't be fetched —
+        // CID attachments are the only universally supported delivery path.
+        Event::listen(MessageSending::class, function (MessageSending $event) {
+            $logoPath = public_path('assets/alcatt-logo-email.png');
+            if (file_exists($logoPath)) {
+                $event->message->embedFromPath($logoPath, 'alcatt-logo', 'image/png');
+            }
+        });
 
         $this->configureRateLimiting();
     }

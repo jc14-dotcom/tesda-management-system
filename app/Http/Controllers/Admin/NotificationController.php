@@ -21,7 +21,7 @@ class NotificationController extends Controller
             'verification_reminder', 'weekly_digest',
         ];
 
-        $notifications = DatabaseNotification::with('notifiable')
+        $notifications = DatabaseNotification::with(['notifiable', 'notifiable.profile'])
             ->where('notifiable_type', \App\Models\User::class)
             ->when($status === 'unread', fn ($q) => $q->whereNull('read_at'))
             ->when($status === 'read',   fn ($q) => $q->whereNotNull('read_at'))
@@ -57,6 +57,13 @@ class NotificationController extends Controller
             'type'          => $type,
             'stats'         => $stats,
         ]);
+    }
+
+    public function markRead(string $id): \Illuminate\Http\Response
+    {
+        DatabaseNotification::findOrFail($id)->markAsRead();
+
+        return response()->noContent();
     }
 
     public function destroy(string $id)

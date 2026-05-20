@@ -14,7 +14,7 @@ class DocumentController extends Controller
         $search = trim((string) $request->query('search', ''));
         $type   = $request->query('type', 'all');
 
-        $documents = Document::with('user:id,name')
+        $documents = Document::with(['user:id,name', 'user.profile:user_id,profile_photo_path'])
             ->select(['id', 'user_id', 'document_name', 'original_name', 'type', 'mime_type', 'size', 'created_at'])
             ->when($search, fn ($q) => $q->where(function ($q) use ($search) {
                 $q->where('document_name', 'like', "%{$search}%")

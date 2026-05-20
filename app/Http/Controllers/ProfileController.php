@@ -178,7 +178,7 @@ class ProfileController extends Controller
         $certWindow = (int) $request->query('cert_window', 0);
 
         $certificates = $user->certificates()
-            ->select(['id', 'user_id', 'certificate_name', 'certificate_type', 'qualification_title', 'expiration_date', 'status'])
+            ->select(['id', 'user_id', 'certificate_name', 'certificate_type', 'qualification_title', 'certificate_number', 'issued_by', 'issue_date', 'expiration_date', 'status', 'remarks'])
             ->with(['documents' => fn($q) => $q->select(['id', 'certificate_id', 'document_name', 'original_name'])->latest()])
             ->when($certStatus !== 'all', fn($q) => $q->where('status', $certStatus))
             ->when($certWindow > 0, fn($q) => $q
@@ -197,16 +197,26 @@ class ProfileController extends Controller
                 'items' => $certificates->map(function ($cert) {
                     $firstDoc = $cert->documents->first();
                     return [
-                        'id'             => $cert->id,
-                        'name'           => $cert->certificate_name,
-                        'type'           => $cert->certificate_type_label,
-                        'qualification'  => $cert->qualification_title ?? '—',
-                        'expirationDate' => $cert->expiration_date ? $cert->expiration_date->format('M d, Y') : '—',
-                        'status'         => $cert->status,
-                        'statusLabel'    => ucfirst($cert->status),
-                        'hasFile'        => (bool) $firstDoc,
-                        'fileUrl'        => $firstDoc ? route('documents.view', $firstDoc) : null,
-                        'deleteUrl'      => route('certificates.destroy', $cert),
+                        'id'                 => $cert->id,
+                        'name'              => $cert->certificate_name,
+                        'type'              => $cert->certificate_type_label,
+                        'qualification'     => $cert->qualification_title ?? '',
+                        'certificateNumber' => $cert->certificate_number ?? '',
+                        'issuedBy'          => $cert->issued_by ?? '—',
+                        'issueDate'         => $cert->issue_date ? $cert->issue_date->format('M d, Y') : '—',
+                        'expirationDate'    => $cert->expiration_date ? $cert->expiration_date->format('M d, Y') : '—',
+                        'status'            => $cert->status,
+                        'statusLabel'       => ucfirst($cert->status),
+                        'remarks'           => $cert->remarks ?? '',
+                        'hasFile'           => (bool) $firstDoc,
+                        'previewUrl'        => $firstDoc ? route('documents.preview', $firstDoc) : null,
+                        'downloadUrl'       => $firstDoc ? route('documents.download', $firstDoc) : null,
+                        'deleteUrl'         => route('certificates.destroy', $cert),
+                        'updateUrl'         => route('certificates.update', $cert),
+                        'showUrl'           => route('account.certificates.show', $cert),
+                        'certificateTypeRaw' => $cert->certificate_type,
+                        'issueDateRaw'      => $cert->issue_date ? $cert->issue_date->format('Y-m-d') : '',
+                        'expirationDateRaw' => $cert->expiration_date ? $cert->expiration_date->format('Y-m-d') : '',
                     ];
                 })->values(),
                 'nextUrl' => $certificates->nextPageUrl(),
