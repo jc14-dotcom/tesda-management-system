@@ -53,10 +53,10 @@
                         <span class="rounded-full bg-warning px-3 py-1 text-xs font-semibold text-white shadow-sm">Next 60 days</span>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto overflow-y-auto" style="max-height:320px;">
                         <table class="min-w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-grayTheme-border bg-grayTheme-light/70">
+                            <thead class="sticky top-0 z-10">
+                                <tr class="border-b border-grayTheme-border bg-grayTheme-light">
                                     <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">User</th>
                                     <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">Certificate</th>
                                     <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">Expires</th>
@@ -158,10 +158,10 @@
                         <a href="{{ route('admin.users.index') }}" class="shrink-0 whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/20">View all</a>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto overflow-y-auto" style="max-height:320px;">
                         <table class="min-w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-grayTheme-border bg-grayTheme-light/70">
+                            <thead class="sticky top-0 z-10">
+                                <tr class="border-b border-grayTheme-border bg-grayTheme-light">
                                     <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">Name</th>
                                     <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">Email</th>
                                     <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">Role</th>
@@ -219,7 +219,7 @@
                         <a href="{{ route('admin.documents.index') }}" class="shrink-0 whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/20">View all</a>
                     </div>
 
-                    <div class="divide-y divide-grayTheme-border">
+                    <div class="divide-y divide-grayTheme-border overflow-y-auto" style="max-height:320px;">
                         @forelse ($recentUploads as $upload)
                             <div class="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-grayTheme-light/60">
                                 <div class="flex items-center gap-3">

@@ -15,7 +15,7 @@ class CertificateController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'certificate_type' => ['required', 'string', 'in:nc_i,nc_ii,nc_iii,nc_iv,nttc,trainer,assessor,other'],
+            'certificate_type' => ['required', 'string', 'in:nc_i,nc_ii,nc_iii,nc_iv,nttc,assessor,other'],
             'qualification_title' => ['required', 'string', 'max:255'],
             'certificate_number' => ['required', 'string', 'max:255'],
             'issued_by' => ['required', 'string', 'max:255'],
@@ -40,7 +40,6 @@ class CertificateController extends Controller
         $certificate = $user->certificates()->create([
             ...$data,
             'status' => $status,
-            'verification_status' => 'verified',
             'notified_days' => [],
             'notification_count' => 0,
         ]);
@@ -76,7 +75,9 @@ class CertificateController extends Controller
 
         $certificate->load('documents');
 
-        return view('user.certificates.show', compact('certificate'));
+        $profile = $request->user()->profile;
+
+        return view('user.certificates.show', compact('certificate', 'profile'));
     }
 
     public function update(Request $request, Certificate $certificate): RedirectResponse
@@ -86,7 +87,7 @@ class CertificateController extends Controller
         }
 
         $data = $request->validate([
-            'certificate_type'    => ['required', 'string', 'in:nc_i,nc_ii,nc_iii,nc_iv,nttc,trainer,assessor,other'],
+            'certificate_type'    => ['required', 'string', 'in:nc_i,nc_ii,nc_iii,nc_iv,nttc,assessor,other'],
             'qualification_title' => ['required', 'string', 'max:255'],
             'certificate_number'  => ['required', 'string', 'max:255'],
             'issued_by'           => ['required', 'string', 'max:255'],

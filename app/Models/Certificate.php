@@ -15,7 +15,7 @@ class Certificate extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['certificate_name', 'certificate_type', 'status', 'verification_status'])
+            ->logOnly(['certificate_name', 'certificate_type', 'status'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(fn(string $eventName) => match($eventName) {
@@ -32,7 +32,6 @@ class Certificate extends Model
         'nc_iii' => 'NC III',
         'nc_iv' => 'NC IV',
         'nttc' => 'NTTC',
-        'trainer' => 'Trainer',
         'assessor' => 'Assessor',
         'other' => 'Other',
     ];
@@ -47,9 +46,6 @@ class Certificate extends Model
         'issue_date',
         'expiration_date',
         'status',
-        'verification_status',
-        'verified_by',
-        'verified_at',
         'last_notified_at',
         'notified_days',
         'notification_count',
@@ -59,7 +55,6 @@ class Certificate extends Model
     protected $casts = [
         'issue_date' => 'date',
         'expiration_date' => 'date',
-        'verified_at' => 'datetime',
         'last_notified_at' => 'datetime',
         'notified_days' => 'array',
     ];
@@ -72,11 +67,6 @@ class Certificate extends Model
     public function documents()
     {
         return $this->hasMany(Document::class);
-    }
-
-    public function verifier()
-    {
-        return $this->belongsTo(User::class, 'verified_by');
     }
 
     public function getCertificateTypeLabelAttribute(): string

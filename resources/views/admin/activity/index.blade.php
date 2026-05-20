@@ -175,8 +175,8 @@
                                     
                                     $changes[] = [
                                         'field' => ucwords(str_replace('_', ' ', $key)),
-                                        'old'   => $oldVal !== null ? (string) $oldVal : null,
-                                        'new'   => $newVal !== null ? (string) $newVal : null,
+                                        'old'   => $oldVal !== null ? (is_array($oldVal) ? json_encode($oldVal) : (string) $oldVal) : null,
+                                        'new'   => $newVal !== null ? (is_array($newVal) ? json_encode($newVal) : (string) $newVal) : null,
                                     ];
                                 }
                                 $subjectClass = class_basename($log->subject_type ?? '');

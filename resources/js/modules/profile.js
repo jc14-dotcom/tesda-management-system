@@ -228,6 +228,8 @@ export function registerProfileComponents(Alpine) {
             initialAddress = '',
             initialPositionRoles = [],
             initialQualificationTitle = '',
+            initialTrainerQualificationTitles = [],
+            initialAssessorQualificationTitles = [],
             initialRemarks = '',
             isAdmin = false,
         } = {}) => ({
@@ -243,6 +245,8 @@ export function registerProfileComponents(Alpine) {
                 : [],
             initialDateOfBirth,
             initialQualificationTitle,
+            initialTrainerQualificationTitles,
+            initialAssessorQualificationTitles,
             initialRemarks,
             isAdmin,
 
@@ -256,6 +260,12 @@ export function registerProfileComponents(Alpine) {
             address: initialAddress,
             positionRoles: Array.isArray(initialPositionRoles) ? initialPositionRoles : [],
             qualificationTitle: initialQualificationTitle,
+            trainerQualificationTitles: (Array.isArray(initialTrainerQualificationTitles) && initialTrainerQualificationTitles.length)
+                ? initialTrainerQualificationTitles
+                : [''],
+            assessorQualificationTitles: (Array.isArray(initialAssessorQualificationTitles) && initialAssessorQualificationTitles.length)
+                ? initialAssessorQualificationTitles
+                : [''],
             remarks: initialRemarks,
 
             errors: {
@@ -269,7 +279,9 @@ export function registerProfileComponents(Alpine) {
                 positionRoles: '',
                 address: '',
                 qualificationTitle: '',
-                remarks: '',
+                trainerQualificationTitles: '',
+                assessorQualificationTitles: '',
+                remarks: ''
             },
             touched: {
                 firstName: false,
@@ -282,6 +294,8 @@ export function registerProfileComponents(Alpine) {
                 positionRoles: false,
                 address: false,
                 qualificationTitle: false,
+                trainerQualificationTitles: false,
+                assessorQualificationTitles: false,
                 remarks: false,
             },
             submitted: false,
@@ -304,6 +318,12 @@ export function registerProfileComponents(Alpine) {
                     : [];
                 this.address = normalizeTrim(this.address);
                 this.qualificationTitle = normalizeTrim(this.qualificationTitle);
+                this.trainerQualificationTitles = Array.isArray(this.trainerQualificationTitles)
+                    ? this.trainerQualificationTitles.map((t) => normalizeTrim(t))
+                    : [''];
+                this.assessorQualificationTitles = Array.isArray(this.assessorQualificationTitles)
+                    ? this.assessorQualificationTitles.map((t) => normalizeTrim(t))
+                    : [''];
                 this.remarks = normalizeTrim(this.remarks);
                 this.updateValidation();
             },
@@ -334,6 +354,10 @@ export function registerProfileComponents(Alpine) {
                     (this.dateOfBirth ?? '') !== (this.initialDateOfBirth ?? '') ||
                     normalizeTrim(this.qualificationTitle) !==
                         normalizeTrim(this.initialQualificationTitle) ||
+                    JSON.stringify(this.trainerQualificationTitles.filter((t) => normalizeTrim(t) !== '').map((t) => normalizeTrim(t))) !==
+                        JSON.stringify((Array.isArray(this.initialTrainerQualificationTitles) ? this.initialTrainerQualificationTitles : []).filter((t) => normalizeTrim(t) !== '').map((t) => normalizeTrim(t))) ||
+                    JSON.stringify(this.assessorQualificationTitles.filter((t) => normalizeTrim(t) !== '').map((t) => normalizeTrim(t))) !==
+                        JSON.stringify((Array.isArray(this.initialAssessorQualificationTitles) ? this.initialAssessorQualificationTitles : []).filter((t) => normalizeTrim(t) !== '').map((t) => normalizeTrim(t))) ||
                     normalizeTrim(this.remarks) !== normalizeTrim(this.initialRemarks)
                 );
             },
@@ -399,12 +423,22 @@ export function registerProfileComponents(Alpine) {
                 );
                 this.errors.gender = this.validateRequiredValue(this.gender, 'Sex');
                 this.errors.contactNumber = this.validateContactNumber();
-                this.errors.address = this.validateRequiredValue(this.address, 'Address', 500);
+                this.errors.address = this.validateMaxLength(this.address, 500);
                 this.errors.positionRoles = this.isAdmin ? '' : this.validatePositionRoles();
                 this.errors.qualificationTitle = this.validateMaxLength(
                     this.qualificationTitle,
                     255,
                 );
+                this.errors.trainerQualificationTitles = this.trainerQualificationTitles.some(
+                    (t) => normalizeTrim(t).length > 255,
+                )
+                    ? 'Each title must be 255 characters or less.'
+                    : '';
+                this.errors.assessorQualificationTitles = this.assessorQualificationTitles.some(
+                    (t) => normalizeTrim(t).length > 255,
+                )
+                    ? 'Each title must be 255 characters or less.'
+                    : '';
                 this.errors.remarks = this.validateMaxLength(this.remarks, 1000);
             },
 
@@ -414,6 +448,23 @@ export function registerProfileComponents(Alpine) {
 
             showError(field) {
                 return Boolean(this.errors[field]) && (this.touched[field] || this.submitted);
+            },
+
+            addTrainerTitle() {
+                this.trainerQualificationTitles.push('');
+            },
+            removeTrainerTitle(index) {
+                if (this.trainerQualificationTitles.length > 1) {
+                    this.trainerQualificationTitles.splice(index, 1);
+                }
+            },
+            addAssessorTitle() {
+                this.assessorQualificationTitles.push('');
+            },
+            removeAssessorTitle(index) {
+                if (this.assessorQualificationTitles.length > 1) {
+                    this.assessorQualificationTitles.splice(index, 1);
+                }
             },
 
             async submitForm(event) {
@@ -460,6 +511,8 @@ export function registerProfileComponents(Alpine) {
                         this.initialPositionRoles = [...this.positionRoles];
                         this.initialDateOfBirth = this.dateOfBirth;
                         this.initialQualificationTitle = this.qualificationTitle;
+                        this.initialTrainerQualificationTitles = [...this.trainerQualificationTitles];
+                        this.initialAssessorQualificationTitles = [...this.assessorQualificationTitles];
                         this.initialRemarks = this.remarks;
                     } else if (res.status === 422) {
                         const payload = await res.json().catch(() => ({}));

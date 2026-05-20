@@ -14,6 +14,7 @@
     $adminCertificates = $routeOrUrl('admin.certificates.index', '/admin/certificates');
     $adminDocuments = $routeOrUrl('admin.documents.index', '/admin/documents');
     $adminNotifications = $routeOrUrl('admin.notifications.index', '/admin/notifications');
+    $adminAnnouncements = $routeOrUrl('admin.announcements.index', '/admin/announcements');
     $adminActivity = $routeOrUrl('admin.activity.index', '/admin/activity');
     $adminBackups = $routeOrUrl('admin.backups.index', '/admin/backups');
     $adminSettings = $routeOrUrl('admin.settings.index', '/admin/settings');
@@ -23,6 +24,7 @@
     $onCertificates = request()->routeIs('admin.certificates.*') || request()->is('admin/certificates*');
     $onDocuments = request()->routeIs('admin.documents.*') || request()->is('admin/documents*');
     $onNotifications = request()->routeIs('admin.notifications.*') || request()->is('admin/notifications*');
+    $onAnnouncements = request()->routeIs('admin.announcements.*') || request()->is('admin/announcements*');
     $onActivity = request()->routeIs('admin.activity.*') || request()->is('admin/activity*');
     $onBackups = request()->routeIs('admin.backups.*') || request()->is('admin/backups*');
     $onSettings = request()->routeIs('admin.settings.*') || request()->is('admin/settings*');
@@ -108,6 +110,22 @@
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 1 0-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 1 1-6 0h6Z" />
             </svg>
             <span class="sidebar-label ms-3 whitespace-nowrap">Notifications</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="{{ $adminAnnouncements }}" @class([
+            'flex items-center px-2 py-1.5 rounded-lg transition duration-250 group',
+            'bg-primary-hover border-l-4 border-accent text-white' => $onAnnouncements,
+            'text-white/80 hover:bg-primary-hover hover:text-white' => ! $onAnnouncements,
+        ])>
+            <svg class="w-5 h-5 transition duration-75 group-hover:text-accent" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" @class([
+                'text-accent' => $onAnnouncements,
+                'text-white/70' => ! $onAnnouncements,
+            ])>
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 0 1-3.417.592l-2.147-6.15M18 13a3 3 0 1 0 0-6M5.436 13.683A4.001 4.001 0 0 1 7 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 0 1-1.564-.317Z" />
+            </svg>
+            <span class="sidebar-label ms-3 whitespace-nowrap">Announcements</span>
         </a>
     </li>
 

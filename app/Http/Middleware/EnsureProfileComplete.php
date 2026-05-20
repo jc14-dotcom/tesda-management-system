@@ -36,7 +36,6 @@ class EnsureProfileComplete
             filled($profile->date_of_birth) &&
             filled($profile->gender) &&
             filled($profile->contact_number) &&
-            filled($profile->address) &&
             ! empty($profile->position_roles);
     }
 }

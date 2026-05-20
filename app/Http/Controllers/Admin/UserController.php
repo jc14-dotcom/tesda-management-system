@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Notifications\AccountApprovedNotification;
 use App\Notifications\Admin\UserStatusChangedNotification;
 use App\Support\CacheBuster;
+use App\Support\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -53,7 +54,7 @@ class UserController extends Controller
 
         $user->profile->update(['status' => 'active']);
 
-        $user->notify(new AccountApprovedNotification());
+        NotificationHelper::sendNowOrQueue($user, new AccountApprovedNotification());
 
         activity()
             ->causedBy($request->user())

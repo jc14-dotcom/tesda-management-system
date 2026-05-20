@@ -264,9 +264,9 @@
                 </div>
             </template>
 
-            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" x-ref="list" x-show="items.length > 0">
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" x-ref="list" x-show="items.length > 0">
                 <template x-for="doc in items" :key="doc.id">
-                    <div class="group flex flex-col rounded-2xl border border-grayTheme-border bg-white shadow-sm transition hover:shadow-md">
+                    <div class="group flex flex-col overflow-hidden rounded-2xl border border-grayTheme-border bg-white shadow-sm transition hover:shadow-md">
                         {{-- Card top: click to open preview --}}
                         <button
                             type="button"

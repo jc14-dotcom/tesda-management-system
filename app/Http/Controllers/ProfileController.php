@@ -62,14 +62,20 @@ class ProfileController extends Controller
                 ->select(['id', 'certificate_name', 'certificate_type', 'expiration_date', 'status'])
                 ->whereNotNull('expiration_date')
                 ->where('expiration_date', '>=', $now)
+                ->where('expiration_date', '<=', now()->addDays(90)->toDateString())
                 ->orderBy('expiration_date')
                 ->limit(5)
                 ->get()
                 ->map(fn($c) => [
-                    'name' => $c->certificate_name,
-                    'type' => $c->certificate_type_label,
-                    'date' => $c->expiration_date->format('Y-m-d'),
-                    'status' => ucfirst($c->status),
+                    'name'         => $c->certificate_name,
+                    'type'         => $c->certificate_type_label,
+                    'date'         => $c->expiration_date->format('Y-m-d'),
+                    'status'       => ucfirst($c->status),
+                    'status_class' => match($c->status) {
+                        'expiring' => 'bg-warning-soft text-warning',
+                        'expired'  => 'bg-danger-soft text-danger',
+                        default    => 'bg-success-soft text-success',
+                    },
                 ])->all();
 
             $recentUploads = $user->documents()

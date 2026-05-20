@@ -25,28 +25,67 @@
     </div>
 
     {{-- Add Certificate Form --}}
-    <form method="post" action="{{ route('certificates.store') }}" enctype="multipart/form-data" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('certificates.store') }}" enctype="multipart/form-data" class="mt-6 space-y-6"
+          x-data="{ certType: '{{ old('certificate_type', 'nc_i') }}' }">
         @csrf
 
         <div class="grid gap-4 md:grid-cols-2">
             <div>
+                @php
+                    $trainerTitles = array_values(array_filter((array) ($profile?->trainer_qualification_titles ?? [])));
+                    $assessorTitles = array_values(array_filter((array) ($profile?->assessor_qualification_titles ?? [])));
+                    $hasTitles = !empty($trainerTitles) || !empty($assessorTitles);
+                    $initIsOther = old('certificate_type', 'nc_i') === 'other';
+                @endphp
                 <x-input-label for="qualification_title" :value="__('Program / Qualification Title')" :required="true" />
-                <x-text-input id="qualification_title" name="qualification_title" type="text" class="mt-1 block w-full" :value="old('qualification_title')" required />
-                <p class="mt-1 text-xs text-grayTheme-medium">Example: Bookkeeping, Cookery, Food and Beverage Services</p>
+                @if ($hasTitles)
+                    <select id="qualification_title" name="qualification_title" class="mt-1 form-input w-full"
+                            x-show="certType !== 'other'" :disabled="certType === 'other'" :required="certType !== 'other'"
+                            style="{{ $initIsOther ? 'display:none' : '' }}">
+                        <option value="">Select a qualification title</option>
+                        @if (!empty($trainerTitles))
+                            <optgroup label="Trainer">
+                                @foreach ($trainerTitles as $title)
+                                    <option value="{{ $title }}" @selected(old('qualification_title') === $title)>{{ $title }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endif
+                        @if (!empty($assessorTitles))
+                            <optgroup label="Assessor">
+                                @foreach ($assessorTitles as $title)
+                                    <option value="{{ $title }}" @selected(old('qualification_title') === $title)>{{ $title }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endif
+                    </select>
+                    <input type="text" name="qualification_title" class="mt-1 form-input w-full"
+                           value="{{ old('qualification_title') }}"
+                           placeholder="e.g. First Aid Certificate, Driver's License"
+                           x-show="certType === 'other'" :disabled="certType !== 'other'" :required="certType === 'other'"
+                           style="{{ $initIsOther ? '' : 'display:none' }}">
+                    <p class="mt-1 text-xs text-grayTheme-medium"
+                       x-show="certType !== 'other'" style="{{ $initIsOther ? 'display:none' : '' }}">Titles are pulled from your <a href="{{ route('account.profile') }}#update-profile-details" class="font-medium text-primary hover:underline">profile settings</a>.</p>
+                    <p class="mt-1 text-xs text-grayTheme-medium"
+                       x-show="certType === 'other'" style="{{ $initIsOther ? '' : 'display:none' }}">Enter the name of the credential or qualification.</p>
+                @else
+                    <input type="text" id="qualification_title" name="qualification_title" class="mt-1 form-input w-full"
+                           value="{{ old('qualification_title') }}" required
+                           placeholder="e.g. First Aid Certificate, Bookkeeping">
+                    <p class="mt-1 text-xs text-grayTheme-medium">No qualification titles in your profile. <a href="{{ route('account.profile') }}#update-profile-details" class="font-medium text-primary hover:underline">Add them here</a> or type manually.</p>
+                @endif
                 <x-input-error class="mt-2" :messages="$errors->get('qualification_title')" />
             </div>
 
             <div>
-                <x-input-label for="certificate_type" :value="__('TESDA Classification / Level')" :required="true" />
-                <select id="certificate_type" name="certificate_type" class="mt-1 form-input" required>
-                    <option value="nc_i" @selected(old('certificate_type') === 'nc_i')>NC I</option>
-                    <option value="nc_ii" @selected(old('certificate_type') === 'nc_ii')>NC II</option>
-                    <option value="nc_iii" @selected(old('certificate_type') === 'nc_iii')>NC III</option>
-                    <option value="nc_iv" @selected(old('certificate_type') === 'nc_iv')>NC IV</option>
-                    <option value="nttc" @selected(old('certificate_type') === 'nttc')>NTTC</option>
-                    <option value="trainer" @selected(old('certificate_type') === 'trainer')>Trainer</option>
-                    <option value="assessor" @selected(old('certificate_type') === 'assessor')>Assessor</option>
-                    <option value="other" @selected(old('certificate_type') === 'other')>Other</option>
+                <x-input-label for="certificate_type" :value="__('Classification / Level')" :required="true" />
+                <select id="certificate_type" name="certificate_type" class="mt-1 form-input" x-model="certType" required>
+                    <option value="nc_i" @selected(old('certificate_type', 'nc_i') === 'nc_i')>NC I</option>
+                    <option value="nc_ii" @selected(old('certificate_type', 'nc_i') === 'nc_ii')>NC II</option>
+                    <option value="nc_iii" @selected(old('certificate_type', 'nc_i') === 'nc_iii')>NC III</option>
+                    <option value="nc_iv" @selected(old('certificate_type', 'nc_i') === 'nc_iv')>NC IV</option>
+                    <option value="nttc" @selected(old('certificate_type', 'nc_i') === 'nttc')>NTTC</option>
+                    <option value="assessor" @selected(old('certificate_type', 'nc_i') === 'assessor')>Assessor</option>
+                    <option value="other" @selected(old('certificate_type', 'nc_i') === 'other')>Other</option>
                 </select>
                 <p class="mt-1 text-xs text-grayTheme-medium">Use this for the TESDA level or credential classification, such as NC II or NTTC.</p>
                 <x-input-error class="mt-2" :messages="$errors->get('certificate_type')" />

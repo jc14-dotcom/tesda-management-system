@@ -16,9 +16,4 @@ class CertificatePolicy
     {
         return $user->hasRole('admin') || $user->id === $certificate->user_id;
     }
-
-    public function verify(User $user): bool
-    {
-        return $user->hasRole('admin');
-    }
 }

@@ -18,7 +18,8 @@ class Profile extends Model
                 'first_name', 'last_name', 'middle_name', 'suffix',
                 'date_of_birth', 'gender', 'contact_number', 'address',
                 'employment_status', 'position_title', 'region', 'branch',
-                'tesda_registry_number', 'qualification_title', 'status',
+                'tesda_registry_number', 'qualification_title',
+                'trainer_qualification_titles', 'assessor_qualification_titles', 'status',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
@@ -51,13 +52,17 @@ class Profile extends Model
         'branch',
         'tesda_registry_number',
         'qualification_title',
+        'trainer_qualification_titles',
+        'assessor_qualification_titles',
         'remarks',
     ];
 
     protected $casts = [
         'date_of_birth'  => 'date',
         'date_hired'     => 'date',
-        'position_roles' => 'array',
+        'position_roles'               => 'array',
+        'trainer_qualification_titles'  => 'array',
+        'assessor_qualification_titles' => 'array',
     ];
 
     public function user()

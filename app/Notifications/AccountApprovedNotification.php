@@ -2,11 +2,21 @@
 
 namespace App\Notifications;
 
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AccountApprovedNotification extends Notification
+class AccountApprovedNotification extends Notification implements ShouldQueue
 {
+    use Queueable;
+
+    /** Retry up to 3 times if the immediate send fails. */
+    public int $tries = 3;
+
+    /** Wait 2 min, then 5 min between retries. */
+    public array $backoff = [120, 300];
+
     public function via(object $notifiable): array
     {
         return ['mail'];

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityController as AdminActivityController;
+use App\Http\Controllers\Admin\AnnouncementController as AdminAnnouncementController;
 use App\Http\Controllers\Admin\BackupController as AdminBackupController;
 use App\Http\Controllers\Admin\CertificateController as AdminCertificateController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -89,9 +90,11 @@ Route::middleware(['auth', 'role:admin'])
         Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
         Route::get('/certificates', [AdminCertificateController::class, 'index'])->name('certificates.index');
         Route::get('/certificates/{certificate}', [AdminCertificateController::class, 'show'])->name('certificates.show');
-        Route::patch('/certificates/{certificate}/verify', [AdminCertificateController::class, 'verify'])->name('certificates.verify');
         Route::get('/documents', [AdminDocumentController::class, 'index'])->name('documents.index');
         Route::get('/documents/{document}', [AdminDocumentController::class, 'show'])->name('documents.show');
+        // Announcements
+        Route::get('/announcements', [AdminAnnouncementController::class, 'index'])->name('announcements.index');
+        Route::post('/announcements', [AdminAnnouncementController::class, 'store'])->middleware('throttle:10,1')->name('announcements.store');
         // Notifications
         Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
         Route::patch('/notifications/{id}/read', [AdminNotificationController::class, 'markRead'])->name('notifications.mark-read');

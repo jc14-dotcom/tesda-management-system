@@ -50,7 +50,7 @@
                                 <dd class="mt-1.5 font-mono text-base font-medium text-grayTheme-dark">{{ $certificate->certificate_number ?: '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium">TESDA Classification / Level</dt>
+                                <dt class="text-xs font-semibold uppercase tracking-widest text-grayTheme-medium">Classification / Level</dt>
                                 <dd class="mt-1.5 text-base font-medium text-grayTheme-dark">{{ $certificate->certificate_type_label }}</dd>
                             </div>
                             <div>
@@ -280,27 +280,70 @@
                     @endif
 
                     {{-- Form --}}
-                    <form action="{{ route('certificates.update', $certificate) }}" method="POST" enctype="multipart/form-data" class="space-y-4 px-6 py-5">
+                    <form action="{{ route('certificates.update', $certificate) }}" method="POST" enctype="multipart/form-data" class="space-y-4 px-6 py-5"
+                          x-data="{ certType: '{{ old('certificate_type', $certificate->certificate_type) }}' }">
                         @csrf
                         @method('PATCH')
 
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
+                                @php
+                                    $trainerTitles = array_values(array_filter((array) ($profile?->trainer_qualification_titles ?? [])));
+                                    $assessorTitles = array_values(array_filter((array) ($profile?->assessor_qualification_titles ?? [])));
+                                    $hasTitles = !empty($trainerTitles) || !empty($assessorTitles);
+                                    $currentTitle = old('qualification_title', $certificate->qualification_title);
+                                    $initIsOther = old('certificate_type', $certificate->certificate_type) === 'other';
+                                @endphp
                                 <x-input-label for="edit_qualification_title" :value="__('Program / Qualification Title')" :required="true" />
-                                <x-text-input
-                                    id="edit_qualification_title"
-                                    name="qualification_title"
-                                    type="text"
-                                    class="mt-1 block w-full"
-                                    :value="old('qualification_title', $certificate->qualification_title)"
-                                    required
-                                />
+                                @if ($hasTitles)
+                                    <select id="edit_qualification_title" name="qualification_title" class="mt-1 form-input w-full"
+                                            x-show="certType !== 'other'" :disabled="certType === 'other'" :required="certType !== 'other'"
+                                            style="{{ $initIsOther ? 'display:none' : '' }}">
+                                        <option value="">Select a qualification title</option>
+                                        @if (!empty($trainerTitles))
+                                            <optgroup label="Trainer">
+                                                @foreach ($trainerTitles as $title)
+                                                    <option value="{{ $title }}" @selected($currentTitle === $title)>{{ $title }}</option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endif
+                                        @if (!empty($assessorTitles))
+                                            <optgroup label="Assessor">
+                                                @foreach ($assessorTitles as $title)
+                                                    <option value="{{ $title }}" @selected($currentTitle === $title)>{{ $title }}</option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endif
+                                        {{-- Preserve existing title for non-Other types if not in profile --}}
+                                        @if (!$initIsOther && $currentTitle && !in_array($currentTitle, array_merge($trainerTitles, $assessorTitles)))
+                                            <optgroup label="Previously entered">
+                                                <option value="{{ $currentTitle }}" selected>{{ $currentTitle }}</option>
+                                            </optgroup>
+                                        @endif
+                                    </select>
+                                    <input type="text" name="qualification_title" class="mt-1 form-input w-full"
+                                           value="{{ $currentTitle }}"
+                                           placeholder="e.g. First Aid Certificate, Driver's License"
+                                           x-show="certType === 'other'" :disabled="certType !== 'other'" :required="certType === 'other'"
+                                           style="{{ $initIsOther ? '' : 'display:none' }}">
+                                    <p class="mt-1 text-xs text-grayTheme-medium"
+                                       x-show="certType !== 'other'" style="{{ $initIsOther ? 'display:none' : '' }}">Titles are pulled from your <a href="{{ route('account.profile') }}#update-profile-details" class="font-medium text-primary hover:underline">profile settings</a>.</p>
+                                    <p class="mt-1 text-xs text-grayTheme-medium"
+                                       x-show="certType === 'other'" style="{{ $initIsOther ? '' : 'display:none' }}">Enter the name of the credential or qualification.</p>
+                                @else
+                                    <input type="text"
+                                           id="edit_qualification_title"
+                                           name="qualification_title"
+                                           class="mt-1 form-input w-full"
+                                           value="{{ $currentTitle }}"
+                                           required>
+                                @endif
                                 <x-input-error class="mt-1" :messages="$errors->get('qualification_title')" />
                             </div>
 
                             <div>
-                                <x-input-label for="edit_certificate_type" :value="__('TESDA Classification / Level')" :required="true" />
-                                <select id="edit_certificate_type" name="certificate_type" class="mt-1 form-input" required>
+                                <x-input-label for="edit_certificate_type" :value="__('Classification / Level')" :required="true" />
+                                <select id="edit_certificate_type" name="certificate_type" class="mt-1 form-input" x-model="certType" required>
                                     @foreach (\App\Models\Certificate::TYPE_LABELS as $val => $label)
                                         <option value="{{ $val }}" @selected(old('certificate_type', $certificate->certificate_type) === $val)>{{ $label }}</option>
                                     @endforeach

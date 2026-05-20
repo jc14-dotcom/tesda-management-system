@@ -3,7 +3,7 @@
         <div class="page-container space-y-6">
             <x-page-header
                 title="{{ $certificate->certificate_name }}"
-                subtitle="Certificate details, attached documents, and verification controls."
+                subtitle="Certificate details and attached documents."
                 eyebrow="Administration / Certificates"
             >
                 <x-slot:actions>
@@ -22,13 +22,13 @@
 
             {{-- Flash messages handled by toast notifications --}}
 
-            <div class="grid gap-6 md:grid-cols-3">
+            <div class="space-y-6">
 
-                {{-- Left column: details --}}
-                <div class="space-y-6 md:col-span-2">
+                {{-- Top row: Certificate Info (3/4) + sidebar (1/4) --}}
+                <div class="grid gap-6 md:grid-cols-4">
 
                     {{-- Certificate info --}}
-                    <div class="surface p-6">
+                    <div class="surface p-6 md:col-span-3">
                         <h3 class="mb-4 text-base font-semibold text-grayTheme-dark">Certificate Information</h3>
                         <dl class="grid gap-4 md:grid-cols-2">
                             <div>
@@ -88,9 +88,52 @@
                         </dl>
                     </div>
 
-                    {{-- Documents / attachments --}}
-                    <div class="surface p-6">
-                        <h3 class="mb-4 text-base font-semibold text-grayTheme-dark">Attached Documents</h3>
+                    {{-- Right sidebar: owner + actions --}}
+                    <div class="space-y-6">
+
+                        {{-- Certificate owner --}}
+                        <div class="surface p-6">
+                            <h3 class="mb-4 text-base font-semibold text-grayTheme-dark">Certificate Owner</h3>
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+                                    {{ strtoupper(substr($certificate->user->name ?? '?', 0, 1)) }}
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-grayTheme-dark">{{ $certificate->user->name ?? '—' }}</div>
+                                    <div class="text-xs text-grayTheme-medium">{{ $certificate->user->email ?? '' }}</div>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <a href="{{ route('admin.users.show', $certificate->user) }}"
+                                   class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary-soft px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary hover:text-white">
+                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                    View User Profile
+                                </a>
+                            </div>
+                        </div>
+
+                        {{-- Actions --}}
+                        <div class="surface p-6">
+                            <h3 class="mb-4 text-base font-semibold text-grayTheme-dark">Actions</h3>
+                            <div class="flex flex-col gap-2">
+                                <button type="button" onclick="window.print()"
+                                    class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary-soft px-3 py-2 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                                    </svg>
+                                    Print Details
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                {{-- Attached Documents — full width --}}
+                <div class="surface p-6">
+                    <h3 class="mb-4 text-base font-semibold text-grayTheme-dark">Attached Documents</h3>
                         @if ($certificate->documents->isEmpty())
                             <p class="text-sm text-grayTheme-medium">No documents attached to this certificate.</p>
                         @else
@@ -175,126 +218,7 @@
                         @endif
                     </div>
 
-                </div>
-
-                {{-- Right column: owner + verification --}}
-                <div class="space-y-6">
-
-                    {{-- Certificate owner --}}
-                    <div class="surface p-6">
-                        <h3 class="mb-4 text-base font-semibold text-grayTheme-dark">Certificate Owner</h3>
-                        <div class="flex items-center gap-3">
-                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
-                                {{ strtoupper(substr($certificate->user->name ?? '?', 0, 1)) }}
-                            </div>
-                            <div>
-                                <div class="font-semibold text-grayTheme-dark">{{ $certificate->user->name ?? '—' }}</div>
-                                <div class="text-xs text-grayTheme-medium">{{ $certificate->user->email ?? '' }}</div>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <a href="{{ route('admin.users.show', $certificate->user) }}"
-                               class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary-soft px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary hover:text-white">
-                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
-                                View User Profile
-                            </a>
-                        </div>
-                    </div>
-
-                    {{-- Verification status --}}
-                    <div class="surface p-6">
-                        <h3 class="mb-4 text-base font-semibold text-grayTheme-dark">Verification</h3>
-                        @php
-                            $vStatus = $certificate->verification_status ?? 'pending';
-                            $verifyTone = match ($vStatus) {
-                                'verified' => 'bg-success-soft text-success',
-                                'rejected' => 'bg-danger-soft text-danger',
-                                default    => 'bg-warning-soft text-warning',
-                            };
-                        @endphp
-                        <div class="mb-4 flex items-center gap-2">
-                            <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold {{ $verifyTone }}">
-                                @if ($vStatus === 'verified')
-                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                @elseif ($vStatus === 'rejected')
-                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                                @else
-                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                @endif
-                                {{ ucfirst($vStatus) }}
-                            </span>
-                        </div>
-
-                        @if ($certificate->verifier)
-                            <div class="mb-4 text-xs text-grayTheme-medium">
-                                {{ $vStatus === 'verified' ? 'Verified' : 'Reviewed' }} by
-                                <span class="font-semibold text-grayTheme-dark">{{ $certificate->verifier->name }}</span>
-                                @if ($certificate->verified_at)
-                                    on {{ $certificate->verified_at->format('M d, Y') }}
-                                @endif
-                            </div>
-                        @endif
-
-                        <div class="flex flex-col gap-2">
-                            @if ($vStatus !== 'verified')
-                                <form method="POST" action="{{ route('admin.certificates.verify', $certificate) }}">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="action" value="verify">
-                                    <button type="submit"
-                                        class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-success px-3 py-2 text-sm font-semibold text-white transition hover:bg-success-hover focus:outline-none">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                        Mark as Verified
-                                    </button>
-                                </form>
-                            @endif
-                            @if ($vStatus !== 'rejected')
-                                <form method="POST" action="{{ route('admin.certificates.verify', $certificate) }}">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="action" value="reject">
-                                    <button type="submit"
-                                        class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-danger px-3 py-2 text-sm font-semibold text-white transition hover:bg-danger-hover focus:outline-none">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        Reject Certificate
-                                    </button>
-                                </form>
-                            @endif
-                            @if ($vStatus !== 'pending')
-                                <form method="POST" action="{{ route('admin.certificates.verify', $certificate) }}">
-                                    @csrf @method('PATCH')
-                                    <input type="hidden" name="action" value="reset">
-                                    <button type="submit"
-                                        class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-grayTheme-hover px-3 py-2 text-sm font-semibold text-grayTheme-dark transition hover:bg-grayTheme-border focus:outline-none">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                        Reset to Pending
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    </div>
-
-                    {{-- Print / actions --}}
-                    <div class="surface p-6">
-                        <h3 class="mb-4 text-base font-semibold text-grayTheme-dark">Actions</h3>
-                        <div class="flex flex-col gap-2">
-                            <button type="button" onclick="window.print()"
-                                class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary-soft px-3 py-2 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white">
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                                </svg>
-                                Print Details
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
             </div>
         </div>
     </div>
-
-    {{-- Bridge session flash messages to toast notifications --}}
-    @if (session('status') === 'cert-updated')
-    <script data-turbo-eval="true">window.dispatchEvent(new CustomEvent('show-toast',{detail:{type:'success',title:'Certificate Updated',message:'Verification status has been updated.'}}));</script>
-    @endif
 </x-app-layout>

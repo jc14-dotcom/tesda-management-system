@@ -152,8 +152,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('admin.users.update', $user) }}" class="mt-6 grid gap-5 md:grid-cols-2"
-                    x-data="{
+                <div x-data="{
                         submitting: false,
                         dirty: false,
                         orig: {
@@ -164,9 +163,11 @@
                         },
                         check(field, val) { this.dirty = Object.keys(this.orig).some(k => document.getElementById('mgmt_' + k)?.value !== this.orig[k]); }
                     }"
-                    @submit="submitting = true"
                     @input="dirty = ['mgmt_name','mgmt_email','mgmt_role','mgmt_status'].some(id => { const el = document.getElementById(id); return el && el.value !== orig[id === 'mgmt_name' ? 'name' : id === 'mgmt_email' ? 'email' : id === 'mgmt_role' ? 'role' : 'status']; })"
                     @change="$el.dispatchEvent(new Event('input'))"
+                >
+                <form id="mgmt-update" method="POST" action="{{ route('admin.users.update', $user) }}" class="mt-6 grid gap-5 md:grid-cols-2"
+                    @submit="submitting = true"
                 >
                     @csrf
                     @method('PATCH')
@@ -221,7 +222,10 @@
                         </div>
                     </div>
 
-                    <div class="mt-2 flex items-center justify-end gap-4 border-t border-grayTheme-border pt-5 md:col-span-2">
+                </form>
+
+                {{-- Footer buttons — outside the update form to prevent nesting --}}
+                <div class="mt-2 flex items-center justify-end gap-4 border-t border-grayTheme-border pt-5">
                         @if(($user->profile?->status) === 'pending')
                             <form method="POST" action="{{ route('admin.users.approve', $user) }}" class="mr-auto">
                                 @csrf
@@ -232,12 +236,12 @@
                                 </button>
                             </form>
                         @endif
-                        <button type="submit" class="btn-primary gap-2" x-bind:disabled="submitting || !dirty">
+                        <button type="submit" form="mgmt-update" class="btn-primary gap-2" x-bind:disabled="submitting || !dirty">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                             Save Changes
                         </button>
-                    </div>
-                </form>
+                </div>
+                </div>{{-- end x-data wrapper --}}
 
                 {{-- Danger Zone --}}
                 @if(auth()->id() !== $user->id)
@@ -336,18 +340,25 @@
                         </div>
                     </div>
 
-                    {{-- Employment Details subsection (hidden for admin users) --}}
+                    {{-- TESDA Role & Qualification Details subsection (hidden for admin users) --}}
                     @unless($user->hasRole('admin'))
                     <div class="mt-6 space-y-4">
                         <div class="flex items-center gap-2 border-b border-grayTheme-border pb-3">
                             <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
                                 <svg class="h-4 w-4 text-accent-active" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                             </div>
-                            <h4 class="text-sm font-bold text-grayTheme-dark">Employment Details</h4>
+                            <h4 class="text-sm font-bold text-grayTheme-dark">TESDA Role &amp; Qualification Details</h4>
                         </div>
 
+                        @php
+                            $positionRoles = $user->profile->position_roles ?? [];
+                            $trainerTitles = array_values(array_filter($user->profile->trainer_qualification_titles ?? []));
+                            $assessorTitles = array_values(array_filter($user->profile->assessor_qualification_titles ?? []));
+                        @endphp
+
                         <div class="grid gap-3 sm:grid-cols-2">
-                            <div class="flex items-start gap-3 rounded-xl border border-grayTheme-border bg-grayTheme-light/50 px-4 py-3">
+                            {{-- Position / Job Role --}}
+                            <div class="flex items-start gap-3 rounded-xl border border-grayTheme-border bg-grayTheme-light/50 px-4 py-3 sm:col-span-2">
                                 <span class="mt-0.5 shrink-0 text-grayTheme-medium"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></span>
                                 <div>
                                     <div class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">Position / Job Role</div>
@@ -355,30 +366,45 @@
                                 </div>
                             </div>
 
+                            {{-- Trainer Qualification Title(s) --}}
+                            @if(in_array('trainer', $positionRoles))
                             <div class="flex items-start gap-3 rounded-xl border border-grayTheme-border bg-grayTheme-light/50 px-4 py-3">
                                 <span class="mt-0.5 shrink-0 text-grayTheme-medium"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg></span>
-                                <div>
-                                    <div class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">Qualification Title</div>
-                                    <div class="mt-0.5 font-medium text-grayTheme-dark">{{ $user->profile->qualification_title ?? '—' }}</div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">Trainer Qualification Title(s)</div>
+                                    @if(count($trainerTitles))
+                                        <ul class="mt-1 space-y-0.5">
+                                            @foreach($trainerTitles as $title)
+                                                <li class="font-medium text-grayTheme-dark">{{ $title }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <div class="mt-0.5 font-medium text-grayTheme-dark">—</div>
+                                    @endif
                                 </div>
                             </div>
+                            @endif
 
+                            {{-- Assessor Qualification Title(s) --}}
+                            @if(in_array('assessor', $positionRoles))
                             <div class="flex items-start gap-3 rounded-xl border border-grayTheme-border bg-grayTheme-light/50 px-4 py-3">
-                                <span class="mt-0.5 shrink-0 text-grayTheme-medium"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg></span>
-                                <div>
-                                    <div class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">Municipality / City</div>
-                                    <div class="mt-0.5 font-medium text-grayTheme-dark">{{ $user->profile->region ?? '—' }}</div>
+                                <span class="mt-0.5 shrink-0 text-grayTheme-medium"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg></span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">Assessor Qualification Title(s)</div>
+                                    @if(count($assessorTitles))
+                                        <ul class="mt-1 space-y-0.5">
+                                            @foreach($assessorTitles as $title)
+                                                <li class="font-medium text-grayTheme-dark">{{ $title }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <div class="mt-0.5 font-medium text-grayTheme-dark">—</div>
+                                    @endif
                                 </div>
                             </div>
+                            @endif
 
-                            <div class="flex items-start gap-3 rounded-xl border border-grayTheme-border bg-grayTheme-light/50 px-4 py-3">
-                                <span class="mt-0.5 shrink-0 text-grayTheme-medium"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg></span>
-                                <div>
-                                    <div class="text-xs font-semibold uppercase tracking-wide text-grayTheme-medium">TESDA Registry Number</div>
-                                    <div class="mt-0.5 font-mono font-medium text-grayTheme-dark">{{ $user->profile->tesda_registry_number ?? '—' }}</div>
-                                </div>
-                            </div>
-
+                            {{-- Remarks --}}
                             @if ($user->profile->remarks)
                             <div class="flex items-start gap-3 rounded-xl border border-grayTheme-border bg-grayTheme-light/50 px-4 py-3 sm:col-span-2">
                                 <span class="mt-0.5 shrink-0 text-grayTheme-medium"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></span>
@@ -401,6 +427,7 @@
                 @endif
             </div>
 
+            @unless($user->hasRole('admin'))
             <div id="certificates-section" class="surface p-6">
                 <h3 class="text-lg font-semibold text-grayTheme-dark">Certificates</h3>
                 <form method="get" class="mt-4 flex flex-wrap items-end gap-3 text-sm">
@@ -440,7 +467,6 @@
                         'number'             => $cert->certificate_number ?? '—',
                         'expirationDate'     => $cert->expiration_date?->format('Y-m-d') ?? '—',
                         'status'             => ucfirst($cert->status),
-                        'verificationStatus' => ucfirst($cert->verification_status ?? 'pending'),
                         'documents'          => $cert->documents->map(fn($d) => [
                             'name'        => $d->document_name ?? $d->original_name,
                             'downloadUrl' => route('documents.download', $d),
@@ -457,7 +483,6 @@
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-white">Number</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-white">Expires</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-white">Status</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-white">Verified</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-white">Documents</th>
                                 </tr>
                             </thead>
@@ -491,17 +516,6 @@
                                                     'bg-warning-soft text-warning': cert.status === 'Expiring',
                                                     'bg-danger-soft text-danger':   cert.status === 'Expired',
                                                     'bg-grayTheme-hover text-grayTheme-medium': !['Valid','Expiring','Expired'].includes(cert.status),
-                                                }"
-                                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                                            ></span>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <span
-                                                x-text="cert.verificationStatus"
-                                                :class="{
-                                                    'bg-success-soft text-success': cert.verificationStatus === 'Verified',
-                                                    'bg-danger-soft text-danger':   cert.verificationStatus === 'Rejected',
-                                                    'bg-warning-soft text-warning': cert.verificationStatus === 'Pending',
                                                 }"
                                                 class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
                                             ></span>
@@ -636,6 +650,8 @@
                     </div>
                 </div>
             </div>
+            @endunless
+
         </div>
 
         {{-- Confirmation Modal --}}

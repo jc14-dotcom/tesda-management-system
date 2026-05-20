@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Profile;
 use App\Support\CacheBuster;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ProfileDetailsController extends Controller
 {
@@ -19,17 +21,18 @@ class ProfileDetailsController extends Controller
             'date_of_birth' => ['required', 'date'],
             'gender' => ['required', 'string', Rule::in(['male', 'female'])],
             'contact_number' => ['required', 'digits:11', 'regex:/^09\d{9}$/'],
-            'address' => ['required', 'string', 'max:500'],
+            'address' => ['nullable', 'string', 'max:500'],
             'company_id' => ['nullable', 'string', 'max:255'],
             'position_roles' => ['nullable', 'array'],
             'position_roles.*' => ['string', Rule::in(['trainer', 'assessor'])],
             'employment_status' => ['nullable', 'string', Rule::in(['regular', 'probationary', 'contractual', 'part-time', 'internship', 'self-employed', 'unemployed'])],
             'date_hired' => ['nullable', 'date'],
             'tesda_registry_number' => ['nullable', 'string', 'max:255'],
-            'qualification_title' => ['nullable', 'string', 'max:255'],
-            'region' => ['nullable', 'string', 'max:100'],
+            'trainer_qualification_titles'   => ['nullable', 'array', 'max:20'],
+            'trainer_qualification_titles.*'  => ['nullable', 'string', 'max:255'],
+            'assessor_qualification_titles'   => ['nullable', 'array', 'max:20'],
+            'assessor_qualification_titles.*' => ['nullable', 'string', 'max:255'],
             'branch' => ['nullable', 'string', 'max:100'],
-            'remarks' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $normalizeName = static function (?string $value): ?string {
@@ -60,6 +63,35 @@ class ProfileDetailsController extends Controller
 
         if (!empty($data['contact_number'])) {
             $data['contact_number'] = preg_replace('/\D+/', '', $data['contact_number']);
+        }
+
+        // Reject if another account already shares the same full name + date of birth
+        $duplicate = Profile::query()
+            ->whereRaw('LOWER(TRIM(first_name))  = ?', [strtolower(trim($data['first_name']))])
+            ->whereRaw('LOWER(TRIM(middle_name)) = ?', [strtolower(trim($data['middle_name']))])
+            ->whereRaw('LOWER(TRIM(last_name))   = ?', [strtolower(trim($data['last_name']))])
+            ->where('date_of_birth', $data['date_of_birth'])
+            ->where('user_id', '!=', $request->user()->id)
+            ->exists();
+
+        if ($duplicate) {
+            throw ValidationException::withMessages([
+                'first_name' => 'An account with this full name and date of birth already exists. '
+                    . 'If this is your account, please contact the administrator to recover or reset your password.',
+            ]);
+        }
+
+        // Only set position_title when roles were submitted — otherwise leave existing value intact
+        foreach (['trainer_qualification_titles', 'assessor_qualification_titles'] as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = array_values(array_filter(
+                    $data[$field],
+                    static fn ($v) => trim($v ?? '') !== ''
+                ));
+                if (empty($data[$field])) {
+                    $data[$field] = null;
+                }
+            }
         }
 
         // Only set position_title when roles were submitted — otherwise leave existing value intact

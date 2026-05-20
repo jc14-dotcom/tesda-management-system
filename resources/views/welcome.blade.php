@@ -41,10 +41,8 @@
                         </span>
 
                         <h1 class="mt-6 text-4xl font-black leading-tight tracking-tight text-grayTheme-dark sm:text-5xl">
-                            Manage Certificates,
-                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-hover">Documents</span>
-                            &amp; Profiles —
-                            <span class="text-accent">All in One Place.</span>
+                            ALCATT registration
+                            <span class="text-accent">eSystem</span>
                         </h1>
 
                         <p class="mt-5 max-w-lg text-lg leading-8 text-grayTheme-medium">

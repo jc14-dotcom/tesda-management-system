@@ -7,8 +7,8 @@
         <title>Alcatt Portal — Complete Your Profile</title>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="bg-grayTheme-light text-grayTheme-dark antialiased">
-        <main class="flex min-h-screen">
+    <body class="h-dvh overflow-hidden bg-grayTheme-light text-grayTheme-dark antialiased">
+        <main class="flex h-dvh overflow-hidden">
 
             {{-- Left: Brand Panel --}}
             <div class="relative hidden overflow-hidden lg:flex lg:w-[36%] lg:flex-col bg-primary">
@@ -156,8 +156,8 @@
                             initialContactNumber: @json(old("contact_number", $profile?->contact_number)),
                             initialAddress: @json(old("address", $profile?->address)),
                             initialPositionRoles: @json($initialPositionRoles),
-                            initialQualificationTitle: @json(old("qualification_title", $profile?->qualification_title)),
-                            initialRemarks: null,
+                            initialTrainerQualificationTitles: @json(old('trainer_qualification_titles', $profile?->trainer_qualification_titles ?? [])),
+                            initialAssessorQualificationTitles: @json(old('assessor_qualification_titles', $profile?->assessor_qualification_titles ?? [])),
                             isAdmin: false
                         })'
                         @submit.prevent="submitted = true; updateValidation(); if (!hasErrors()) $el.submit()"
@@ -318,7 +318,7 @@
 
                             {{-- Address --}}
                             <div>
-                                <x-input-label for="pc_address" :value="__('Address')" :required="true" />
+                                <x-input-label for="pc_address" :value="__('Address')" />
                                 <div class="relative mt-1">
                                     <span class="pointer-events-none absolute left-3 top-2.5 text-grayTheme-medium">
                                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -326,7 +326,7 @@
                                     <textarea id="pc_address" name="address"
                                         class="form-input min-h-[7rem] pl-9 pt-2"
                                         x-bind:class="showError('address') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                                        rows="3" placeholder="Street, barangay, city, province" required
+                                        rows="3" placeholder="Street, barangay, city, province"
                                         x-model.trim="address"
                                         @input="touched.address = true; updateValidation()"
                                         @blur="touched.address = true; updateValidation()">{{ old('address', $profile?->address) }}</textarea>
@@ -337,13 +337,13 @@
                             </div>
                         </div>
 
-                        {{-- ── Employment Details ──────────────────────────────────── --}}
+                        {{-- ── TESDA Role & Qualification Details ───────────────────── --}}
                         <div class="space-y-4">
                             <div class="flex items-center gap-2 border-b border-grayTheme-border pb-3">
                                 <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
                                     <svg class="h-4 w-4 text-accent-active" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                                 </div>
-                                <h3 class="text-sm font-bold text-grayTheme-dark">Employment Details</h3>
+                                <h3 class="text-sm font-bold text-grayTheme-dark">TESDA Role &amp; Qualification Details</h3>
                             </div>
 
                             {{-- Position / Roles --}}
@@ -373,64 +373,88 @@
                             </div>
 
                             <div class="grid gap-6 md:grid-cols-2">
-                                {{-- Municipality / City --}}
-                                <div>
-                                    <x-input-label for="pc_region" :value="__('Municipality / City')" />
-                                    <div class="relative mt-1">
-                                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                        </span>
-                                        <select id="pc_region" name="region" class="form-input pl-9">
-                                            @php($selectedRegion = old('region', $profile?->region))
-                                            <option value="">Select municipality or city</option>
-                                            <option value="Alaminos" @selected($selectedRegion === 'Alaminos')>Alaminos</option>
-                                            <option value="Bay" @selected($selectedRegion === 'Bay')>Bay</option>
-                                            <option value="Biñan" @selected($selectedRegion === 'Biñan')>Biñan (City)</option>
-                                            <option value="Cabuyao" @selected($selectedRegion === 'Cabuyao')>Cabuyao (City)</option>
-                                            <option value="Calamba" @selected($selectedRegion === 'Calamba')>Calamba (City)</option>
-                                            <option value="Calauan" @selected($selectedRegion === 'Calauan')>Calauan</option>
-                                            <option value="Cavinti" @selected($selectedRegion === 'Cavinti')>Cavinti</option>
-                                            <option value="Famy" @selected($selectedRegion === 'Famy')>Famy</option>
-                                            <option value="Kalayaan" @selected($selectedRegion === 'Kalayaan')>Kalayaan</option>
-                                            <option value="Liliw" @selected($selectedRegion === 'Liliw')>Liliw</option>
-                                            <option value="Los Baños" @selected($selectedRegion === 'Los Baños')>Los Baños</option>
-                                            <option value="Luisiana" @selected($selectedRegion === 'Luisiana')>Luisiana</option>
-                                            <option value="Lumban" @selected($selectedRegion === 'Lumban')>Lumban</option>
-                                            <option value="Mabitac" @selected($selectedRegion === 'Mabitac')>Mabitac</option>
-                                            <option value="Magdalena" @selected($selectedRegion === 'Magdalena')>Magdalena</option>
-                                            <option value="Majayjay" @selected($selectedRegion === 'Majayjay')>Majayjay</option>
-                                            <option value="Nagcarlan" @selected($selectedRegion === 'Nagcarlan')>Nagcarlan</option>
-                                            <option value="Pakil" @selected($selectedRegion === 'Pakil')>Pakil</option>
-                                            <option value="Pagsanjan" @selected($selectedRegion === 'Pagsanjan')>Pagsanjan</option>
-                                            <option value="Pila" @selected($selectedRegion === 'Pila')>Pila</option>
-                                            <option value="Rizal" @selected($selectedRegion === 'Rizal')>Rizal</option>
-                                            <option value="San Pablo" @selected($selectedRegion === 'San Pablo')>San Pablo (City)</option>
-                                            <option value="San Pedro" @selected($selectedRegion === 'San Pedro')>San Pedro (City)</option>
-                                            <option value="Santa Cruz" @selected($selectedRegion === 'Santa Cruz')>Santa Cruz (Provincial Capital)</option>
-                                            <option value="Santa Maria" @selected($selectedRegion === 'Santa Maria')>Santa Maria</option>
-                                            <option value="Santa Rosa" @selected($selectedRegion === 'Santa Rosa')>Santa Rosa (City)</option>
-                                            <option value="Siniloan" @selected($selectedRegion === 'Siniloan')>Siniloan</option>
-                                            <option value="Victoria" @selected($selectedRegion === 'Victoria')>Victoria</option>
-                                        </select>
+                                {{-- Trainer Qualification Titles --}}
+                                <div x-show="positionRoles.includes('trainer')" x-transition.opacity.duration.200ms>
+                                    <x-input-label :value="__('Trainer Qualification Title(s)')" />
+                                    <p class="mt-0.5 text-xs text-grayTheme-medium">TESDA qualification title(s) as a trainer.</p>
+                                    <div class="mt-2 space-y-2">
+                                        <template x-for="(title, index) in trainerQualificationTitles" :key="'trainer-' + index">
+                                            <div class="flex items-center gap-2">
+                                                <div class="relative flex-1">
+                                                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>
+                                                    </span>
+                                                    <input
+                                                        type="text"
+                                                        :name="'trainer_qualification_titles[' + index + ']'"
+                                                        class="form-input block w-full pl-9"
+                                                        placeholder="e.g. Automotive Servicing NC II"
+                                                        maxlength="255"
+                                                        x-model.trim="trainerQualificationTitles[index]"
+                                                        @input="updateValidation()"
+                                                        @blur="touched.trainerQualificationTitles = true; updateValidation()"
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    @click="removeTrainerTitle(index)"
+                                                    x-show="index > 0"
+                                                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-red-200 text-red-500 transition hover:bg-red-50"
+                                                    title="Remove"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                </button>
+                                            </div>
+                                        </template>
                                     </div>
-                                    <x-input-error class="mt-2" :messages="$errors->get('region')" />
+                                    <button type="button" @click="addTrainerTitle()" class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary transition hover:text-primary/80">
+                                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                        Add another title
+                                    </button>
+                                    <p x-show="showError('trainerQualificationTitles')" class="mt-2 text-sm text-red-600" x-text="errors.trainerQualificationTitles"></p>
+                                    <x-input-error class="mt-2" :messages="$errors->get('trainer_qualification_titles')" />
                                 </div>
 
-                                {{-- Qualification Title --}}
-                                <div>
-                                    <x-input-label for="pc_qualification_title" :value="__('Qualification Title')" />
-                                    <div class="relative mt-1">
-                                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>
-                                        </span>
-                                        <x-text-input id="pc_qualification_title" name="qualification_title" type="text" class="block w-full pl-9"
-                                            :value="old('qualification_title', $profile?->qualification_title)"
-                                            placeholder="e.g. Automotive Servicing NC II" maxlength="255"
-                                            x-model.trim="qualificationTitle"
-                                            @input="updateValidation()"
-                                            @blur="touched.qualificationTitle = true; updateValidation()" />
+                                {{-- Assessor Qualification Titles --}}
+                                <div x-show="positionRoles.includes('assessor')" x-transition.opacity.duration.200ms>
+                                    <x-input-label :value="__('Assessor Qualification Title(s)')" />
+                                    <p class="mt-0.5 text-xs text-grayTheme-medium">TESDA qualification title(s) as an assessor.</p>
+                                    <div class="mt-2 space-y-2">
+                                        <template x-for="(title, index) in assessorQualificationTitles" :key="'assessor-' + index">
+                                            <div class="flex items-center gap-2">
+                                                <div class="relative flex-1">
+                                                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
+                                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>
+                                                    </span>
+                                                    <input
+                                                        type="text"
+                                                        :name="'assessor_qualification_titles[' + index + ']'"
+                                                        class="form-input block w-full pl-9"
+                                                        placeholder="e.g. Automotive Servicing NC II"
+                                                        maxlength="255"
+                                                        x-model.trim="assessorQualificationTitles[index]"
+                                                        @input="updateValidation()"
+                                                        @blur="touched.assessorQualificationTitles = true; updateValidation()"
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    @click="removeAssessorTitle(index)"
+                                                    x-show="index > 0"
+                                                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-red-200 text-red-500 transition hover:bg-red-50"
+                                                    title="Remove"
+                                                >
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                </button>
+                                            </div>
+                                        </template>
                                     </div>
-                                    <x-input-error class="mt-2" :messages="$errors->get('qualification_title')" />
+                                    <button type="button" @click="addAssessorTitle()" class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary transition hover:text-primary/80">
+                                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                        Add another title
+                                    </button>
+                                    <p x-show="showError('assessorQualificationTitles')" class="mt-2 text-sm text-red-600" x-text="errors.assessorQualificationTitles"></p>
+                                    <x-input-error class="mt-2" :messages="$errors->get('assessor_qualification_titles')" />
                                 </div>
                             </div>
                         </div>

@@ -4,12 +4,19 @@ namespace App\Notifications;
 
 use App\Models\Certificate;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class CertificateExpiryNotification extends Notification
+class CertificateExpiryNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+
+    /** Retry up to 5 times if SMTP is unreachable. */
+    public int $tries = 5;
+
+    /** Exponential backoff: 2m, 4m, 8m, 16m between retries. */
+    public array $backoff = [120, 240, 480, 960];
 
     public function __construct(
         protected Certificate $certificate,

@@ -35,10 +35,6 @@ class WeeklyDigestNotification extends Notification
             $label = $this->stats['expiring_certificates'] === 1 ? 'certificate expiring soon' : 'certificates expiring soon';
             $message->line('⚠️ **' . $this->stats['expiring_certificates'] . '** ' . $label);
         }
-        if ($this->stats['pending_verification'] > 0) {
-            $label = $this->stats['pending_verification'] === 1 ? 'certificate pending verification' : 'certificates pending verification';
-            $message->line('🔍 **' . $this->stats['pending_verification'] . '** ' . $label);
-        }
 
         return $message
             ->action('Go to Dashboard', route('admin.dashboard'))
@@ -56,9 +52,6 @@ class WeeklyDigestNotification extends Notification
         }
         if ($this->stats['expiring_certificates'] > 0) {
             $parts[] = $this->stats['expiring_certificates'] . ' expiring';
-        }
-        if ($this->stats['pending_verification'] > 0) {
-            $parts[] = $this->stats['pending_verification'] . ' pending verification';
         }
 
         $summary = empty($parts) ? 'No significant activity this week.' : 'This week: ' . implode(', ', $parts) . '.';

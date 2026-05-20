@@ -192,7 +192,7 @@
                         <a href="{{ route('account.certificates') }}" class="shrink-0 whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/20">View all</a>
                     </div>
 
-                    <div class="divide-y divide-grayTheme-border">
+                    <div class="divide-y divide-grayTheme-border overflow-y-auto" style="max-height:320px;">
                         @forelse ($expiring as $item)
                             <div class="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-grayTheme-light/60">
                                 <div class="flex items-center gap-3">
@@ -206,7 +206,7 @@
                                         <p class="text-xs text-grayTheme-medium">{{ $item['type'] }} · Expires {{ $item['date'] }}</p>
                                     </div>
                                 </div>
-                                <span class="shrink-0 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-hover">{{ $item['status'] }}</span>
+                                <span class="shrink-0 rounded-full px-3 py-1 text-xs font-semibold {{ $item['status_class'] ?? 'bg-success-soft text-success' }}">{{ $item['status'] }}</span>
                             </div>
                         @empty
                             <div class="flex flex-col items-center gap-2 py-10 text-center">
@@ -237,7 +237,7 @@
                         <a href="{{ route('account.documents') }}" class="shrink-0 whitespace-nowrap rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/20">View all</a>
                     </div>
 
-                    <div class="divide-y divide-grayTheme-border">
+                    <div class="divide-y divide-grayTheme-border overflow-y-auto" style="max-height:320px;">
                         @forelse ($uploads as $upload)
                             <div class="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-grayTheme-light/60">
                                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-info-soft">

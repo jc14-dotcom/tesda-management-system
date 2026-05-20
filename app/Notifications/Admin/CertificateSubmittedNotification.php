@@ -27,8 +27,8 @@ class CertificateSubmittedNotification extends Notification
             ->line('**Certificate:** ' . ($this->certificate->certificate_name ?: '—'))
             ->line('**Type:** ' . $typeLabel)
             ->line('**Issued By:** ' . ($this->certificate->issued_by ?: '—'))
-            ->action('Review Certificate', route('admin.certificates.show', $this->certificate->id))
-            ->line('Please verify or reject this certificate from the administration panel.')
+            ->action('View Certificate', route('admin.certificates.show', $this->certificate->id))
+            ->line('You can review this certificate from the administration panel.')
             ->salutation('Alcatt Portal Admin');
     }
 
