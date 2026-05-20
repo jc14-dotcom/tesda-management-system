@@ -14,6 +14,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Print styles ─────────────────────────────────────────────────────── */
+@media print {
+    /* Hide app chrome */
+    .layout-nav,
+    #app-sidebar,
+    #sidebar-overlay,
+    #toast-container,
+    #confirm-modal,
+    .no-print {
+        display: none !important;
+    }
+
+    /* Remove sidebar margin so content fills the page */
+    .layout-main {
+        margin-inline-start: 0 !important;
+        padding-inline-start: 0 !important;
+        width: 100% !important;
+    }
+
+    @page {
+        size: A4 portrait;
+        margin: 1.5cm;
+    }
+
+    body {
+        background: white !important;
+    }
+}
+
 @layer base {
 	html {
 		scroll-behavior: smooth;

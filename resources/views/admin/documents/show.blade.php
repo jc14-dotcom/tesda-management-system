@@ -83,7 +83,7 @@
                         </dl>
                     </div>
 
-                    <div class="surface p-6">
+                    <div class="surface p-6 no-print">
                         <h3 class="mb-4 text-base font-semibold text-grayTheme-dark">Document Preview</h3>
                         @if (! $document->path)
                             <p class="text-sm text-grayTheme-medium">No file attached to this document.</p>
@@ -175,7 +175,7 @@
                         </div>
                     </div>
 
-                    <div class="surface p-6">
+                    <div class="surface p-6 no-print">
                         <h3 class="mb-4 text-base font-semibold text-grayTheme-dark">Actions</h3>
                         <div class="flex flex-col gap-2">
                             <button type="button" onclick="window.print()"

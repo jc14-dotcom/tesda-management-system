@@ -37,7 +37,6 @@ class CertificateController extends Controller
 
         $user = $request->user();
         $data['certificate_name'] = $data['qualification_title'];
-        unset($data['certificate_file']);
         $certificate = $user->certificates()->create([
             ...$data,
             'status' => $status,
@@ -117,7 +116,7 @@ class CertificateController extends Controller
 
         if ($file) {
             $user = $request->user();
-            foreach ($certificate->documents()->where('type', 'certificate')->get() as $document) {
+            foreach ($certificate->documents as $document) {
                 if (Storage::disk('local')->exists($document->path)) {
                     Storage::disk('local')->delete($document->path);
                 }

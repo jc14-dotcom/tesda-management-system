@@ -35,7 +35,7 @@
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3">
-                        <button type="button" onclick="window.print()" class="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                        <button type="button" onclick="printDocumentFile('{{ addslashes($previewUrl) }}','{{ addslashes($document->original_name ?? '') }}')" class="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                             Print
                         </button>
                         <a href="{{ route('documents.download', $document) }}" class="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover">
@@ -58,4 +58,35 @@
             </div>
         </div>
     </div>
+
+<script>
+function printDocumentFile(url, filename) {
+    var isImage = /\.(jpe?g|png|gif|webp|bmp|tiff?)$/i.test(filename || '');
+
+    if (isImage) {
+        var win = window.open('', '_blank', 'width=900,height=1100');
+        if (!win) { alert('Please allow popups to enable printing.'); return; }
+        win.document.write(
+            '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Document</title>' +
+            '<style>@page{size:A4 portrait;margin:1.5cm}*{margin:0;padding:0;box-sizing:border-box}' +
+            'body{background:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}' +
+            'img{max-width:100%;max-height:100vh;object-fit:contain;display:block}</style></head>' +
+            '<body><img src="' + url + '" onload="setTimeout(function(){window.focus();window.print();},250);"></body></html>'
+        );
+        win.document.close();
+        return;
+    }
+
+    var win = window.open(url, '_blank');
+    if (!win) { alert('Please allow popups to enable printing.'); return; }
+    var printed = false;
+    var doPrint = function () {
+        if (printed) return;
+        printed = true;
+        try { win.focus(); win.print(); } catch (e) {}
+    };
+    win.addEventListener('load', function () { setTimeout(doPrint, 1200); }, { once: true });
+    setTimeout(doPrint, 2500);
+}
+</script>
 </x-app-layout>

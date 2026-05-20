@@ -22,17 +22,7 @@
         this.selectedDocument = document;
         this.modalOpen = true;
     },
-    printDocument() {
-        const frame = this.$refs.previewFrame;
-
-        if (frame && frame.contentWindow) {
-            frame.contentWindow.focus();
-            frame.contentWindow.print();
-            return;
-        }
-
-        window.print();
-    },
+    printDocument() { printDocumentModal(this.selectedDocument); },
     closeDocument() {
         this.modalOpen = false;
     }
@@ -497,3 +487,44 @@
     </div>
 
 </section>
+
+<script>
+function printDocumentModal(doc) {
+    var url = doc.previewUrl;
+    var isImage = /\.(jpe?g|png|gif|webp|bmp|tiff?)$/i.test(doc.originalName || '');
+
+    if (isImage) {
+        var title = (doc.title || 'Document').replace(/[<>&]/g, function(c) {
+            return c === '<' ? '&lt;' : c === '>' ? '&gt;' : '&amp;';
+        });
+        var win = window.open('', '_blank', 'width=900,height=1100');
+        if (!win) { alert('Please allow popups to enable printing.'); return; }
+        win.document.write(
+            '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + title + '</title>' +
+            '<style>' +
+            '@page { size: A4 portrait; margin: 1.5cm }' +
+            '* { margin: 0; padding: 0; box-sizing: border-box }' +
+            'body { background: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px }' +
+            'img { max-width: 100%; max-height: 100vh; object-fit: contain; display: block }' +
+            '</style></head>' +
+            '<body><img src="' + url + '" onload="setTimeout(function(){ window.focus(); window.print(); }, 250);"></body></html>'
+        );
+        win.document.close();
+        return;
+    }
+
+    // For PDFs: open the URL directly so Chrome's built-in PDF viewer
+    // handles rendering and respects the PDF's own embedded page size.
+    var win = window.open(url, '_blank');
+    if (!win) { alert('Please allow popups to enable printing.'); return; }
+
+    var printed = false;
+    function doPrint() {
+        if (printed) return;
+        printed = true;
+        try { win.focus(); win.print(); } catch (e) {}
+    }
+    win.addEventListener('load', function() { setTimeout(doPrint, 1200); }, { once: true });
+    setTimeout(doPrint, 2500);
+}
+</script>
