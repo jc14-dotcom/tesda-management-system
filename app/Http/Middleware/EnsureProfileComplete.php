@@ -16,7 +16,7 @@ class EnsureProfileComplete
             $user &&
             ! $user->hasRole('admin') &&
             $user->dpa_agreed_at !== null &&
-            ! $request->routeIs('profile.complete', 'profile.complete.store', 'logout', 'notifications.poll', 'notifications.panel', 'dashboard.live') &&
+            ! $request->routeIs('profile.complete', 'profile.complete.store', 'logout', 'notifications.poll', 'notifications.panel', 'dashboard.live', 'verification.notice', 'verification.verify', 'verification.send') &&
             ! $this->isProfileComplete($user)
         ) {
             return redirect()->route('profile.complete');

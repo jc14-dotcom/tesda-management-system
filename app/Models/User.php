@@ -15,8 +15,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
-// TODO: Re-enable MustVerifyEmail for production
-class User extends Authenticatable // implements MustVerifyEmail
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasRoles, LogsActivity;

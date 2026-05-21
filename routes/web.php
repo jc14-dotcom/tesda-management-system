@@ -19,10 +19,10 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome');
 
 Route::get('/dashboard', [ProfileController::class, 'dashboard'])
-    ->middleware(['auth'/*, 'verified'*/]) // TODO: Re-enable 'verified' middleware for production
+    ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     // Data Privacy Act agreement (must be accessible before DPA is agreed)
     Route::get('/dpa/accept', [\App\Http\Controllers\DpaController::class, 'show'])->name('dpa.accept');
     Route::post('/dpa/accept', [\App\Http\Controllers\DpaController::class, 'accept'])->name('dpa.accept.store');
