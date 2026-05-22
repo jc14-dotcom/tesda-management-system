@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Profile;
+use App\Models\Qualification;
 use App\Support\CacheBuster;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,20 @@ class ProfileDetailsController extends Controller
 {
     public function update(Request $request)
     {
+        // Build dynamic qualification rules — enforce admin-defined list if configured,
+        // but always allow the user's currently-saved titles to prevent lock-out.
+        $trainerTitles  = Qualification::where('type', 'trainer')->pluck('title')->all();
+        $assessorTitles = Qualification::where('type', 'assessor')->pluck('title')->all();
+
+        $savedTrainer  = array_filter((array) ($request->user()->profile?->trainer_qualification_titles ?? []));
+        $savedAssessor = array_filter((array) ($request->user()->profile?->assessor_qualification_titles ?? []));
+
+        $validTrainerTitles  = array_unique(array_merge($trainerTitles,  $savedTrainer));
+        $validAssessorTitles = array_unique(array_merge($assessorTitles, $savedAssessor));
+
+        $trainerTitleRules  = array_values(array_filter(['nullable', 'string', $trainerTitles  ? Rule::in($validTrainerTitles)  : null]));
+        $assessorTitleRules = array_values(array_filter(['nullable', 'string', $assessorTitles ? Rule::in($validAssessorTitles) : null]));
+
         $data = $request->validate([
             'first_name' => ['required', 'string', 'max:255', 'regex:/^[A-Za-z][A-Za-z\s\'-]*$/'],
             'middle_name' => ['required', 'string', 'max:255', 'regex:/^[A-Za-z][A-Za-z\s\'-]*$/'],
@@ -29,9 +44,9 @@ class ProfileDetailsController extends Controller
             'date_hired' => ['nullable', 'date'],
             'tesda_registry_number' => ['nullable', 'string', 'max:255'],
             'trainer_qualification_titles'   => ['nullable', 'array', 'max:20'],
-            'trainer_qualification_titles.*'  => ['nullable', 'string', 'max:255'],
+            'trainer_qualification_titles.*'  => $trainerTitleRules,
             'assessor_qualification_titles'   => ['nullable', 'array', 'max:20'],
-            'assessor_qualification_titles.*' => ['nullable', 'string', 'max:255'],
+            'assessor_qualification_titles.*' => $assessorTitleRules,
             'branch' => ['nullable', 'string', 'max:100'],
         ]);
 

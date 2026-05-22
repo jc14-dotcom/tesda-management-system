@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use App\Http\Controllers\Admin\ExportController as AdminExportController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
+use App\Http\Controllers\Admin\QualificationController as AdminQualificationController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CertificateController;
@@ -113,6 +114,9 @@ Route::middleware(['auth', 'role:admin'])
         // Settings
         Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+        // Qualification titles (managed from Settings page)
+        Route::post('/qualifications', [AdminQualificationController::class, 'store'])->name('qualifications.store');
+        Route::delete('/qualifications/{qualification}', [AdminQualificationController::class, 'destroy'])->name('qualifications.destroy');
         // Exports
         Route::get('/export/certificates', [AdminExportController::class, 'certificates'])->middleware('throttle:admin-exports')->name('export.certificates');
         Route::get('/export/users', [AdminExportController::class, 'users'])->middleware('throttle:admin-exports')->name('export.users');

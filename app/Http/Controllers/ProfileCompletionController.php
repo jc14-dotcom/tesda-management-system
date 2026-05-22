@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Profile;
+use App\Models\Qualification;
 use App\Support\CacheBuster;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,11 +23,21 @@ class ProfileCompletionController extends Controller
 
         $profile = $user->profile;
 
-        return view('profile.complete', compact('profile'));
+        return view('profile.complete', [
+            'profile'                => $profile,
+            'trainerQualifications'  => Qualification::where('type', 'trainer')->orderBy('title')->get(),
+            'assessorQualifications' => Qualification::where('type', 'assessor')->orderBy('title')->get(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $trainerTitles  = Qualification::where('type', 'trainer')->pluck('title')->all();
+        $assessorTitles = Qualification::where('type', 'assessor')->pluck('title')->all();
+
+        $trainerTitleRules  = array_values(array_filter(['nullable', 'string', $trainerTitles  ? Rule::in($trainerTitles)  : null]));
+        $assessorTitleRules = array_values(array_filter(['nullable', 'string', $assessorTitles ? Rule::in($assessorTitles) : null]));
+
         $data = $request->validate([
             'first_name'            => ['required', 'string', 'max:255', 'regex:/^[A-Za-z][A-Za-z\s\'-]*$/'],
             'middle_name'           => ['required', 'string', 'max:255', 'regex:/^[A-Za-z][A-Za-z\s\'-]*$/'],
@@ -39,9 +50,9 @@ class ProfileCompletionController extends Controller
             'position_roles'        => ['required', 'array', 'min:1'],
             'position_roles.*'      => ['string', Rule::in(['trainer', 'assessor'])],
             'trainer_qualification_titles'   => ['nullable', 'array', 'max:20'],
-            'trainer_qualification_titles.*'  => ['nullable', 'string', 'max:255'],
+            'trainer_qualification_titles.*'  => $trainerTitleRules,
             'assessor_qualification_titles'   => ['nullable', 'array', 'max:20'],
-            'assessor_qualification_titles.*' => ['nullable', 'string', 'max:255'],
+            'assessor_qualification_titles.*' => $assessorTitleRules,
         ]);
 
         // Normalize names

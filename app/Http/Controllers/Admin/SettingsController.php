@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
+use App\Models\Qualification;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -20,6 +21,8 @@ class SettingsController extends Controller
                 config('certificates.notifications_enabled', false)),
             'expiryNoticeDays' => Setting::get('certificates_expiry_notice_days',
                 config('certificates.expiry_notice_days', [30, 14, 7, 3, 1])),
+            'trainerQualifications' => Qualification::where('type', 'trainer')->orderBy('title')->get(),
+            'assessorQualifications' => Qualification::where('type', 'assessor')->orderBy('title')->get(),
         ]);
     }
 

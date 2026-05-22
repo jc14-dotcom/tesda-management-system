@@ -367,10 +367,20 @@
                             </div>
 
                             <div class="grid gap-6 md:grid-cols-2">
+                                @php
+                                    $savedTrainerTitles = collect(old('trainer_qualification_titles', $profile?->trainer_qualification_titles ?? []))->filter()->values();
+                                    $trainerOptions = $trainerQualifications->pluck('title')
+                                        ->merge($savedTrainerTitles)->unique()->sort()->values();
+                                    $savedAssessorTitles = collect(old('assessor_qualification_titles', $profile?->assessor_qualification_titles ?? []))->filter()->values();
+                                    $assessorOptions = $assessorQualifications->pluck('title')
+                                        ->merge($savedAssessorTitles)->unique()->sort()->values();
+                                @endphp
+
                                 {{-- Trainer Qualification Titles --}}
                                 <div x-show="positionRoles.includes('trainer')" x-transition.opacity.duration.200ms>
                                     <x-input-label :value="__('Trainer Qualification Title(s)')" />
                                     <p class="mt-0.5 text-xs text-grayTheme-medium">TESDA qualification title(s) as a trainer.</p>
+                                    <p class="mt-1 text-xs @if($trainerQualifications->isEmpty()) text-warning @else invisible @endif">No trainer qualifications configured yet. Contact your administrator.</p>
                                     <div class="mt-2 space-y-2">
                                         <template x-for="(title, index) in trainerQualificationTitles" :key="'trainer-' + index">
                                             <div class="flex items-center gap-2">
@@ -378,16 +388,17 @@
                                                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
                                                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>
                                                     </span>
-                                                    <input
-                                                        type="text"
+                                                    <select
                                                         :name="'trainer_qualification_titles[' + index + ']'"
-                                                        class="form-input block w-full pl-9"
-                                                        placeholder="e.g. Automotive Servicing NC II"
-                                                        maxlength="255"
-                                                        x-model.trim="trainerQualificationTitles[index]"
-                                                        @input="updateValidation()"
-                                                        @blur="touched.trainerQualificationTitles = true; updateValidation()"
-                                                    />
+                                                        class="form-input block w-full pl-9 pr-8"
+                                                        x-model="trainerQualificationTitles[index]"
+                                                        @change="touched.trainerQualificationTitles = true; updateValidation()"
+                                                    >
+                                                        <option value="">— Select a qualification —</option>
+                                                        @foreach($trainerOptions as $opt)
+                                                        <option value="{{ $opt }}">{{ $opt }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                                 <button
                                                     type="button"
@@ -413,6 +424,7 @@
                                 <div x-show="positionRoles.includes('assessor')" x-transition.opacity.duration.200ms>
                                     <x-input-label :value="__('Assessor Qualification Title(s)')" />
                                     <p class="mt-0.5 text-xs text-grayTheme-medium">TESDA qualification title(s) as an assessor.</p>
+                                    <p class="mt-1 text-xs @if($assessorQualifications->isEmpty()) text-warning @else invisible @endif">No assessor qualifications configured yet. Contact your administrator.</p>
                                     <div class="mt-2 space-y-2">
                                         <template x-for="(title, index) in assessorQualificationTitles" :key="'assessor-' + index">
                                             <div class="flex items-center gap-2">
@@ -420,16 +432,17 @@
                                                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-grayTheme-medium">
                                                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>
                                                     </span>
-                                                    <input
-                                                        type="text"
+                                                    <select
                                                         :name="'assessor_qualification_titles[' + index + ']'"
-                                                        class="form-input block w-full pl-9"
-                                                        placeholder="e.g. Automotive Servicing NC II"
-                                                        maxlength="255"
-                                                        x-model.trim="assessorQualificationTitles[index]"
-                                                        @input="updateValidation()"
-                                                        @blur="touched.assessorQualificationTitles = true; updateValidation()"
-                                                    />
+                                                        class="form-input block w-full pl-9 pr-8"
+                                                        x-model="assessorQualificationTitles[index]"
+                                                        @change="touched.assessorQualificationTitles = true; updateValidation()"
+                                                    >
+                                                        <option value="">— Select a qualification —</option>
+                                                        @foreach($assessorOptions as $opt)
+                                                        <option value="{{ $opt }}">{{ $opt }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                                 <button
                                                     type="button"

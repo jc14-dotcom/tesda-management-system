@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Certificate;
+use App\Models\Qualification;
 use App\Models\User;
 use App\Support\CacheBuster;
 use Illuminate\Http\RedirectResponse;
@@ -207,8 +208,10 @@ class ProfileController extends Controller
         $user = $request->user()->load('profile');
 
         return view('user.profile.index', [
-            'user' => $user,
-            'profile' => $user->profile,
+            'user'                   => $user,
+            'profile'                => $user->profile,
+            'trainerQualifications'  => Qualification::where('type', 'trainer')->orderBy('title')->get(),
+            'assessorQualifications' => Qualification::where('type', 'assessor')->orderBy('title')->get(),
         ]);
     }
 
