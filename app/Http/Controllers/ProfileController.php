@@ -341,6 +341,62 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display the people directory with qualification search/filter.
+     */
+    public function directory(Request $request)
+    {
+        $trainerQuals   = Qualification::trainer()->orderBy('title')->pluck('title');
+        $assessorQuals  = Qualification::assessor()->orderBy('title')->pluck('title');
+        $search         = $request->input('search', '');
+        $trainerFilter  = (array) $request->input('trainer_qual', []);
+        $assessorFilter = (array) $request->input('assessor_qual', []);
+
+        $people = User::query()
+            ->with(['profile' => fn($q) => $q->select([
+                'id', 'user_id', 'first_name', 'middle_name', 'last_name', 'suffix',
+                'position_title', 'branch', 'employment_status', 'profile_photo_path',
+                'trainer_qualification_titles', 'assessor_qualification_titles',
+            ])])
+            ->whereHas('profile', fn($q) => $q->where('status', 'active'))
+            ->where('id', '!=', Auth::id())
+            ->when($search, function ($q) use ($search) {
+                $like = '%' . $search . '%';
+                $q->where(function ($inner) use ($like) {
+                    $inner->where('name', 'like', $like)
+                        ->orWhereHas('profile', fn($p) => $p
+                            ->where('first_name', 'like', $like)
+                            ->orWhere('last_name', 'like', $like)
+                        );
+                });
+            })
+            ->when($trainerFilter, function ($q) use ($trainerFilter) {
+                $q->whereHas('profile', function ($p) use ($trainerFilter) {
+                    foreach ($trainerFilter as $title) {
+                        $p->whereRaw('JSON_CONTAINS(trainer_qualification_titles, ?)', [json_encode($title)]);
+                    }
+                });
+            })
+            ->when($assessorFilter, function ($q) use ($assessorFilter) {
+                $q->whereHas('profile', function ($p) use ($assessorFilter) {
+                    foreach ($assessorFilter as $title) {
+                        $p->whereRaw('JSON_CONTAINS(assessor_qualification_titles, ?)', [json_encode($title)]);
+                    }
+                });
+            })
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('user.directory.index', [
+            'people'         => $people,
+            'trainerQuals'   => $trainerQuals,
+            'assessorQuals'  => $assessorQuals,
+            'search'         => $search,
+            'trainerFilter'  => $trainerFilter,
+            'assessorFilter' => $assessorFilter,
+        ]);
+    }
+
+    /**
      * Display the user's notifications.
      */
     public function notifications(Request $request)

@@ -38,6 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/account/certificates', [ProfileController::class, 'certificates'])->name('account.certificates');
     Route::get('/account/certificates/{certificate}', [CertificateController::class, 'show'])->name('account.certificates.show');
     Route::get('/account/documents', [ProfileController::class, 'documents'])->name('account.documents');
+    Route::get('/account/directory', [ProfileController::class, 'directory'])->name('account.directory');
     Route::get('/account/notifications', [ProfileController::class, 'notifications'])->name('account.notifications');
     Route::patch('/account/notifications/read-all', [ProfileController::class, 'notificationsMarkAllRead'])->name('account.notifications.mark-all-read');
     Route::patch('/account/notifications/{id}/read', [ProfileController::class, 'notificationMarkRead'])->name('account.notifications.mark-read');
