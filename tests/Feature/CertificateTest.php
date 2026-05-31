@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Certificate;
+use App\Models\Document;
 use App\Models\User;
 use Tests\TestCase;
 
@@ -119,5 +120,51 @@ class CertificateTest extends TestCase
 
         $response->assertForbidden();
         $this->assertDatabaseHas('certificates', ['id' => $cert->id]);
+    }
+
+    // ─── Update ──────────────────────────────────────────────────────────────
+
+    /**
+     * Regression: uploading a new certificate file must only delete documents
+     * of type='certificate' attached to that certificate.  Non-certificate
+     * documents linked via certificate_id (e.g. supporting training records)
+     * must survive the update.
+     */
+    public function test_updating_certificate_file_does_not_delete_non_certificate_documents(): void
+    {
+        $user        = User::factory()->create();
+        $certificate = Certificate::factory()->create(['user_id' => $user->id]);
+
+        // Attach a 'certificate'-type document (should be deleted on file re-upload)
+        $certDoc = Document::factory()->create([
+            'user_id'        => $user->id,
+            'certificate_id' => $certificate->id,
+            'type'           => 'certificate',
+        ]);
+
+        // Attach a 'training'-type document linked to the same certificate (must NOT be deleted)
+        $trainingDoc = Document::factory()->create([
+            'user_id'        => $user->id,
+            'certificate_id' => $certificate->id,
+            'type'           => 'training',
+        ]);
+
+        $file = \Illuminate\Http\UploadedFile::fake()->create('new_cert.pdf', 100, 'application/pdf');
+
+        $response = $this->actingAs($user)->patch(route('certificates.update', $certificate), [
+            'certificate_type'    => $certificate->certificate_type,
+            'qualification_title' => $certificate->qualification_title,
+            'certificate_number'  => $certificate->certificate_number,
+            'issued_by'           => $certificate->issued_by,
+            'certificate_file'    => $file,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+
+        // The old certificate-file document must be gone
+        $this->assertDatabaseMissing('documents', ['id' => $certDoc->id]);
+
+        // The training document linked to the same certificate must survive
+        $this->assertDatabaseHas('documents', ['id' => $trainingDoc->id]);
     }
 }

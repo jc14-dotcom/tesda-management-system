@@ -116,7 +116,7 @@ class CertificateController extends Controller
 
         if ($file) {
             $user = $request->user();
-            foreach ($certificate->documents as $document) {
+            foreach ($certificate->documents()->where('type', 'certificate')->get() as $document) {
                 if (Storage::disk('local')->exists($document->path)) {
                     Storage::disk('local')->delete($document->path);
                 }
