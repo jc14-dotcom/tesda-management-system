@@ -36,7 +36,7 @@ class OtpVerificationMail extends Mailable
     public function build(): self
     {
         return $this->subject('Alcatt Portal — 6-digit Verification Code')
-                    ->view('emails.otp-verification')
+                    ->markdown('emails.otp-verification')
                     ->with([
                         'otp' => $this->otp,
                     ]);

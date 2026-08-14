@@ -24,6 +24,19 @@ class EmailVerificationTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_otp_email_uses_the_shared_branded_mail_layout(): void
+    {
+        $html = (new OtpVerificationMail('123456'))->render();
+
+        $this->assertStringContainsString('cid:alcatt-logo', $html);
+        $this->assertStringContainsString('#2B2D7E', $html);
+        $this->assertStringContainsString('#F4B400', $html);
+        $this->assertStringContainsString('Verification code', $html);
+        $this->assertStringContainsString('123456', $html);
+        $this->assertStringContainsString('>Hello,</p>', $html);
+        $this->assertStringNotContainsString('&lt;p style=', $html);
+    }
+
     public function test_email_can_be_verified_with_a_valid_otp(): void
     {
         $user = User::factory()->unverified()->withOtp('123456')->create();
