@@ -26,23 +26,23 @@
     closeDocument() {
         this.modalOpen = false;
     }
-}" @doc-confirm-delete.window="askDelete($event.detail.url, $event.detail.name)">
+}" @doc-confirm-delete.window="askDelete($event.detail.url, $event.detail.name)" class="flex flex-col">
 
     {{-- Section header --}}
-    <div class="flex items-center gap-3">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent-soft">
-            <svg class="h-5 w-5 text-accent-active" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    <div class="order-3 flex items-center gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-soft">
+            <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
             </svg>
         </div>
         <div>
-            <h2 class="text-lg font-semibold text-grayTheme-dark">{{ __('Documents') }}</h2>
+            <h2 class="text-lg font-semibold text-grayTheme-dark">{{ __('Add Documents') }}</h2>
             <p class="text-sm text-grayTheme-medium">{{ __('Upload CVs, certificate files, and other supporting documents.') }}</p>
         </div>
     </div>
 
     {{-- Upload Form --}}
-    <form method="post" action="{{ route('documents.store') }}" enctype="multipart/form-data" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('documents.store') }}" enctype="multipart/form-data" class="order-4 mt-6 space-y-6">
         @csrf
 
         <div class="grid gap-4 md:grid-cols-2">
@@ -191,15 +191,20 @@
     </form>
 
     {{-- Divider --}}
-    <div class="my-8 border-t border-grayTheme-border"></div>
+    <div class="order-2 my-8 border-t border-grayTheme-border"></div>
 
     {{-- Uploaded Documents --}}
-    <div>
-        <div class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-            </svg>
-            <h3 class="text-sm font-semibold text-grayTheme-dark">Uploaded Documents</h3>
+    <div class="order-1">
+        <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-soft">
+                <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-lg font-semibold text-grayTheme-dark">Uploaded Documents</h2>
+                <p class="text-sm text-grayTheme-medium">Review and manage the documents already uploaded to your account.</p>
+            </div>
         </div>
 
         {{-- Filters --}}
@@ -249,7 +254,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-semibold text-grayTheme-dark">No documents uploaded</p>
-                        <p class="mt-1 text-xs text-grayTheme-medium">Upload your CV, training certificates, or other documents above.</p>
+                        <p class="mt-1 text-xs text-grayTheme-medium">Upload your CV, training certificates, or other documents using the form below.</p>
                     </div>
                 </div>
             </template>

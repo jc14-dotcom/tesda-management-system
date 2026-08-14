@@ -7,8 +7,8 @@
                 eyebrow="Account"
             />
 
-            <section class="p-4 sm:p-8 surface">
-                <div class="mt-6">
+            <section class="px-4 pb-4 pt-3 sm:px-8 sm:pb-8 sm:pt-5 surface">
+                <div>
                     @include('user.certificates.partials.certificates-form')
                 </div>
             </section>

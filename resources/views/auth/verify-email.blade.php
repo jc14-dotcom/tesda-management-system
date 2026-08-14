@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+
         <title>Alcatt Portal &mdash; Verify Email</title>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
@@ -25,33 +26,57 @@
 
                     <h1 class="mt-4 text-2xl font-extrabold tracking-tight text-grayTheme-dark">Verify your email</h1>
                     <p class="mt-2 max-w-xs text-sm leading-6 text-grayTheme-medium">
-                        Thanks for registering! Please verify your email address by clicking the link we sent you.
+                        Enter the 6-digit verification code sent to your email address.
                     </p>
                 </div>
 
-                @if (session('status') == 'verification-link-sent')
+                @if (session('status') == 'otp-sent')
                     <div class="mb-5 rounded-xl bg-success-soft px-4 py-3 text-center text-sm font-semibold text-success">
-                        A new verification link has been sent to your email address.
+                        A new 6-digit verification code has been sent to your email address.
                     </div>
                 @endif
 
-                <div class="space-y-3">
-                    <form method="POST" action="{{ route('verification.send') }}">
-                        @csrf
-                        <x-primary-button class="w-full justify-center gap-2 py-3 text-sm font-bold tracking-wide">
+                <form method="POST" action="{{ route('verification.otp.verify') }}" class="space-y-6">
+                    @csrf
+
+                    <div>
+                        <x-input-label for="otp" :value="__('Verification code')" />
+                        <div class="relative mt-1.5">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                                <svg class="h-4 w-4 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <x-text-input id="otp" class="block w-full pl-10" type="text" name="otp" required autofocus maxlength="6" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" placeholder="123456" />
+                        </div>
+                        <x-input-error :messages="$errors->get('otp')" class="mt-1.5" />
+                    </div>
+
+                    <div>
+                        <button type="submit" class="btn-primary w-full justify-center gap-2 py-3 text-sm font-bold tracking-wide">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
-                            {{ __('Resend Verification Email') }}
-                        </x-primary-button>
+                            Verify
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-4 space-y-4 text-center text-sm text-grayTheme-medium">
+                    <p>The code expires in {{ config('auth.verification_otp.expire', 10) }} minutes.</p>
+
+                    <form method="POST" action="{{ route('verification.send') }}" class="flex items-center justify-center gap-1.5">
+                        @csrf
+                        <span>Didn't receive it?</span>
+                        <button type="submit" class="font-semibold text-primary hover:underline">Send a new code</button>
                     </form>
 
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="w-full rounded-button border border-grayTheme-border bg-white py-2.5 text-sm font-semibold text-grayTheme-medium shadow-card transition hover:border-danger hover:text-danger">
-                            {{ __('Sign Out') }}
-                        </button>
-                    </form>
+                    <div class="text-center">
+                        <form method="POST" action="{{ route('logout') }}" class="inline">
+                            @csrf
+                            <button type="submit" class="font-semibold text-primary hover:underline">Log out</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

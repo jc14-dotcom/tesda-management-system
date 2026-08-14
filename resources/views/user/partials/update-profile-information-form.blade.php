@@ -54,14 +54,18 @@
                             <p class="text-sm mt-2 text-slate-700">
                                 {{ __('Your email address is unverified.') }}
 
+                                <a href="{{ route('verification.notice') }}" class="underline text-sm text-slate-600 hover:text-slate-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/30">
+                                    {{ __('Enter a verification code.') }}
+                                </a>
+
                                 <button form="send-verification" class="underline text-sm text-slate-600 hover:text-slate-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/30">
-                                    {{ __('Click here to re-send the verification email.') }}
+                                    {{ __('Re-send the verification code.') }}
                                 </button>
                             </p>
 
-                            @if (session('status') === 'verification-link-sent')
+                            @if (session('status') === 'otp-sent')
                                 <p class="mt-2 font-medium text-sm text-green-600">
-                                    {{ __('A new verification link has been sent to your email address.') }}
+                                    {{ __('A new six-digit verification code has been sent to your email address.') }}
                                 </p>
                             @endif
                         </div>

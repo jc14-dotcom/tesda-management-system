@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
@@ -52,8 +50,6 @@ class RegisteredUserController extends Controller
 
         // New registrations start as pending — admin must approve before they can log in
         $user->profile()->create(['status' => 'pending']);
-
-        event(new Registered($user));
 
         return redirect()->route('login')->with('account_pending', true);
     }

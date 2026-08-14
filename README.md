@@ -41,6 +41,18 @@ php artisan boost:install
 
 Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
+## Email Verification
+
+This application uses a 6-digit OTP for email verification instead of Laravel's signed verification links.
+
+- New users register as pending and do not receive an OTP at registration.
+- After admin approval, the first successful login sends a verification code to the user's email address.
+- The user enters the code on the verification screen to verify the account.
+- The resend action sends a fresh OTP and invalidates the previous one.
+- OTP expiry is controlled by `VERIFICATION_OTP_EXPIRE` in the environment, with a default of 10 minutes.
+
+Legacy signed verification links are not part of the current flow.
+
 ## Contributing
 
 Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).

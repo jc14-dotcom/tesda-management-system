@@ -9,23 +9,23 @@
         this.confirmMessage = '\u201c' + name + '\u201d and all its attached files will be permanently removed. This cannot be undone.';
         this.confirmOpen = true;
     },
-}" @cert-confirm-delete.window="askDelete($event.detail.url, $event.detail.name)">
+}" @cert-confirm-delete.window="askDelete($event.detail.url, $event.detail.name)" class="flex flex-col">
 
     {{-- Section header --}}
-    <div class="flex items-center gap-3">
+    <div class="order-3 flex items-center gap-3">
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-soft">
             <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
             </svg>
         </div>
         <div>
-            <h2 class="text-lg font-semibold text-grayTheme-dark">{{ __('Certificates') }}</h2>
-            <p class="text-sm text-grayTheme-medium">{{ __('Track TESDA certifications by level or classification, then record the related program or qualification title.') }}</p>
+            <h2 class="text-lg font-semibold text-grayTheme-dark">{{ __('Add Certificates') }}</h2>
+            <p class="text-sm text-grayTheme-medium">{{ __('Record a trainer or assessor certificate and its related qualification details.') }}</p>
         </div>
     </div>
 
     {{-- Add Certificate Form --}}
-    <form method="post" action="{{ route('certificates.store') }}" enctype="multipart/form-data" class="mt-6 space-y-6"
+    <form method="post" action="{{ route('certificates.store') }}" enctype="multipart/form-data" class="order-4 mt-6 space-y-6"
           x-data="{ certType: '{{ old('certificate_type', 'nc_i') }}' }">
         @csrf
 
@@ -171,15 +171,20 @@
     </form>
 
     {{-- Divider --}}
-    <div class="my-8 border-t border-grayTheme-border"></div>
+    <div class="order-2 my-8 border-t border-grayTheme-border"></div>
 
     {{-- Existing Certificates --}}
-    <div>
-        <div class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-grayTheme-medium" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <h3 class="text-sm font-semibold text-grayTheme-dark">Existing Certificates</h3>
+    <div class="order-1">
+        <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-soft">
+                <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-lg font-semibold text-grayTheme-dark">Existing Certificates</h2>
+                <p class="text-sm text-grayTheme-medium">Review and manage the certificates already saved to your account.</p>
+            </div>
         </div>
 
         {{-- Filters --}}
@@ -267,7 +272,7 @@
                                             </svg>
                                         </div>
                                         <p class="text-sm font-semibold text-grayTheme-dark">No certificates found</p>
-                                        <p class="text-xs text-grayTheme-medium">Add your first TESDA certificate using the form above.</p>
+                                        <p class="text-xs text-grayTheme-medium">Add your first TESDA certificate using the form below.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -388,4 +393,3 @@
             </div>
         </div>
     </div>
-

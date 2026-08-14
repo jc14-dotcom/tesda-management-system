@@ -4,6 +4,10 @@ use App\Models\User;
 
 return [
 
+    'verification_otp' => [
+        'expire' => env('VERIFICATION_OTP_EXPIRE', 10),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Authentication Defaults

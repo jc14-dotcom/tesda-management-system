@@ -28,17 +28,27 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = Auth::user();
+
         // Single-session enforcement: record the current session ID so that
         // EnforceSingleSession middleware can evict any other active sessions.
-        Auth::user()->forceFill(['current_session_id' => $request->session()->getId()])->save();
+        $user->forceFill(['current_session_id' => $request->session()->getId()])->save();
 
         activity()
-            ->causedBy(Auth::user())
-            ->performedOn(Auth::user())
+            ->causedBy($user)
+            ->performedOn($user)
             ->event('login')
             ->log('User logged in');
 
-        $redirectRoute = Auth::user()->hasRole('admin') ? 'admin.dashboard' : 'dashboard';
+        if (! $user->hasVerifiedEmail()) {
+            if (! $user->hasActiveOtp()) {
+                $user->sendEmailVerificationNotification();
+            }
+
+            return redirect()->route('verification.notice');
+        }
+
+        $redirectRoute = $user->hasRole('admin') ? 'admin.dashboard' : 'dashboard';
 
         return redirect()->intended(route($redirectRoute, absolute: false));
     }

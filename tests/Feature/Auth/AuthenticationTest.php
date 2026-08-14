@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Mail\OtpVerificationMail;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -28,6 +30,42 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_unverified_users_receive_an_otp_after_successful_login(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->unverified()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('verification.notice'));
+        Mail::assertSent(OtpVerificationMail::class, function (OtpVerificationMail $mail) use ($user) {
+            return $mail->hasTo($user->email);
+        });
+        $this->assertNotNull($user->fresh()->otp);
+        $this->assertNotNull($user->fresh()->otp_expires_at);
+    }
+
+    public function test_unverified_users_with_an_active_otp_are_not_sent_a_duplicate_code_on_login(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->unverified()->withOtp()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('verification.notice'));
+        Mail::assertNothingSent();
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

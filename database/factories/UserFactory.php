@@ -30,7 +30,21 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'otp' => null,
+            'otp_expires_at' => null,
         ];
+    }
+
+    /**
+     * Add a valid OTP to the factory state. The default code is deliberately
+     * predictable so feature tests can submit it without exposing stored data.
+     */
+    public function withOtp(string $otp = '123456'): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'otp' => Hash::make($otp),
+            'otp_expires_at' => now()->addMinutes(10),
+        ]);
     }
 
     /**
@@ -40,6 +54,8 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+            'otp' => null,
+            'otp_expires_at' => null,
         ]);
     }
 }

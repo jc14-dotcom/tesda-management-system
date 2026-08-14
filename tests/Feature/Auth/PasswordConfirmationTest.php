@@ -12,7 +12,7 @@ class PasswordConfirmationTest extends TestCase
 
     public function test_confirm_password_screen_can_be_rendered(): void
     {
-        $user = User::factory()->create();
+        $user = $this->readyUser();
 
         $response = $this->actingAs($user)->get('/confirm-password');
 
@@ -21,7 +21,7 @@ class PasswordConfirmationTest extends TestCase
 
     public function test_password_can_be_confirmed(): void
     {
-        $user = User::factory()->create();
+        $user = $this->readyUser();
 
         $response = $this->actingAs($user)->post('/confirm-password', [
             'password' => 'password',
@@ -33,12 +33,28 @@ class PasswordConfirmationTest extends TestCase
 
     public function test_password_is_not_confirmed_with_invalid_password(): void
     {
-        $user = User::factory()->create();
+        $user = $this->readyUser();
 
         $response = $this->actingAs($user)->post('/confirm-password', [
             'password' => 'wrong-password',
         ]);
 
         $response->assertSessionHasErrors();
+    }
+
+    private function readyUser(): User
+    {
+        $user = User::factory()->create(['dpa_agreed_at' => now()]);
+        $user->profile()->create([
+            'first_name' => 'Test',
+            'middle_name' => 'User',
+            'last_name' => 'Account',
+            'date_of_birth' => '1990-01-01',
+            'gender' => 'male',
+            'contact_number' => '09123456789',
+            'position_roles' => ['trainer'],
+        ]);
+
+        return $user;
     }
 }

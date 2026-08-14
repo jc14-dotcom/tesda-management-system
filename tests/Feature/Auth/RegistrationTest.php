@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,16 +17,27 @@ class RegistrationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_new_users_can_register(): void
+    public function test_new_users_register_as_pending_without_an_otp(): void
     {
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'agree_to_dpa' => true,
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $this->assertGuest();
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHas('account_pending', true);
+
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+
+        $this->assertNull($user->otp);
+        $this->assertNull($user->otp_expires_at);
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => $user->id,
+            'status' => 'pending',
+        ]);
     }
 }
