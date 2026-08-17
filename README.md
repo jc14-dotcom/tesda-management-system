@@ -2,7 +2,7 @@
 
 Alcatt Portal is a role-based employee and credential management system built with Laravel. It gives organizations a single place to maintain user profiles, store employee documents, track certificates and qualifications, and manage account approvals and compliance-related activity.
 
-![Alcatt Portal logo](public/assets/alcatt-logo.png)
+
 
 ## What the system does
 
